@@ -1,1 +1,4 @@
 *.pkl
+*.RData
+*.tsv
+*.json
