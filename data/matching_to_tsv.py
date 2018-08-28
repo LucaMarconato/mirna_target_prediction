@@ -8,7 +8,8 @@ import subprocess
 from collections import OrderedDict # to dump the json file respecting the order
 from typing import Dict, List, Tuple, Set
 
-from matching_to_json_extract_data import show_g_statistics
+from mirna import Mirna
+from gene import Site
 
 class Graph:
 	def __init__(self):
@@ -53,37 +54,6 @@ class Graph:
 		consistent_conservation_information = self.mirna_site_arcs[key].add_context_scores(context_score, weighted_context_score, conserved)
 		if not consistent_conservation_information:
 			self.list_of_scores_with_discording_conservation_information.append(key)
-
-class Mirna:
-	def __init__(self, mirna_family):
-		self.mirna_family = mirna_family
-
-	def __hash__(self):
-		return hash(self.mirna_family)
-
-	def __eq__(self, other):
-		return (self.mirna_family == other.mirna_family)
-
-	def __ne__(self, other):
-		return not(self == other)
-
-class Site:
-	def __init__(self, gene_id, gene_symbol, transcript_id, utr_start, utr_end, seed_match_type):
-		self.gene_id = gene_id
-		self.gene_symbol = gene_symbol
-		self.transcript_id = transcript_id
-		self.utr_start = utr_start
-		self.utr_end = utr_end
-		self.seed_match_type = seed_match_type
-
-	def __hash__(self):
-		return hash((self.gene_id, self.gene_symbol, self.transcript_id, self.utr_start, self.utr_end, self.seed_match_type))
-
-	def __eq__(self, other):
-		return ((self.gene_id, self.gene_symbol, self.transcript_id, self.utr_start, self.utr_end, self.seed_match_type) == (other.gene_id, other.gene_symbol, other.transcript_id, other.utr_start, other.utr_end, other.seed_match_type))
-
-	def __ne__(self, other):
-		return not(self == other)
 
 class Mirna_site_arc: 
 	def __init__(self, conserved):
@@ -266,7 +236,7 @@ def export_g_data(g):
 		i = 0
 		to_write = 'gene_id\tgene_symbol\ttranscript_id\tutr_start\tutr_end\tseed_match_type\n'
 		for site in considered_sites:
-			to_write += f'{e1.gene_id}\t{e1.gene_symbol}\t{e1.transcript_id}\t{e1.utr_start}\t{e1.utr_end}\t{e1.seed_match_type}\n'
+			to_write += f'{site.gene_id}\t{site.gene_symbol}\t{site.transcript_id}\t{site.utr_start}\t{site.utr_end}\t{site.seed_match_type}\n'
 			i += 1
 		outfile.write(to_write)
 		print(f'{i} rows written')
