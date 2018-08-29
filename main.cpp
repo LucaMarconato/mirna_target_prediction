@@ -1,14 +1,23 @@
 #include <iostream>
 #include <fstream>
+#include <unordered_map>
+
+#include <boost/unordered_map.hpp>
+#include <boost/bimap.hpp>
 
 #include "mirna.hpp"
+#include "gene.hpp"
 
 int main(int argc, char * argv[])
 {
-    char * gene [4] = {"AAAUUGUGUG", "AAAAAAAAAAA", "AUAUAUUAUA", "UUUUUUUUU"};
-    for(int i = 0; i < 4; i++) {
-        std::cout << Mirna::format_mirna_matching(Mirna::human_mirnas[0].matches_with_string(gene[i])) << "\n";
-    }
-    
+    // 
+    // std::unordered_map<Mirna, int> mirna_id_dictionary_left;
+    Mirna::initialize_mirna_dictionary();
+    Mirna::print_mirna_dictionary(10);
+
+    Gene::initialize_gene_dictionary();
+    Gene::print_gene_dictionary(100);
+
     return 0;
 }
+
