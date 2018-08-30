@@ -3,29 +3,43 @@
 #include <iostream>
 #include <fstream>
 
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/filesystem.hpp>
+
 boost::bimap<Mirna, int> Mirna::mirna_id_dictionary;
 
-Mirna::Mirna(std::string mirna_family)
-{
-    this->mirna_family = mirna_family;
-}
+Mirna::Mirna() {}
+
+Mirna::Mirna(std::string mirna_family) : mirna_family(mirna_family) {}
 
 void Mirna::initialize_mirna_dictionary()
 {
-    std::ifstream in("./data/processed/mirnas_with_scored_interactions.tsv");
-    if(!in.is_open()) {
-        std::cerr << "error: unable to open file\n";
-        exit(1);
+    if(!boost::filesystem::exists("mirna_id_dictionary.bin")) {
+        std::ifstream in("./data/processed/mirnas_with_scored_interactions.tsv");
+        if(!in.is_open()) {
+            std::cerr << "error: unable to open file\n";
+            exit(1);
+        }
+        std::string line;
+        int i = 0;
+        while(!in.eof()) {
+            getline(in, line);
+            Mirna mirna(line);
+            Mirna::mirna_id_dictionary.insert( boost::bimap<Mirna, int>::value_type(mirna, i) );
+            i++;
+        }
+        in.close();
+        std::ofstream out("mirna_id_dictionary.bin", std::ios::binary);
+        boost::archive::binary_oarchive oa(out);
+        oa << Mirna::mirna_id_dictionary;
+        out.close();
+    } else {
+        std::ifstream in("mirna_id_dictionary.bin", std::ios::binary);
+        boost::archive::binary_iarchive ia(in);        
+        ia >> Mirna::mirna_id_dictionary;
+        in.close();
     }
-    std::string line;
-    int i = 0;
-    while(!in.eof()) {
-        getline(in, line);
-        Mirna mirna(line);
-        Mirna::mirna_id_dictionary.insert( boost::bimap<Mirna, int>::value_type(mirna, i) );
-        i++;
-    }
-    in.close();
 }
 
 void Mirna::print_mirna_dictionary(unsigned int max_rows)
@@ -43,9 +57,43 @@ void Mirna::print_mirna_dictionary(unsigned int max_rows)
     }
 }
 
+std::string Mirna::format_mirna_matching(Mirna::Mirna_matching mirna_matching)
+{    
+    switch(mirna_matching) {
+    case canonical_8mer:
+        return "canonical_8mer";
+    case canonical_7mer_m8:
+        return "canonical_7mer_m8";
+    case canonical_7mer_A1:
+        return "canonical_7mer_A1";
+    case canonical_6mer:
+        return "canonical_6mer";
+    case canonical_offset_6mer:
+        return "canonical_offset_6mer";
+    case non_canonical:
+        return "non_canonical";
+    case no_matching:
+        return "no_matching";
+    default:
+        std::cerr << "error: mirna_matching = " << mirna_matching << "\n";
+        exit(1);
+    }
+}
+
+template<class Archive>
+void Mirna::serialize(Archive & ar, const unsigned int)
+{
+    ar & this->mirna_family;
+}
+
 bool operator<(Mirna const & lhs, Mirna const & rhs)
 {
     return lhs.mirna_family < rhs.mirna_family;
+}
+
+std::ostream & operator<<(std::ostream & stream, const Mirna & o)
+{
+    return stream << "mirna_family = " << o.mirna_family << "\n";
 }
 
 // Mirna::Mirna_matching Mirna::matches_with_string(char * site)
@@ -74,25 +122,4 @@ bool operator<(Mirna const & lhs, Mirna const & rhs)
 //         return canonical_offset_6mer;
 //     }       
 //     return no_matching;
-// }
-
-// std::string Mirna::format_mirna_matching(Mirna::Mirna_matching mirna_matching)
-// {
-//     switch(mirna_matching) {
-//     case canonical_8mer:
-//         return "canonical_8mer";
-//     case canonical_7mer_m8:
-//         return "canonical_7mer_m8";
-//     case canonical_7mer_A1:
-//         return "canonical_7mer_A1";
-//     case canonical_6mer:
-//         return "canonical_6mer";
-//     case canonical_offset_6mer:
-//         return "canonical_offset_6mer";
-//     case no_matching:
-//         return "no_matching";
-//     default:
-//         std::cerr << "error: mirna_matching = " << mirna_matching << "\n";
-//         exit(1);
-//     }
 // }

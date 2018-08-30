@@ -244,6 +244,33 @@ mirna.cpp.s:
 	$(MAKE) -f CMakeFiles/expression_profiles.dir/build.make CMakeFiles/expression_profiles.dir/mirna.cpp.s
 .PHONY : mirna.cpp.s
 
+site.o: site.cpp.o
+
+.PHONY : site.o
+
+# target to build an object file
+site.cpp.o:
+	$(MAKE) -f CMakeFiles/expression_profiles.dir/build.make CMakeFiles/expression_profiles.dir/site.cpp.o
+.PHONY : site.cpp.o
+
+site.i: site.cpp.i
+
+.PHONY : site.i
+
+# target to preprocess a source file
+site.cpp.i:
+	$(MAKE) -f CMakeFiles/expression_profiles.dir/build.make CMakeFiles/expression_profiles.dir/site.cpp.i
+.PHONY : site.cpp.i
+
+site.s: site.cpp.s
+
+.PHONY : site.s
+
+# target to generate assembly for a file
+site.cpp.s:
+	$(MAKE) -f CMakeFiles/expression_profiles.dir/build.make CMakeFiles/expression_profiles.dir/site.cpp.s
+.PHONY : site.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -266,6 +293,9 @@ help:
 	@echo "... mirna.o"
 	@echo "... mirna.i"
 	@echo "... mirna.s"
+	@echo "... site.o"
+	@echo "... site.i"
+	@echo "... site.s"
 .PHONY : help
 
 
