@@ -7,7 +7,7 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/filesystem.hpp>
 
-boost::bimap<Mirna, int> Mirna::mirna_id_dictionary;
+boost::bimap<Mirna, Mirna_id> Mirna::mirna_id_dictionary;
 
 Mirna::Mirna() {}
 
@@ -22,11 +22,11 @@ void Mirna::initialize_mirna_dictionary()
             exit(1);
         }
         std::string line;
-        int i = 0;
+        Mirna_id i = 0;
         while(!in.eof()) {
             getline(in, line);
             Mirna mirna(line);
-            Mirna::mirna_id_dictionary.insert( boost::bimap<Mirna, int>::value_type(mirna, i) );
+            Mirna::mirna_id_dictionary.insert( boost::bimap<Mirna, Mirna_id>::value_type(mirna, i) );
             i++;
         }
         in.close();
@@ -51,37 +51,14 @@ void Mirna::print_mirna_dictionary(unsigned int max_rows)
     for(auto & e : Mirna::mirna_id_dictionary.left) {
         if(j++ < max_rows) {
             Mirna & mirna = const_cast<Mirna &>(e.first);
-            int & i = const_cast<int &>(e.second);
+            Mirna_id & i = const_cast<Mirna_id &>(e.second);
             std::cout << "mirna.mirna_family = " << mirna.mirna_family << ", i = " << i << "\n";            
         }
     }
 }
 
-std::string Mirna::format_mirna_matching(Mirna::Mirna_matching mirna_matching)
-{    
-    switch(mirna_matching) {
-    case canonical_8mer:
-        return "canonical_8mer";
-    case canonical_7mer_m8:
-        return "canonical_7mer_m8";
-    case canonical_7mer_A1:
-        return "canonical_7mer_A1";
-    case canonical_6mer:
-        return "canonical_6mer";
-    case canonical_offset_6mer:
-        return "canonical_offset_6mer";
-    case non_canonical:
-        return "non_canonical";
-    case no_matching:
-        return "no_matching";
-    default:
-        std::cerr << "error: mirna_matching = " << mirna_matching << "\n";
-        exit(1);
-    }
-}
-
 template<class Archive>
-void Mirna::serialize(Archive & ar, const unsigned int)
+void Mirna::serialize(Archive & ar, const unsigned int version)
 {
     ar & this->mirna_family;
 }

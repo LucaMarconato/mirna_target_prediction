@@ -10,7 +10,7 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/filesystem.hpp>
 
-boost::bimap<Gene, int> Gene::gene_id_dictionary;
+boost::bimap<Gene, Gene_id> Gene::gene_id_dictionary;
 
 Gene::Gene() {}
 
@@ -20,16 +20,16 @@ Gene::Gene(std::string gene_id, int gene_id_version, std::string gene_symbol, st
 Gene::Gene(std::string gene_id_and_version, std::string gene_symbol, std::string transcript_id_and_version) : gene_symbol(gene_symbol)
 {
     auto split_into_id_and_version = [](std::string & to_split, std::string & id, int & version)
-                                     {
-                                         int pos = to_split.find(".");
-                                         if(pos != std::string::npos) {
-                                             id = to_split.substr(0, pos);
-                                             version = atoi(to_split.substr(pos + 1, 1).c_str());                                             
-                                         } else {
-                                             id = to_split;
-                                             version = -1;
-                                         }
-                                     };
+    {
+        int pos = to_split.find(".");
+        if(pos != std::string::npos) {
+            id = to_split.substr(0, pos);
+            version = atoi(to_split.substr(pos + 1, 1).c_str());                                             
+        } else {
+            id = to_split;
+            version = -1;
+        }
+    };
     split_into_id_and_version(gene_id_and_version, this->gene_id, this->gene_id_version);
     split_into_id_and_version(transcript_id_and_version, this->transcript_id, this->transcript_id_version);
     Gene gene(gene_id, gene_id_version, gene_symbol, transcript_id, transcript_id_version);
@@ -38,13 +38,13 @@ Gene::Gene(std::string gene_id_and_version, std::string gene_symbol, std::string
 void Gene::initialize_gene_dictionary()
 {
     if(!boost::filesystem::exists("gene_id_dictionary.bin")) {
-        int i = 0;
+        Gene_id i = 0;
     	io::CSVReader<3, io::trim_chars<' '>, io::no_quote_escape<'\t'>> in("./data/processed/sites_with_scored_interactions.tsv");
     	in.read_header(io::ignore_extra_column, "gene_id", "gene_symbol", "transcript_id");
     	std::string column0, column1, column2;
     	while(in.read_row(column0, column1, column2)) {
             Gene gene(column0, column1, column2);
-        	Gene::gene_id_dictionary.insert( boost::bimap<Gene, int>::value_type(gene, i) );
+        	Gene::gene_id_dictionary.insert( boost::bimap<Gene, Gene_id>::value_type(gene, i) );
         	i++;
     	}
         std::ofstream out("gene_id_dictionary.bin");
@@ -68,14 +68,14 @@ void Gene::print_gene_dictionary(unsigned int max_rows)
     for(auto & e : Gene::gene_id_dictionary.left) {
         if(j++ < max_rows) {
             Gene & gene = const_cast<Gene &>(e.first);
-            int & i = const_cast<int &>(e.second);
+            Gene_id & i = const_cast<Gene_id &>(e.second);
             std::cout << "gene.gene_id = " << gene.gene_id << ", gene.gene_id_version = " << gene.gene_id_version << ", gene.gene_symbol = " << gene.gene_symbol << ", gene.transcript_id = " << gene.transcript_id << ", gene.transcript_id_version = " << gene.transcript_id_version << ", i = " << i << "\n";
         }
     }
 }
 
 template<class Archive>
-void Gene::serialize(Archive & ar, const unsigned int)
+void Gene::serialize(Archive & ar, const unsigned int version)
 {
     ar & this->gene_id & this->gene_id_version & this->gene_symbol & this->transcript_id & this->transcript_id_version;
 }
