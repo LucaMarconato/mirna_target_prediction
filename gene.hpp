@@ -50,4 +50,6 @@ namespace std {
     };
 }
 
+#include "gene.tpp"
+
 #endif // GENE_H

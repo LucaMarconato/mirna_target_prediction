@@ -3,30 +3,29 @@
 
 #include <iostream>
 #include <string>
-#include <list>
+#include <unordered_map>
+// #include <tuple>
 
 #include <boost/unordered_map.hpp>
 #include <boost/bimap.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/tuple/tuple.hpp>
+#include <boost/tuple/tuple_comparison.hpp>
 
-#include "seed_match_type.hpp"
 #include "mirna.hpp"
 #include "gene.hpp"
 
 class Site {
 private:
     Site();
+    Site(Mirna_id mirna_id, Gene_id gene_id, unsigned int utr_start, unsigned int utr_end);
 public:
     Mirna_id mirna_id;
     Gene_id gene_id;
     unsigned int utr_start, utr_end;
-    Seed_match_type seed_match_type;
-    double context_score, weighted_context_score;
-    bool conserved;
+
+    static std::unordered_map<boost::tuple<Mirna_id, Gene_id, unsigned int, unsigned int>, Site *> sites_by_location;
     
-    static std::list<Site *> all_sites;
-    
-    Site(Mirna_id mirna_id, Gene_id gene_id, unsigned int utr_start, unsigned int utr_end, Seed_match_type seed_match_type, double context_score, double weighted_context_score, bool conserved);
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version);
     /*
@@ -39,7 +38,7 @@ public:
       by checking if the generated data corresponds to the original one
     */
     // static void regenerate_original_file();
-    static Site * new_site(Mirna_id mirna_id, Gene_id gene_id, unsigned int utr_start, unsigned int utr_end, Seed_match_type seed_match_type, double context_score, double weighted_context_score, bool conserved);
+    static Site * get_site(Mirna_id mirna_id, Gene_id gene_id, unsigned int utr_start, unsigned int utr_end);
     static void delete_all_sites();
     static void save_all_sites();
     static void load_all_sites();
@@ -79,5 +78,22 @@ namespace std {
     };
 }
 
-#endif // SITE_H
+namespace std {
+    template <>
+    struct hash<boost::tuple<Mirna_id, Gene_id, unsigned int, unsigned int>>
+    {
+        size_t operator()(const boost::tuple<Mirna_id, Gene_id, unsigned int, unsigned int> & e) const noexcept
+        {
+            size_t seed = 0;
+            boost::hash_combine(seed, e.get<0>());
+            boost::hash_combine(seed, e.get<1>());
+            boost::hash_combine(seed, e.get<2>());
+            boost::hash_combine(seed, e.get<3>());
+            return seed;
+        }
+    };
+}
 
+#include "site.tpp"
+
+#endif // SITE_H

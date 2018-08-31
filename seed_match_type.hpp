@@ -30,4 +30,6 @@ public:
     friend std::ostream & operator<<(std::ostream & stream, const Seed_match_type & o);
 };
 
+#include "seed_match_type.tpp"
+
 #endif // SEED_MATCH_TYPE_H

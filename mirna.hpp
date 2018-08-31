@@ -28,19 +28,6 @@ public:
     /* // for accessing the private default constructor */
     template< class LeftType, class RightType, bool force_mutable >
     friend class boost::bimaps::relation::detail::relation_storage;
-
-    // std::string sequence;
-    // std::string id;
-    // static Mirna human_mirnas [3000];
-    // static std::unordered_map<std::string, int> mirna_id_to_int;
-
-    // Mirna();
-    // /\*
-    //   Only the first characters of site are used.
-    //   The string must be at least 7 nt long, otherwise an error will be raise.
-    // *\/
-    // Mirna_matching matches_with_string(char * site);
-    // static std::string format_mirna_matching(Mirna::Mirna_matching mirna_matching);
 };
 
 namespace std {
@@ -53,5 +40,7 @@ namespace std {
         }
     };
 }
+
+#include "mirna.tpp"
 
 #endif // MIRNA_H

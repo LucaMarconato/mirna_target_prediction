@@ -10,6 +10,8 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/filesystem.hpp>
 
+#include "timer.hpp"
+
 boost::bimap<Gene, Gene_id> Gene::gene_id_dictionary;
 
 Gene::Gene() {}
@@ -47,15 +49,23 @@ void Gene::initialize_gene_dictionary()
         	Gene::gene_id_dictionary.insert( boost::bimap<Gene, Gene_id>::value_type(gene, i) );
         	i++;
     	}
+        std::cout << "writing gene_id_dictionary.bin\n";
+        Timer::start();
         std::ofstream out("gene_id_dictionary.bin");
         boost::archive::binary_oarchive oa(out);
         oa << Gene::gene_id_dictionary;
         out.close();
+        std::cout << "written, ";
+        Timer::stop();
     } else {
+        std::cout << "loading gene_id_dictionary.bin\n";
+        Timer::start();
         std::ifstream in("gene_id_dictionary.bin");
         boost::archive::binary_iarchive ia(in);
         ia >> Gene::gene_id_dictionary;
         in.close();
+        std::cout << "loaded, ";
+        Timer::stop();
     }
 }
 
@@ -72,12 +82,6 @@ void Gene::print_gene_dictionary(unsigned int max_rows)
             std::cout << "gene.gene_id = " << gene.gene_id << ", gene.gene_id_version = " << gene.gene_id_version << ", gene.gene_symbol = " << gene.gene_symbol << ", gene.transcript_id = " << gene.transcript_id << ", gene.transcript_id_version = " << gene.transcript_id_version << ", i = " << i << "\n";
         }
     }
-}
-
-template<class Archive>
-void Gene::serialize(Archive & ar, const unsigned int version)
-{
-    ar & this->gene_id & this->gene_id_version & this->gene_symbol & this->transcript_id & this->transcript_id_version;
 }
 
 std::ostream & operator<<(std::ostream & stream, const Gene & o)

@@ -7,6 +7,8 @@
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/filesystem.hpp>
 
+#include "timer.hpp"
+
 boost::bimap<Mirna, Mirna_id> Mirna::mirna_id_dictionary;
 
 Mirna::Mirna() {}
@@ -30,15 +32,23 @@ void Mirna::initialize_mirna_dictionary()
             i++;
         }
         in.close();
+        std::cout << "writing mirna_id_dictionary.bin\n";
+        Timer::start();
         std::ofstream out("mirna_id_dictionary.bin", std::ios::binary);
         boost::archive::binary_oarchive oa(out);
         oa << Mirna::mirna_id_dictionary;
         out.close();
+        std::cout << "written, ";
+        Timer::stop();
     } else {
+        std::cout << "loading mirna_id_dictionary.bin\n";
+        Timer::start();
         std::ifstream in("mirna_id_dictionary.bin", std::ios::binary);
         boost::archive::binary_iarchive ia(in);        
         ia >> Mirna::mirna_id_dictionary;
         in.close();
+        std::cout << "loaded, ";
+        Timer::stop();
     }
 }
 
@@ -55,12 +65,6 @@ void Mirna::print_mirna_dictionary(unsigned int max_rows)
             std::cout << "mirna.mirna_family = " << mirna.mirna_family << ", i = " << i << "\n";            
         }
     }
-}
-
-template<class Archive>
-void Mirna::serialize(Archive & ar, const unsigned int version)
-{
-    ar & this->mirna_family;
 }
 
 bool operator<(Mirna const & lhs, Mirna const & rhs)

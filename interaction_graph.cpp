@@ -10,15 +10,18 @@
 #include <boost/filesystem.hpp>
 
 #include <strasser/csv.h>
+#include <sydius/serialize_tuple.h>
 
 #include "seed_match_type.hpp"
+#include "timer.hpp"
 
 #define Ig Interaction_graph
 
-Mirna_site_arc::Mirna_site_arc(double context_score, double weighted_context_score, bool conserved) : context_score(context_score), weighted_context_score(weighted_context_score), conserved(conserved) {}
+Mirna_site_arc::Mirna_site_arc(Seed_match_type seed_match_type, double context_score, double weighted_context_score, bool conserved) : seed_match_type(seed_match_type), context_score(context_score), weighted_context_score(weighted_context_score), conserved(conserved) {}
 
 Mirna_site_arc::Mirna_site_arc(const Mirna_site_arc & obj)
 {
+    this->seed_match_type = obj.seed_match_type;
     this->context_score = obj.context_score;
     this->weighted_context_score = obj.weighted_context_score;
     this->conserved = obj.conserved;
@@ -26,6 +29,7 @@ Mirna_site_arc::Mirna_site_arc(const Mirna_site_arc & obj)
 
 void swap(Mirna_site_arc & obj1, Mirna_site_arc & obj2)
 {
+    std::swap(obj1.seed_match_type,obj2.seed_match_type);
     std::swap(obj1.context_score,obj2.context_score);
     std::swap(obj1.weighted_context_score,obj2.weighted_context_score);
     std::swap(obj1.conserved,obj2.conserved);    
@@ -37,15 +41,9 @@ Mirna_site_arc & Mirna_site_arc::operator=(Mirna_site_arc obj)
     return *this;
 }
 
-template<class Archive>
-void Mirna_site_arc::serialize(Archive & ar, const unsigned int)
-{
-    ar & this->context_score & this->weighted_context_score & this->conserved;
-}
 // --------------------------------------------------
 
 std::unordered_map<Gene_id, std::list<Site *>> Ig::gene_to_sites_arcs;
-std::unordered_map<Site *, Gene_id> Ig::site_to_gene_arcs;
 std::unordered_map<std::pair<Mirna_id, Site *>, Mirna_site_arc> Ig::mirna_site_arcs;
 std::unordered_map<Mirna_id, std::list<Site *>> Ig::mirna_to_sites_arcs;
 std::unordered_map<Site *, std::list<Mirna_id>> Ig::site_to_mirnas_arcs;
@@ -55,7 +53,7 @@ std::unordered_map<Gene_id, std::list<Mirna_id>> Ig::gene_to_mirnas_arcs;
 
 void Ig::build_interaction_graph()
 {
-    if(!boost::filesystem::exists("all_genes.bin") || !boost::filesystem::exists("interaction_graph.bin")) {
+    if(!boost::filesystem::exists("all_sites.bin") || !boost::filesystem::exists("interaction_graph.bin")) {
         io::CSVReader<8, io::trim_chars<' '>, io::no_quote_escape<'\t'>> in("./data/processed/scored_interactions_processed.tsv");
         in.read_header(io::ignore_extra_column, "mirna_id",  "gene_id",  "utr_start",  "utr_end",  "seed_match_type",  "context_score",  "weighted_context_score", "conserved");
         std::string columns[8];
@@ -69,19 +67,17 @@ void Ig::build_interaction_graph()
             double context_score = std::strtod(columns[5].c_str(), nullptr);
             double weighted_context_score = std::strtod(columns[6].c_str(), nullptr);
             bool conserved = atoi(columns[7].c_str());
-            Site * site = Site::new_site(mirna_id, gene_id, utr_start, utr_end, seed_match_type, context_score, weighted_context_score, conserved);
+            Site * site = Site::get_site(mirna_id, gene_id, utr_start, utr_end);
 
             // create gene-site arcs
             if(Ig::gene_to_sites_arcs.find(gene_id) == Ig::gene_to_sites_arcs.end()) {
                 // this initialize the list as empty
                 Ig::gene_to_sites_arcs[gene_id];
             }
-            Ig::gene_to_sites_arcs[gene_id].push_back(site);
-        
-            Ig::site_to_gene_arcs[site] = gene_id;
+            Ig::gene_to_sites_arcs[gene_id].push_back(site);       
 
             // create mirna-site arcs
-            Mirna_site_arc mirna_site_arc(context_score, weighted_context_score, conserved);
+            Mirna_site_arc mirna_site_arc(seed_match_type, context_score, weighted_context_score, conserved);
             Ig::mirna_site_arcs[std::make_pair(mirna_id, site)] = mirna_site_arc;
         
             if(Ig::mirna_to_sites_arcs.find(mirna_id) == Ig::mirna_to_sites_arcs.end()) {
@@ -112,10 +108,12 @@ void Ig::build_interaction_graph()
             Ig::gene_to_mirnas_arcs[gene_id].push_back(mirna_id);
         }
         Site::save_all_sites();
+        std::cout << "writing interaction_graph.bin\n";
+        Timer::start();
         std::ofstream out("interaction_graph.bin", std::ios::binary);
         boost::archive::binary_oarchive oa(out);
-        oa << Ig::gene_to_sites_arcs;        
-        oa << Ig::site_to_gene_arcs;
+        oa << Site::sites_by_location;
+        oa << Ig::gene_to_sites_arcs;
         oa << Ig::mirna_site_arcs;
         oa << Ig::mirna_to_sites_arcs;
         oa << Ig::site_to_mirnas_arcs;
@@ -123,12 +121,16 @@ void Ig::build_interaction_graph()
         oa << Ig::mirna_to_genes_arcs;
         oa << Ig::gene_to_mirnas_arcs;
         out.close();
+        std::cout << "written, ";
+        Timer::stop();
     } else {
         Site::load_all_sites();
+        std::cout << "loading interaction_graph.bin\n";
+        Timer::start();
         std::ifstream in("interaction_graph.bin", std::ios::binary);
         boost::archive::binary_iarchive ia(in);
+        ia >> Site::sites_by_location;
         ia >> Ig::gene_to_sites_arcs;        
-        ia >> Ig::site_to_gene_arcs;
         ia >> Ig::mirna_site_arcs;
         ia >> Ig::mirna_to_sites_arcs;
         ia >> Ig::site_to_mirnas_arcs;
@@ -136,5 +138,7 @@ void Ig::build_interaction_graph()
         ia >> Ig::mirna_to_genes_arcs;
         ia >> Ig::gene_to_mirnas_arcs;
         in.close();
+        std::cout << "loaded, ";
+        Timer::stop();
     }
 }

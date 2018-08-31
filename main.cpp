@@ -28,6 +28,7 @@ int main(int argc, char * argv[])
     Interaction_graph::build_interaction_graph();
 
     Site::delete_all_sites();
+    std::cout << "cleaning up\n";
     return 0;
 }
 

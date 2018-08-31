@@ -5,39 +5,24 @@
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
-#include <boost/serialization/list.hpp>
 
 #include <strasser/csv.h>
 #include <marconato/output_buffer/output_buffer.hpp>
 
-std::list<Site *> Site::all_sites;
+#include "timer.hpp"
+#include "seed_match_type.hpp"
+
+std::unordered_map<boost::tuple<Mirna_id, Gene_id, unsigned int, unsigned int>, Site *> Site::sites_by_location;
 
 Site::Site() {}
 
-Site::Site(Mirna_id mirna_id, Gene_id gene_id, unsigned int utr_start, unsigned int utr_end, Seed_match_type seed_match_type, double context_score, double weighted_context_score, bool conserved) :
+Site::Site(Mirna_id mirna_id, Gene_id gene_id, unsigned int utr_start, unsigned int utr_end) :
     mirna_id(mirna_id), 
     gene_id(gene_id), 
     utr_start(utr_start), 
-    utr_end(utr_end), 
-    seed_match_type(seed_match_type), 
-    context_score(context_score), 
-    weighted_context_score(weighted_context_score), 
-    conserved(conserved)
+    utr_end(utr_end)
 {
     
-}
-
-template<class Archive>
-void Site::serialize(Archive & ar, const unsigned int version)
-{
-    ar & this->mirna_id;
-    ar & this->gene_id;
-    ar & this->utr_start;
-    ar & this->utr_end;
-    ar & this->seed_match_type;
-    ar & this->context_score;
-    ar & this->weighted_context_score;
-    ar & this->conserved;
 }
 
 void Site::reduce_size_of_scored_interactions_file()
@@ -93,38 +78,54 @@ void Site::reduce_size_of_scored_interactions_file()
 //     }
 // }
 
-Site * Site::new_site(Mirna_id mirna_id, Gene_id gene_id, unsigned int utr_start, unsigned int utr_end, Seed_match_type seed_match_type, double context_score, double weighted_context_score, bool conserved)
+Site * Site::get_site(Mirna_id mirna_id, Gene_id gene_id, unsigned int utr_start, unsigned int utr_end)
 {
-    Site * site = new Site(mirna_id, gene_id, utr_start, utr_end, seed_match_type, context_score, weighted_context_score, conserved);
-    Site::all_sites.push_back(site);
-    return site;
+    auto t = boost::make_tuple(mirna_id, gene_id, utr_start, utr_end);
+    auto e = Site::sites_by_location.find(t);
+    if(e != Site::sites_by_location.end()) {
+        return e->second;
+    } else {
+        Site * site = new Site(mirna_id, gene_id, utr_start, utr_end);
+        Site::sites_by_location[boost::make_tuple(mirna_id, gene_id, utr_start, utr_end)] = site;
+        return site;   
+    }
 }
 
 void Site::delete_all_sites()
 {
-    for(auto & e : Site::all_sites) {
-        delete e;
+    Timer::start();
+    std::cout << "deleting all_sites\n";
+    for(auto & e : Site::sites_by_location) {
+        delete e.second;
     }
+    std::cout << "deleted, ";
+    Timer::stop();
 }
 
-void Site::save_all_sites()
-{
-    std::ofstream out("all_sites.bin", std::ios::binary);
-    boost::archive::binary_oarchive oa(out);
-    oa << Site::all_sites;
-    out.close();
-}
+// void Site::save_all_sites()
+// {
+//     Timer::start();
+//     std::ofstream out("all_sites.bin", std::ios::binary);
+//     boost::archive::binary_oarchive oa(out);
+//     oa << Site::all_sites;
+//     out.close();
+//     std::cout << "written, ";
+//     Timer::stop();
+// }
 
-void Site::load_all_sites()
-{
-    std::ifstream in("all_sites.bin", std::ios::binary);
-    boost::archive::binary_iarchive ia(in);
-    ia >> Site::all_sites;
-    in.close();
-}
+// void Site::load_all_sites()
+// {
+//     std::cout << "loading all_sites.bin\n";
+//     Timer::start();
+//     std::ifstream in("all_sites.bin", std::ios::binary);
+//     boost::archive::binary_iarchive ia(in);
+//     ia >> Site::all_sites;
+//     in.close();
+//     std::cout << "loaded, ";
+//     Timer::stop();
+// }
 
 std::ostream & operator<<(std::ostream & stream, const Site & o)
 {
-    return stream << "utr_start = " << o.utr_start << ", utr_end = " << o.utr_end << ", seed_match_type = " << o.seed_match_type << ", context_score = " << o.context_score << ", weighted_context_score = " << o.weighted_context_score << ", conserved = " << o.
-conserved << "\n";
+    return stream << "utr_start = " << o.utr_start << ", utr_end = " << o.utr_end << "\n";
 }

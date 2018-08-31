@@ -15,12 +15,6 @@ Seed_match_type::Seed_match_type(Seed_match_type::Mirna_site_matching mirna_site
     this->match_type = mirna_site_matching;
 }
 
-template<class Archive>
-void Seed_match_type::serialize(Archive & ar, const unsigned int version)
-{
-    ar & this->match_type;
-}
-
 std::string Seed_match_type::format_mirna_matching(Seed_match_type::Mirna_site_matching mirna_matching)
 {    
     switch(mirna_matching) {
