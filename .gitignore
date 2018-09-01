@@ -1,1 +1,5 @@
 *.bin
+data/raw
+data/processed
+data/interactions.RData
+CMakeFiles
