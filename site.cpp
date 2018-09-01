@@ -9,10 +9,7 @@
 #include <strasser/csv.h>
 #include <marconato/output_buffer/output_buffer.hpp>
 
-#include "timer.hpp"
 #include "seed_match_type.hpp"
-
-std::unordered_map<boost::tuple<Mirna_id, Gene_id, unsigned int, unsigned int>, Site *> Site::sites_by_location;
 
 Site::Site() {}
 
@@ -66,64 +63,6 @@ void Site::reduce_size_of_scored_interactions_file()
         ob.add_chunk((void *)(s.c_str()),s.size());
     }
 }
-
-// void Site::regenerate_original_file()
-// {
-//     Output_buffer ob("./data/processed/scored_interactions_test.tsv", 1024*1024*1024, 1000);
-//     std::string header = "mirna_family\tgene_id\tgene_symbol\ttranscript_id\tutr_start\tutr_end\tseed_match_type\tcontext_score\tweighted_context_score\tconserved";
-//     ob.add_chunk(header);
-//     int mirna_count = Mirna::mirna_id_dictionary.size();
-//     for(int i = 0; i < mirna_count; i++) {
-//         std::string 
-//     }
-// }
-
-Site * Site::get_site(Mirna_id mirna_id, Gene_id gene_id, unsigned int utr_start, unsigned int utr_end)
-{
-    auto t = boost::make_tuple(mirna_id, gene_id, utr_start, utr_end);
-    auto e = Site::sites_by_location.find(t);
-    if(e != Site::sites_by_location.end()) {
-        return e->second;
-    } else {
-        Site * site = new Site(mirna_id, gene_id, utr_start, utr_end);
-        Site::sites_by_location[boost::make_tuple(mirna_id, gene_id, utr_start, utr_end)] = site;
-        return site;   
-    }
-}
-
-void Site::delete_all_sites()
-{
-    Timer::start();
-    std::cout << "deleting all_sites\n";
-    for(auto & e : Site::sites_by_location) {
-        delete e.second;
-    }
-    std::cout << "deleted, ";
-    Timer::stop();
-}
-
-// void Site::save_all_sites()
-// {
-//     Timer::start();
-//     std::ofstream out("all_sites.bin", std::ios::binary);
-//     boost::archive::binary_oarchive oa(out);
-//     oa << Site::all_sites;
-//     out.close();
-//     std::cout << "written, ";
-//     Timer::stop();
-// }
-
-// void Site::load_all_sites()
-// {
-//     std::cout << "loading all_sites.bin\n";
-//     Timer::start();
-//     std::ifstream in("all_sites.bin", std::ios::binary);
-//     boost::archive::binary_iarchive ia(in);
-//     ia >> Site::all_sites;
-//     in.close();
-//     std::cout << "loaded, ";
-//     Timer::stop();
-// }
 
 std::ostream & operator<<(std::ostream & stream, const Site & o)
 {

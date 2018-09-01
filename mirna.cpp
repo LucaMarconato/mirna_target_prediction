@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -27,6 +28,7 @@ void Mirna::initialize_mirna_dictionary()
         Mirna_id i = 0;
         while(!in.eof()) {
             getline(in, line);
+            std::transform(line.begin(), line.end(), line.begin(), ::tolower);
             Mirna mirna(line);
             Mirna::mirna_id_dictionary.insert( boost::bimap<Mirna, Mirna_id>::value_type(mirna, i) );
             i++;

@@ -26,7 +26,7 @@ Gene::Gene(std::string gene_id_and_version, std::string gene_symbol, std::string
         int pos = to_split.find(".");
         if(pos != std::string::npos) {
             id = to_split.substr(0, pos);
-            version = atoi(to_split.substr(pos + 1, 1).c_str());                                             
+            version = atoi(to_split.substr(pos + 1, to_split.size() - 1 - id.size()).c_str());
         } else {
             id = to_split;
             version = -1;

@@ -1,62 +1,67 @@
 [
 {
   "directory": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles",
-  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++   -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Ofast -o CMakeFiles/expression_profiles.dir/expression_profile.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/expression_profile.cpp",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++    -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Wall -g -O0 -o CMakeFiles/expression_profiles.dir/expression_profile.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/expression_profile.cpp",
   "file": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/expression_profile.cpp"
 },
 {
   "directory": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles",
-  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++   -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Ofast -o CMakeFiles/expression_profiles.dir/gene.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/gene.cpp",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++    -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Wall -g -O0 -o CMakeFiles/expression_profiles.dir/gene.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/gene.cpp",
   "file": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/gene.cpp"
 },
 {
   "directory": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles",
-  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++   -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Ofast -o CMakeFiles/expression_profiles.dir/gene_expression_profile.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/gene_expression_profile.cpp",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++    -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Wall -g -O0 -o CMakeFiles/expression_profiles.dir/gene_expression_profile.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/gene_expression_profile.cpp",
   "file": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/gene_expression_profile.cpp"
 },
 {
   "directory": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles",
-  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++   -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Ofast -o CMakeFiles/expression_profiles.dir/interaction_graph.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/interaction_graph.cpp",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++    -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Wall -g -O0 -o CMakeFiles/expression_profiles.dir/interaction_graph.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/interaction_graph.cpp",
   "file": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/interaction_graph.cpp"
 },
 {
   "directory": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles",
-  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++   -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Ofast -o CMakeFiles/expression_profiles.dir/main.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/main.cpp",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++    -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Wall -g -O0 -o CMakeFiles/expression_profiles.dir/main.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/main.cpp",
   "file": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/main.cpp"
 },
 {
   "directory": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles",
-  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++   -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Ofast -o CMakeFiles/expression_profiles.dir/matching.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/matching.cpp",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++    -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Wall -g -O0 -o CMakeFiles/expression_profiles.dir/matching.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/matching.cpp",
   "file": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/matching.cpp"
 },
 {
   "directory": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles",
-  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++   -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Ofast -o CMakeFiles/expression_profiles.dir/mirna.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/mirna.cpp",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++    -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Wall -g -O0 -o CMakeFiles/expression_profiles.dir/mirna.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/mirna.cpp",
   "file": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/mirna.cpp"
 },
 {
   "directory": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles",
-  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++   -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Ofast -o CMakeFiles/expression_profiles.dir/mirna_expression_profile.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/mirna_expression_profile.cpp",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++    -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Wall -g -O0 -o CMakeFiles/expression_profiles.dir/mirna_expression_profile.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/mirna_expression_profile.cpp",
   "file": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/mirna_expression_profile.cpp"
 },
 {
   "directory": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles",
-  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++   -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Ofast -o CMakeFiles/expression_profiles.dir/seed_match_type.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/seed_match_type.cpp",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++    -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Wall -g -O0 -o CMakeFiles/expression_profiles.dir/patient.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/patient.cpp",
+  "file": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/patient.cpp"
+},
+{
+  "directory": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++    -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Wall -g -O0 -o CMakeFiles/expression_profiles.dir/seed_match_type.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/seed_match_type.cpp",
   "file": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/seed_match_type.cpp"
 },
 {
   "directory": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles",
-  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++   -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Ofast -o CMakeFiles/expression_profiles.dir/site.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/site.cpp",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++    -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Wall -g -O0 -o CMakeFiles/expression_profiles.dir/site.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/site.cpp",
   "file": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/site.cpp"
 },
 {
   "directory": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles",
-  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++   -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Ofast -o CMakeFiles/expression_profiles.dir/site_expression_profile.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/site_expression_profile.cpp",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++    -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Wall -g -O0 -o CMakeFiles/expression_profiles.dir/site_expression_profile.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/site_expression_profile.cpp",
   "file": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/site_expression_profile.cpp"
 },
 {
   "directory": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles",
-  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++   -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Ofast -o CMakeFiles/expression_profiles.dir/timer.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/timer.cpp",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++    -I/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Wall -g -O0 -o CMakeFiles/expression_profiles.dir/timer.cpp.o -c /Users/macbook/bioinformatics/thesis/simulations/expression_profiles/timer.cpp",
   "file": "/Users/macbook/bioinformatics/thesis/simulations/expression_profiles/timer.cpp"
 }
 ]
