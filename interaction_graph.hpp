@@ -3,8 +3,13 @@
 
 #include <list>
 #include <utility>
-
 #include <unordered_map>
+#include <set>
+
+#include <boost/serialization/list.hpp>
+#include <boost/serialization/unordered_map.hpp>
+
+#include <sohail/serialize_tuple.hpp>
 
 #include "mirna.hpp"
 #include "gene.hpp"
@@ -31,22 +36,28 @@ public:
 };
 
 class Interaction_graph {
-public:
-    static std::unordered_map<boost::tuple<Mirna_id, Gene_id, unsigned int, unsigned int>, Site *> sites_by_location;
+public:    
+    std::unordered_map<boost::tuple<Mirna_id, Gene_id, unsigned int, unsigned int>, Site *> sites_by_location;
     // gene-site arcs
-    static std::unordered_map<Gene_id, std::list<Site *>> gene_to_sites_arcs;
+    std::unordered_map<Gene_id, std::list<Site *>> gene_to_sites_arcs;
     // mirna-site arcs
-    static std::unordered_map<std::pair<Mirna_id, Site *>, Mirna_site_arc> mirna_site_arcs;
-    static std::unordered_map<Mirna_id, std::list<Site *>> mirna_to_sites_arcs;
-    static std::unordered_map<Site *, std::list<Mirna_id>> site_to_mirnas_arcs;
+    std::unordered_map<std::pair<Mirna_id, Site *>, Mirna_site_arc> mirna_site_arcs;
+    std::unordered_map<Mirna_id, std::list<Site *>> mirna_to_sites_arcs;
+    std::unordered_map<Site *, std::list<Mirna_id>> site_to_mirnas_arcs;
     // mirna-gene arcs
-    static std::unordered_map<std::pair<Mirna_id, Gene_id>, std::list<Site *>> mirna_gene_arcs;
-    static std::unordered_map<Mirna_id, std::list<Gene_id>> mirna_to_genes_arcs;
-    static std::unordered_map<Gene_id, std::list<Mirna_id>> gene_to_mirnas_arcs;
+    std::unordered_map<std::pair<Mirna_id, Gene_id>, std::list<Site *>> mirna_gene_arcs;
+    std::unordered_map<Mirna_id, std::list<Gene_id>> mirna_to_genes_arcs;
+    std::unordered_map<Gene_id, std::list<Mirna_id>> gene_to_mirnas_arcs;
+    unsigned long long rows_processed = 0;
+    unsigned long long rows_skipped = 0;
 
-    static void build_interaction_graph();
-    static Site * get_site(Mirna_id mirna_id, Gene_id gene_id, unsigned int utr_start, unsigned int utr_end);
-    static void delete_all_sites();
+    Interaction_graph();
+    void build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> & genes);
+    Site * get_site(Mirna_id mirna_id, Gene_id gene_id, unsigned int utr_start, unsigned int utr_end);
+    void print_statistics();
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version);
+    ~Interaction_graph();
 };
 
 #include "interaction_graph.tpp"

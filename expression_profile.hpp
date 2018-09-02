@@ -3,36 +3,37 @@
 
 struct Relative_expression {
     double value;
+    bool undefined = true;
+    bool normalized = false;
     
-    Relative_expression() {}
-    Relative_expression(const Relative_expression & obj) {
-        this->value = obj.value;
-    }
-    Relative_expression(double value) : value(value) {}
+    Relative_expression();
+    Relative_expression(const Relative_expression & obj);
+    Relative_expression(double value);
     void swap(Relative_expression & obj);
+    void normalize(double normalization_factor);
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version);
 };
 struct Reads {
     unsigned long long value;
+    bool undefined = true;
     
-    Reads() {}
-    Reads(Reads & obj) {
-        this->value = obj.value;
-    }
-    Reads(unsigned long long value) : value(value) {}
+    Reads();
+    Reads(const Reads & obj);
+    Reads(unsigned long long value);
+    void swap(Reads & obj);
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version);
 };
 // reads per million
 struct Rpm {
     double value;
+    bool undefined = true;
     
-    Rpm() {}
-    Rpm(Reads & obj) {
-        this->value = obj.value;
-    }
-    Rpm(double value) : value(value) {}
+    Rpm();
+    Rpm(const Rpm & obj);
+    Rpm(double value);
+    void swap(Rpm & obj);
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version);
 };
@@ -40,15 +41,21 @@ struct Rpm {
 class Expression {
 private:
     Relative_expression relative_expression;
-    bool to_normalize = false;    
+    Reads reads;
+    Rpm rpm;    
+    bool normalization_factor;
 public:    
     Expression();
     Expression(Relative_expression relative_expression);
     Expression(Reads reads);
     Expression(Rpm rpm);
-    Rpm to_rpm();
     Relative_expression to_relative_expression();
+    Reads to_reads();
+    Rpm to_rpm();
+    void normalize_relative_expression(double total_relative_expression);
     void normalize_reads(double total_reads);
+    void normalize_rpm(double total_rpm);
+    double get_normalization_factor();
     Expression & operator=(Expression obj);
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version);

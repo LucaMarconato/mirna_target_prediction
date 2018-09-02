@@ -4,9 +4,69 @@
 #include <cmath>
 #include <algorithm>
 
+// --------------------------------------------------
+
+Relative_expression::Relative_expression() {}
+
+Relative_expression::Relative_expression(const Relative_expression & obj) {
+    this->value = obj.value;
+    this->undefined = obj.undefined;
+    this->normalized = obj.normalized;
+}
+
+Relative_expression::Relative_expression(double value) : value(value) {
+    undefined = false;
+}
+
 void Relative_expression::swap(Relative_expression & obj)
 {
     std::swap(this->value, obj.value);
+    std::swap(this->undefined, obj.undefined);
+    std::swap(this->normalized, obj.normalized);
+}
+
+void Relative_expression::normalize(double normalization_factor)
+{
+    this->value /= normalization_factor;
+    this->normalized = true;
+}
+
+// --------------------------------------------------
+
+Reads::Reads() {}
+
+Reads::Reads(const Reads & obj) {
+    this->value = obj.value;
+    this->undefined = obj.undefined;
+}
+
+Reads::Reads(unsigned long long value) : value(value) {
+    undefined = false;
+}
+
+void Reads::swap(Reads & obj)
+{
+    std::swap(this->value, obj.value);
+    std::swap(this->undefined, obj.undefined);
+}
+
+// --------------------------------------------------
+
+Rpm::Rpm() {}
+
+Rpm::Rpm(const Rpm & obj) {
+    this->value = obj.value;
+    this->undefined = obj.undefined;
+}
+
+Rpm::Rpm(double value) : value(value) {
+    undefined = false;
+}
+
+void Rpm::swap(Rpm & obj)
+{
+    std::swap(this->value, obj.value);
+    std::swap(this->undefined, obj.undefined);
 }
 
 // --------------------------------------------------
@@ -65,4 +125,13 @@ void Expression::normalize_reads(double total_reads)
         exit(1);
     }
     this->relative_expression.value /= (double)total_reads;
+}
+
+double Expression::get_normalization_factor()
+{
+    if(!this->to_normalize) {
+        std::cerr << "error: normalize_reads(" << total_reads << "), this->to_normalize = " << this->to_normalize << "\n";
+        exit(1);
+    }
+    return this->normalization_factor;
 }

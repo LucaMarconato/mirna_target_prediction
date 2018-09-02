@@ -55,7 +55,8 @@ void Gep::load_from_gdc_file(std::string filename, std::string patient_folder)
                 this->profile[gene_id] = expression;
             }
         }
-
+        total_reads = this->recognized_reads + this->not_recognized_reads;
+        total_distinct_genes = this->recognized_distinct_genes + this->not_recognized_distinct_genes;
         for(auto & e : this->profile) {
             e.second.normalize_reads(total_reads);
         }
@@ -66,7 +67,6 @@ void Gep::load_from_gdc_file(std::string filename, std::string patient_folder)
 void Gep::print_statistics()
 {
     if(this->initialized) {
-        total_distinct_genes = this->recognized_distinct_genes + this->not_recognized_distinct_genes;
         total_reads = this->recognized_reads + this->not_recognized_reads;
         std::cout << "recognized_distinct_genes/total_distinct_genes: " << recognized_distinct_genes << "/" << total_distinct_genes << " = " << ((double)recognized_distinct_genes)/total_distinct_genes << "\n";
         std::cout << "recognized_reads/total_reads: " << recognized_reads << "/" << total_reads << " = " << ((double)recognized_reads)/total_reads << "\n";

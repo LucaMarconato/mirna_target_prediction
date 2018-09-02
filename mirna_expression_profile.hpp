@@ -16,9 +16,12 @@ public:
     double not_recognized_rpm = 0.0;
     unsigned long long total_distinct_mirnas;
     double total_rpm;
+    unsigned long long filtered_out_distinct_mirnas = 0;
+    double filtered_out_rpm = 0.0;
 
     void load_from_gdc_file(std::string filename, std::string patient_folder);
     void print_statistics();
+    void filter(double threshold_rpm);
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version);
 };

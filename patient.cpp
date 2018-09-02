@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <set>
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -31,25 +32,40 @@ Patient::Patient(std::string case_id) : case_id(case_id)
             in.close();
             
             std::string file_prefix = patient_folder;
-            std::string normal_mirna_file = j["normal_mirna"]["uuid"].get<std::string>() + "/" + j["normal_mirna"]["file"].get<std::string>();
-            std::string normal_mrna_file = j["normal_mrna"]["uuid"].get<std::string>() + "/" + j["normal_mrna"]["file"].get<std::string>();
-            std::string tumor_mirna_file = j["tumor_mirna"]["uuid"].get<std::string>() + "/" + j["tumor_mirna"]["file"].get<std::string>();
-            std::string tumor_mrna_file = j["tumor_mrna"]["uuid"].get<std::string>() + "/" + j["tumor_mrna"]["file"].get<std::string>();
-            // std::cout << "normal_mirna_file = " << normal_mirna_file << ", normal_mrna_file = " << normal_mrna_file << ", tumor_mirna_file = " << tumor_mirna_file << ", tumor_mrna_file = " << tumor_mrna_file << "\n";
+            std::string normal_mirnas_file = j["normal_mirnas"]["uuid"].get<std::string>() + "/" + j["normal_mirnas"]["file"].get<std::string>();
+            std::string normal_genes_file = j["normal_genes"]["uuid"].get<std::string>() + "/" + j["normal_genes"]["file"].get<std::string>();
+            std::string tumor_mirnas_file = j["tumor_mirnas"]["uuid"].get<std::string>() + "/" + j["tumor_mirnas"]["file"].get<std::string>();
+            std::string tumor_genes_file = j["tumor_genes"]["uuid"].get<std::string>() + "/" + j["tumor_genes"]["file"].get<std::string>();
+            // std::cout << "normal_mirnas_file = " << normal_mirnas_file << ", normal_genes_file = " << normal_genes_file << ", tumor_mirnas_file = " << tumor_mirnas_file << ", tumor_genes_file = " << tumor_genes_file << "\n";
 
-            this->normal_mirna.load_from_gdc_file(normal_mirna_file, patient_folder);
-            this->normal_mrna.load_from_gdc_file(normal_mrna_file, patient_folder);
-            this->tumor_mirna.load_from_gdc_file(tumor_mirna_file, patient_folder);
-            this->tumor_mrna.load_from_gdc_file(tumor_mrna_file, patient_folder);
+            this->normal_mirnas.load_from_gdc_file(normal_mirnas_file, patient_folder);
+            this->normal_genes.load_from_gdc_file(normal_genes_file, patient_folder);
+            this->tumor_mirnas.load_from_gdc_file(tumor_mirnas_file, patient_folder);
+            this->tumor_genes.load_from_gdc_file(tumor_genes_file, patient_folder);
 
-            // TODO: build interaction graph, which must not be static!!!!!!!!!!!
+            std::set<Mirna_id> mirnas;
+            for(auto & e : this->normal_mirnas.profile) {
+                mirnas.insert(e.first);
+            }
+            for(auto & e : this->tumor_mirnas.profile) {
+                mirnas.insert(e.first);
+            }
+            std::set<Gene_id> genes;
+            for(auto & e : this->normal_genes.profile) {
+                genes.insert(e.first);
+            }
+            for(auto & e : this->tumor_genes.profile) {
+                genes.insert(e.first);
+            }
+            this->interaction_graph.build_interaction_graph(mirnas, genes);
             
             std::cout << "writing " << patient_file << "\n";
             Timer::start();
             std::ofstream out(patient_file, std::ios::binary);
             boost::archive::binary_oarchive oa(out);
-            oa << this->normal_mirna << this->normal_mrna << this->tumor_mirna << this->tumor_mrna;
-            // TODO: save the interaction graph
+            oa << this->case_id;
+            oa << this->normal_mirnas << this->normal_genes << this->tumor_mirnas << this->tumor_genes;
+            oa << this->interaction_graph;
             out.close();
             std::cout << "written, ";
             Timer::stop();
@@ -58,15 +74,17 @@ Patient::Patient(std::string case_id) : case_id(case_id)
             Timer::start();
             std::ifstream in(patient_file, std::ios::binary);
             boost::archive::binary_iarchive ia(in);
-            ia >> this->normal_mirna >> this->normal_mrna >> this->tumor_mirna >> this->tumor_mrna;
-            // TODO: load the interaction graph
+            in >> this->case_id;
+            ia >> this->normal_mirnas >> this->normal_genes >> this->tumor_mirnas >> this->tumor_genes;            
+            ia >> this->interaction_graph;
             in.close();
             std::cout << "loaded, ";
             Timer::stop();
         }
-        this->normal_mirna.print_statistics();
-        this->normal_mrna.print_statistics();
-        this->tumor_mirna.print_statistics();
-        this->tumor_mrna.print_statistics();
+        this->normal_mirnas.print_statistics();
+        this->normal_genes.print_statistics();
+        this->tumor_mirnas.print_statistics();
+        this->tumor_genes.print_statistics();
+        this->interaction_graph.print_statistics();
     }
 }

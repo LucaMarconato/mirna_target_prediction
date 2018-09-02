@@ -46,6 +46,9 @@ void Mep::load_from_gdc_file(std::string filename, std::string patient_folder)
                 this->profile[mirna_id] = expression;
             }
         }
+        this->total_distinct_mirnas = this->recognized_distinct_mirnas + this->not_recognized_distinct_mirnas;
+        this->total_rpm = this->recognized_rpm + this->not_recognized_rpm;
+        this->filter(1.0);
         this->initialized = true;
     }
 }
@@ -53,9 +56,32 @@ void Mep::load_from_gdc_file(std::string filename, std::string patient_folder)
 void Mep::print_statistics()
 {
     if(this->initialized) {
-        this->total_distinct_mirnas = this->recognized_distinct_mirnas + this->not_recognized_distinct_mirnas;
-        this->total_rpm = this->recognized_rpm + this->not_recognized_rpm;
         std::cout << "recognized_distinct_mirnas/total_distinct_mirnas: " << recognized_distinct_mirnas << "/" << total_distinct_mirnas << " = " << ((double)recognized_distinct_mirnas)/total_distinct_mirnas << "\n";
-        std::cout << "recognized_rpm/total_rpm: " << recognized_rpm << "/" << total_rpm << " = " << ((double)recognized_rpm)/total_rpm << "\n";        
+        std::cout << "recognized_rpm/total_rpm: " << recognized_rpm << "/" << total_rpm << " = " << ((double)recognized_rpm)/total_rpm << "\n";
+        std::cout << "filtered_out_distinct_mirnas/total_distinct_mirnas: " << filtered_out_distinct_mirnas << "/" << total_distinct_mirnas << " = " << ((double)filtered_out_distinct_mirnas)/total_distinct_mirnas << "\n";
+        std::cout << "filtered_out_rpm/total_rpm: " << filtered_out_rpm << "/" << total_rpm << " = " << ((double)filtered_out_rpm)/total_rpm << "\n";
+        std::cout << "remaining = recognized - filtered_out\n";
+        std::cout << "remaining/total_distinct_mirnas: " << (recognized_distinct_mirnas - filtered_out_distinct_mirnas) << "/" << total_distinct_mirnas << " = " << ((double)(recognized_distinct_mirnas - filtered_out_distinct_mirnas))/total_distinct_mirnas << "\n";
+        std::cout << "remaining/total_rpm: " << (recognized_rpm - filtered_out_rpm) << "/" << total_rpm << " = " << ((double)(recognized_rpm - filtered_out_rpm))/total_rpm << "\n";
     }
+}
+
+void Mirna_expression_profile::filter(double threshold_rpm)
+{
+    unsigned long long newly_filtered_out_distinct_mirnas = 0.0;
+    double newly_filtered_out_rpm = 0.0;
+    for(std::unordered_map<Mirna_id, Expression>::iterator it = this->profile.begin(); it != this->profile.end();) {
+        double rpm = it->second.to_rpm().value;
+        if(rpm < threshold_rpm) {
+            newly_filtered_out_distinct_mirnas++;
+            newly_filtered_out_rpm += rpm;
+            it = this->profile.erase(it++);
+        } else {
+            ++it;
+        }
+    }
+    std::cout << "newly_filtered_out_distinc_mirnas/recognized_distinct_mirnas: " << newly_filtered_out_distinct_mirnas << "/" << recognized_distinct_mirnas << " = " << ((double)newly_filtered_out_distinct_mirnas)/recognized_distinct_mirnas << "\n";
+    std::cout << "newly_filtered_out_rpm/recognized_rpm: " << newly_filtered_out_rpm << "/" << recognized_rpm << " = " << ((double)newly_filtered_out_rpm)/recognized_rpm << "\n";
+    this->filtered_out_distinct_mirnas += newly_filtered_out_distinct_mirnas;
+    this->filtered_out_rpm += newly_filtered_out_rpm;
 }
