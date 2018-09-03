@@ -1,0 +1,6 @@
+#!/bin/bash
+cd build
+CC=clang
+CXX=clang++
+cmake ../
+make -C ../
