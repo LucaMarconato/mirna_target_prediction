@@ -4,7 +4,6 @@
 #include "gene.hpp"
 #include "site.hpp"
 #include "patient.hpp"
-// #include "interaction_graph.hpp"
 
 int main(int argc, char * argv[])
 {

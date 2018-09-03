@@ -66,14 +66,14 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
         bool conserved = atoi(columns[7].c_str());
         Site * site = this->get_site(mirna_id, gene_id, utr_start, utr_end);
 
-        // create gene-site arcs
+        // create gene_site arcs
         if(this->gene_to_sites_arcs.find(gene_id) == this->gene_to_sites_arcs.end()) {
             // this initialize the list as empty
             this->gene_to_sites_arcs[gene_id];
         }
         this->gene_to_sites_arcs[gene_id].push_back(site);       
 
-        // create mirna-site arcs
+        // create mirna_site arcs
         Mirna_site_arc mirna_site_arc(seed_match_type, context_score, weighted_context_score, conserved);
         this->mirna_site_arcs[std::make_pair(mirna_id, site)] = mirna_site_arc;
         
@@ -87,7 +87,7 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
         }
         this->site_to_mirnas_arcs[site].push_back(mirna_id);
         
-        // create mirna-gene arcs
+        // create mirna_gene arcs
         auto p = std::make_pair(mirna_id, gene_id);
         if(this->mirna_gene_arcs.find(p) == this->mirna_gene_arcs.end()) {
             this->mirna_gene_arcs[p];
@@ -125,13 +125,13 @@ void Ig::print_statistics()
 {
     std::cout << "rows_processed/rows_skipped = " << rows_processed << "/" << rows_skipped << " = " << ((double)rows_processed)/rows_skipped << "\n";
     std::cout << "sites_by_location.size() = " << sites_by_location.size() << "\n";
-    std::cout << "gene-site arcs:\n";
+    std::cout << "arcs: gene_site\n";
     std::cout << "gene_to_sites_arcs.size() = " << gene_to_sites_arcs.size() << "\n";
-    std::cout << "mirna-site arcs:\n";
+    std::cout << "arcs: mirna_site\n";
     std::cout << "mirna_site_arcs.size() = " << mirna_site_arcs.size() << "\n";
     std::cout << "mirna_to_sites_arcs.size() = " << mirna_to_sites_arcs.size() << "\n";
     std::cout << "site_to_mirnas_arcs.size() = " << site_to_mirnas_arcs.size() << "\n";
-    std::cout << "mirna-gene arcs:\n";
+    std::cout << "arcs: mirna_gene\n";
     std::cout << "mirna_gene_arcs.size() = " << mirna_gene_arcs.size() << "\n";
     std::cout << "mirna_to_genes_arcs.size() = " << mirna_to_genes_arcs.size() << "\n";
     std::cout << "gene_to_mirnas_arcs.size() = " << gene_to_mirnas_arcs.size() << "\n";

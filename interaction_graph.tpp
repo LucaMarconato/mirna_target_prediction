@@ -7,7 +7,7 @@ void Mirna_site_arc::serialize(Archive & ar, const unsigned int)
 template<class Archive>
 void Interaction_graph::serialize(Archive & ar, const unsigned int version)
 {
-    //ar & this->sites_by_location;
+    ar & this->sites_by_location;
     ar & this->gene_to_sites_arcs;
     ar & this->mirna_site_arcs;
     ar & this->mirna_to_sites_arcs;

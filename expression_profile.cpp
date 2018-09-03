@@ -11,7 +11,6 @@ Relative_expression::Relative_expression() {}
 Relative_expression::Relative_expression(const Relative_expression & obj) {
     this->value = obj.value;
     this->undefined = obj.undefined;
-    this->normalized = obj.normalized;
 }
 
 Relative_expression::Relative_expression(double value) : value(value) {
@@ -22,13 +21,6 @@ void Relative_expression::swap(Relative_expression & obj)
 {
     std::swap(this->value, obj.value);
     std::swap(this->undefined, obj.undefined);
-    std::swap(this->normalized, obj.normalized);
-}
-
-void Relative_expression::normalize(double normalization_factor)
-{
-    this->value /= normalization_factor;
-    this->normalized = true;
 }
 
 // --------------------------------------------------
@@ -38,6 +30,7 @@ Reads::Reads() {}
 Reads::Reads(const Reads & obj) {
     this->value = obj.value;
     this->undefined = obj.undefined;
+    this->grand_total = obj.grand_total;
 }
 
 Reads::Reads(unsigned long long value) : value(value) {
@@ -48,6 +41,7 @@ void Reads::swap(Reads & obj)
 {
     std::swap(this->value, obj.value);
     std::swap(this->undefined, obj.undefined);
+    std::swap(this->grand_total, obj.grand_total);
 }
 
 // --------------------------------------------------
@@ -73,14 +67,32 @@ void Rpm::swap(Rpm & obj)
 
 Expression::Expression() {}
 
-Expression::Expression(Relative_expression relative_expression) : relative_expression(relative_expression) {}
+Expression::Expression(Relative_expression relative_expression) {
+    this->relative_expression = Relative_expression(relative_expression);
+    this->reads = Reads();
+    this->rpm = Rpm();
+}
+
+Expression::Expression(Reads reads)
+{
+    this->relative_expression = Relative_expression();
+    this->reads = Reads(reads);
+    this->rpm = Rpm();
+}
+
+Expression::Expression(Rpm rpm)
+{
+    this->relative_expression = Relative_expression();
+    this->reads = Reads();
+    this->rpm = Rpm(rpm);
+}
 
 void swap(Expression & obj1, Expression & obj2)
 {
+    // I prefer the syntax with std::swap, I will make the following conform to it
     obj1.relative_expression.swap(obj2.relative_expression);
-    // I would prefer the following syntax, which requires some extra code
-    // std::swap(obj1.relative_expression, obj2.relative_expression);
-    std::swap(obj1.to_normalize, obj2.to_normalize);
+    obj1.reads.swap(obj2.reads);
+    obj1.rpm.swap(obj2.rpm);
 }
 
 Expression & Expression::operator=(Expression obj)
@@ -89,49 +101,82 @@ Expression & Expression::operator=(Expression obj)
     return *this;
 }
 
-Expression::Expression(Reads reads)
+double Expression::to_relative_expression()
 {
-    this->relative_expression.value = (double)reads.value;
-    this->to_normalize = true;
-}
-
-Expression::Expression(Rpm rpm)
-{
-    this->relative_expression.value = rpm.value/1000000.0;   
-}
-
-Rpm Expression::to_rpm()
-{
-    if(this->to_normalize) {
-        std::cerr << "error: to_rpm(), this->to_normalize = " << this->to_normalize << "\n";
+    integrity_check();
+    if(!this->relative_expression.undefined) {
+        return this->relative_expression.value;
+    } else if(!this->reads.undefined) {
+        if(this->reads.grand_total == 0) {
+            std::cerr << "this->reads is not normalized\n";
+            exit(1);
+        } else {
+            return ((double)this->reads.value)/this->reads.grand_total;
+        }
+    } else if(!this->rpm.undefined) {
+        return ((double)this->rpm.value)/1000000;
+    } else {
+        // this case is actually caught in integrity_check()
+        std::cerr << "Relative_expression not initialized\n";
         exit(1);
     }
-    return std::round(this->relative_expression.value*1000000.0);
 }
 
-Relative_expression Expression::to_relative_expression()
+unsigned long long Expression::to_reads()
 {
-    if(this->to_normalize) {
-        std::cerr << "error: to_relative_expression(), this->to_normalize = " << this->to_normalize << "\n";
+    integrity_check();
+    if(!this->relative_expression.undefined) {
+        std::cerr << "error: unable to infer the number of reads from the relative expression\n";
+        exit(1);
+    } else if(!this->reads.undefined) {
+        return this->reads.value;
+    } else if(!this->rpm.undefined) {
+        std::cerr << "error: unable to infer the number of reads from the rpm\n";
+        exit(1);
+    } else {
+        // this case is actually caught in integrity_check()
+        std::cerr << "Relative_expression not initialized\n";
         exit(1);
     }
-    return this->relative_expression;
 }
 
-void Expression::normalize_reads(double total_reads)
+double Expression::to_rpm()
 {
-    if(!this->to_normalize) {
-        std::cerr << "error: normalize_reads(" << total_reads << "), this->to_normalize = " << this->to_normalize << "\n";
+    integrity_check();
+    if(!this->relative_expression.undefined) {
+        return this->relative_expression.value/1000000;            
+    } else if(!this->reads.undefined) {
+        if(this->reads.grand_total == 0) {
+            std::cerr << "this->reads is not normalized\n";
+            exit(1);
+        } else {
+            return ((double)this->reads.value)/this->reads.grand_total*1000000;
+        }
+    } else if(!this->rpm.undefined) {
+        return this->rpm.value;
+    } else {
+        // this case is actually caught in integrity_check()
+        std::cerr << "Relative_expression not initialized\n";
         exit(1);
     }
-    this->relative_expression.value /= (double)total_reads;
 }
 
-double Expression::get_normalization_factor()
+void Expression::integrity_check()
 {
-    if(!this->to_normalize) {
-        std::cerr << "error: normalize_reads(" << total_reads << "), this->to_normalize = " << this->to_normalize << "\n";
+    int true_count = !this->relative_expression.undefined + !this->reads.undefined + !this->rpm.undefined;   
+    if(true_count != 1) {
+        std::cerr << "error: this->relative_expression.undefined = " << this->relative_expression.undefined << ", this->reads.undefined = " << this->reads.undefined << ", this->rpm.undefined = " << this->rpm.undefined << "\n";
+        exit(1);
+    }    
+}
+
+void Expression::normalize_reads(unsigned long long grand_total)
+{
+    integrity_check();
+    if(!this->reads.undefined) {
+        this->reads.grand_total = grand_total;
+    } else {
+        std::cerr << "error: normalized_reads, reads not initialized; this->relative_expression.undefined = " << this->relative_expression.undefined << ", this->rpm.undefined = " << this->rpm.undefined << "\n";
         exit(1);
     }
-    return this->normalization_factor;
 }

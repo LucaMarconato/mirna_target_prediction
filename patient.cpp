@@ -23,7 +23,9 @@ Patient::Patient(std::string case_id) : case_id(case_id)
         exit(1);
     } else {
         std::string patient_file = patient_folder + case_id + ".bin";
-        if(!boost::filesystem::exists(patient_file)) {
+        // TODO: bug with boost serialization
+        bool dont_use_boost_serialization_here = !boost::filesystem::exists(patient_file) || true;
+        if(dont_use_boost_serialization_here) {
             std::ifstream in(patient_folder + "info.json");
             std::stringstream buffer;
             buffer << in.rdbuf();
@@ -58,24 +60,26 @@ Patient::Patient(std::string case_id) : case_id(case_id)
                 genes.insert(e.first);
             }
             this->interaction_graph.build_interaction_graph(mirnas, genes);
-            
-            std::cout << "writing " << patient_file << "\n";
-            Timer::start();
-            std::ofstream out(patient_file, std::ios::binary);
-            boost::archive::binary_oarchive oa(out);
-            oa << this->case_id;
-            oa << this->normal_mirnas << this->normal_genes << this->tumor_mirnas << this->tumor_genes;
-            oa << this->interaction_graph;
-            out.close();
-            std::cout << "written, ";
-            Timer::stop();
+
+            if(!dont_use_boost_serialization_here) {
+                std::cout << "writing " << patient_file << "\n";
+                Timer::start();
+                std::ofstream out(patient_file, std::ios::binary);
+                boost::archive::binary_oarchive oa(out);
+                oa << this->case_id;
+                oa << this->normal_mirnas << this->normal_genes << this->tumor_mirnas << this->tumor_genes;
+                oa << this->interaction_graph;
+                out.close();
+                std::cout << "written, ";
+                Timer::stop();
+            }
         } else {
             std::cout << "loading " << patient_file << "\n";
             Timer::start();
             std::ifstream in(patient_file, std::ios::binary);
             boost::archive::binary_iarchive ia(in);
             in >> this->case_id;
-            ia >> this->normal_mirnas >> this->normal_genes >> this->tumor_mirnas >> this->tumor_genes;            
+            ia >> this->normal_mirnas >> this->normal_genes >> this->tumor_mirnas >> this->tumor_genes;
             ia >> this->interaction_graph;
             in.close();
             std::cout << "loaded, ";

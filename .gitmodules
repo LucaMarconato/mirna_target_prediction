@@ -1,0 +1,3 @@
+[submodule "dependencies/marconato/output_buffer"]
+	path = dependencies/marconato/output_buffer
+	url = https://github.com/LucaMarconato/output_buffer

@@ -71,7 +71,7 @@ void Mirna_expression_profile::filter(double threshold_rpm)
     unsigned long long newly_filtered_out_distinct_mirnas = 0.0;
     double newly_filtered_out_rpm = 0.0;
     for(std::unordered_map<Mirna_id, Expression>::iterator it = this->profile.begin(); it != this->profile.end();) {
-        double rpm = it->second.to_rpm().value;
+        double rpm = it->second.to_rpm();
         if(rpm < threshold_rpm) {
             newly_filtered_out_distinct_mirnas++;
             newly_filtered_out_rpm += rpm;

@@ -1,5 +1,1 @@
-* TODO finish working on expression_profile.hpp and expression_profile.cpp
-* TODO adjust the normalization process in patient.cpp
 * TODO implement the filtering process in gene_expression_profile.cpp
-* TODO test the loading phase of serialization
-* TODO restore the serialization of sites_by_location, probably there is a bug when loading a boost::tuple

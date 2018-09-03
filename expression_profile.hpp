@@ -4,19 +4,18 @@
 struct Relative_expression {
     double value;
     bool undefined = true;
-    bool normalized = false;
-    
+
     Relative_expression();
     Relative_expression(const Relative_expression & obj);
     Relative_expression(double value);
     void swap(Relative_expression & obj);
-    void normalize(double normalization_factor);
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version);
 };
 struct Reads {
     unsigned long long value;
     bool undefined = true;
+    unsigned long long grand_total = 0;
     
     Reads();
     Reads(const Reads & obj);
@@ -43,20 +42,19 @@ private:
     Relative_expression relative_expression;
     Reads reads;
     Rpm rpm;    
-    bool normalization_factor;
 public:    
     Expression();
     Expression(Relative_expression relative_expression);
     Expression(Reads reads);
     Expression(Rpm rpm);
-    Relative_expression to_relative_expression();
-    Reads to_reads();
-    Rpm to_rpm();
-    void normalize_relative_expression(double total_relative_expression);
-    void normalize_reads(double total_reads);
-    void normalize_rpm(double total_rpm);
-    double get_normalization_factor();
+    double to_relative_expression();
+    unsigned long long to_reads();
+    double to_rpm();
+    void integrity_check();
     Expression & operator=(Expression obj);
+    bool is_valid();
+    void clear();
+    void normalize_reads(unsigned long long grand_total);
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version);
     
