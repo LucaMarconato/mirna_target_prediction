@@ -18,6 +18,7 @@ public:
     Interaction_graph interaction_graph;
 
     Patient(std::string case_id);
+    void export_expression_profiles(std::string patient_folder);
 };
 
 #endif // PATIENT_H

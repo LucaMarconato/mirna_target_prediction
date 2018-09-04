@@ -90,6 +90,43 @@ Patient::Patient(std::string case_id) : case_id(case_id)
         this->tumor_mirnas.print_statistics();
         this->tumor_genes.print_statistics();
         this->interaction_graph.print_statistics();
-        this->interaction_graph.export_adjacency_matrices(patient_folder);
+        this->interaction_graph.export_interactions_data(patient_folder);
+        this->export_expression_profiles(patient_folder);
     }
+}
+
+void Patient::export_expression_profiles(std::string patient_folder)
+{
+    // export expression profiles for the mirnas and the genes involved in the interaction graph    
+    auto export_mirna_expression_profile = [](Patient * patient, std::string filename, Mirna_expression_profile & ep) {
+		std::stringstream ss;
+        ss << "mirna_id\trpm\n";
+        for(auto & e : ep.profile) {
+            Mirna_id mirna_id = e.first;
+            if(patient->interaction_graph.mirna_to_genes_arcs.find(mirna_id) != patient->interaction_graph.mirna_to_genes_arcs.end()) {
+                ss << mirna_id << "\t" << e.second.to_rpm() << "\n";
+            }
+        }
+        std::ofstream out(filename);
+        out << ss.str();
+        out.close();
+	};
+    auto export_gene_expression_profile = [](Patient * patient, std::string filename, Gene_expression_profile & ep) {
+		std::stringstream ss;
+        ss << "gene_id\trpm\n";
+        for(auto & e : ep.profile) {
+            Gene_id gene_id = e.first;
+            if(patient->interaction_graph.gene_to_mirnas_arcs.find(gene_id) != patient->interaction_graph.gene_to_mirnas_arcs.end()) {
+                ss << gene_id << "\t" << e.second.to_rpm() << "\n";
+            }
+        }
+        std::ofstream out(filename);
+        out << ss.str();
+        out.close();
+	};
+
+    export_mirna_expression_profile(this, patient_folder + "normal_mirna_expression_profile.tsv", normal_mirnas);
+    export_mirna_expression_profile(this, patient_folder + "tumor_mirna_expression_profile.tsv", tumor_mirnas);
+    export_gene_expression_profile(this, patient_folder + "normal_gene_expression_profile.tsv", normal_genes);
+    export_gene_expression_profile(this, patient_folder + "tumor_gene_expression_profile.tsv", tumor_genes);
 }

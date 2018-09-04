@@ -3,3 +3,4 @@ data/raw
 data/processed
 data/interactions.RData
 CMakeFiles
+.DS_Store

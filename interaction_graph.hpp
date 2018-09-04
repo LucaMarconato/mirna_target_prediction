@@ -55,7 +55,7 @@ public:
     void build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> & genes);
     Site * get_site(Mirna_id mirna_id, Gene_id gene_id, unsigned int utr_start, unsigned int utr_end);
     void print_statistics();
-    void export_adjacency_matrices(std::string patient_folder);
+    void export_interactions_data(std::string patient_folder);
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version);
     ~Interaction_graph();

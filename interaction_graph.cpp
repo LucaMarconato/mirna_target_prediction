@@ -139,7 +139,7 @@ void Ig::print_statistics()
     std::cout << "gene_to_mirnas_arcs.size() = " << gene_to_mirnas_arcs.size() << "\n";
 }
 
-void Ig::export_adjacency_matrices(std::string patient_folder)
+void Ig::export_interactions_data(std::string patient_folder)
 {
     // matrix with one row for each mirna, one column for each gene and with the cells showing the number of sites for the mirna-gene combination
     std::string filename = patient_folder + "mirna_gene_adjacency_matrix.mat";
