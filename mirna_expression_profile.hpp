@@ -11,13 +11,13 @@ class Mirna_expression_profile : Expression_profile {
 public:
     std::unordered_map<Mirna_id, Expression> profile;
     unsigned long long recognized_distinct_mirnas = 0;
-    double recognized_rpm = 0.0;
+    unsigned long long recognized_reads = 0;
     unsigned long long not_recognized_distinct_mirnas = 0;
-    double not_recognized_rpm = 0.0;
+    unsigned long long not_recognized_reads = 0;
     unsigned long long total_distinct_mirnas;
-    double total_rpm;
+    unsigned long long total_reads;
     unsigned long long filtered_out_distinct_mirnas = 0;
-    double filtered_out_rpm = 0.0;
+    unsigned long long filtered_out_reads = 0;
 
     void load_from_gdc_file(std::string filename, std::string patient_folder);
     void print_statistics();

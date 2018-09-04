@@ -16,10 +16,13 @@ public:
     unsigned long long not_recognized_reads = 0;
     unsigned long long total_distinct_genes;
     unsigned long long total_reads;
+    unsigned long long filtered_out_distinct_genes = 0;
+    unsigned long long filtered_out_reads = 0;
     // unsigned long long discarded_reads = 0;
     
     void load_from_gdc_file(std::string filename, std::string patient_folder);
     void print_statistics();
+    void filter(double threshold_rpm);
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version);
 };

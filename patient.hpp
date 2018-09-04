@@ -13,6 +13,7 @@ public:
     std::string case_id;
     Mirna_expression_profile normal_mirnas, tumor_mirnas;
     Gene_expression_profile normal_genes, tumor_genes;
+    Site_expression_profile normal_sites, tumor_sites;
     // Site_expression_profile ...;
     Interaction_graph interaction_graph;
 

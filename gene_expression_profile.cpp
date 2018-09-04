@@ -25,7 +25,6 @@ void Gep::load_from_gdc_file(std::string filename, std::string patient_folder)
 
         std::string gene_id_and_version, reads;
         while(in.read_row(gene_id_and_version, reads)) {
-            unsigned long long reads_ull = std::strtoull(reads.c_str(), nullptr, 10);
             if(gene_id_and_version == "__no_feature" || gene_id_and_version == "__ambiguos" || gene_id_and_version == "__too_low_aQual" || gene_id_and_version == "__not_aligned" || gene_id_and_version == "__alignment_not_unique" || gene_id_and_version == "__ambiguous") {
                 // WARNING! the information about these reads could be relevant, so mind to consider them
                 // this sum is an overestimation, since some reads could belong to many of the above classes
@@ -33,7 +32,7 @@ void Gep::load_from_gdc_file(std::string filename, std::string patient_folder)
                 continue;
             }
             Gene gene(gene_id_and_version, "", "");
-
+            unsigned long long reads_ull = std::strtoull(reads.c_str(), nullptr, 10);
             auto e = Gene::gene_id_dictionary.left.find(gene);
             if(e == Gene::gene_id_dictionary.left.end()) {
                 this->not_recognized_distinct_genes++;
@@ -55,11 +54,12 @@ void Gep::load_from_gdc_file(std::string filename, std::string patient_folder)
                 this->profile[gene_id] = expression;
             }
         }
-        total_reads = this->recognized_reads + this->not_recognized_reads;
-        total_distinct_genes = this->recognized_distinct_genes + this->not_recognized_distinct_genes;
+        this->total_distinct_genes = this->recognized_distinct_genes + this->not_recognized_distinct_genes;
+        this->total_reads = this->recognized_reads + this->not_recognized_reads;
         for(auto & e : this->profile) {
             e.second.normalize_reads(total_reads);
         }
+        this->filter(1.0);
         this->initialized = true;
     }
 }
@@ -67,9 +67,34 @@ void Gep::load_from_gdc_file(std::string filename, std::string patient_folder)
 void Gep::print_statistics()
 {
     if(this->initialized) {
-        total_reads = this->recognized_reads + this->not_recognized_reads;
         std::cout << "recognized_distinct_genes/total_distinct_genes: " << recognized_distinct_genes << "/" << total_distinct_genes << " = " << ((double)recognized_distinct_genes)/total_distinct_genes << "\n";
         std::cout << "recognized_reads/total_reads: " << recognized_reads << "/" << total_reads << " = " << ((double)recognized_reads)/total_reads << "\n";
-        // std::cout << "discarded_reads/total_reads: " << discarded_reads << "/" << total_reads << " = " << ((double)discarded_reads)/total_reads << "\n";        
+        std::cout << "filtered_out_distinct_genes/total_distinct_genes: " << filtered_out_distinct_genes << "/" << total_distinct_genes << " = " << ((double)filtered_out_distinct_genes)/total_distinct_genes << "\n";
+        std::cout << "filtered_out_reads/total_reads: " << filtered_out_reads << "/" << total_reads << " = " << ((double)filtered_out_reads)/total_reads << "\n";
+        std::cout << "remaining = recognized - filtered_out\n";
+        std::cout << "remaining/total_distinct_genes: " << (recognized_distinct_genes - filtered_out_distinct_genes) << "/" << total_distinct_genes << " = " << ((double)(recognized_distinct_genes - filtered_out_distinct_genes))/total_distinct_genes << "\n";
+        std::cout << "remaining/total_reads: " << (recognized_reads - filtered_out_reads) << "/" << total_reads << " = " << ((double)(recognized_reads - filtered_out_reads))/total_reads << "\n";
+        // std::cout << "discarded_reads/total_reads: " << discarded_reads << "/" << total_reads << " = " << ((double)discarded_reads)/total_reads << "\n";
     }
+}
+
+void Gep::filter(double threshold_rpm)
+{
+    unsigned long long newly_filtered_out_distinct_genes = 0;
+    unsigned long long newly_filtered_out_reads = 0;
+    for(std::unordered_map<Gene_id, Expression>::iterator it = this->profile.begin(); it != this->profile.end();) {
+        double rpm = it->second.to_rpm();
+        unsigned long long reads = it->second.to_reads();
+        if(rpm < threshold_rpm) {
+            newly_filtered_out_distinct_genes++;
+            newly_filtered_out_reads += reads;
+            it = this->profile.erase(it++);
+        } else {
+            ++it;
+        }
+    }
+    std::cout << "newly_filtered_out_distinc_genes/recognized_distinct_genes: " << newly_filtered_out_distinct_genes << "/" << recognized_distinct_genes << " = " << ((double)newly_filtered_out_distinct_genes)/recognized_distinct_genes << "\n";
+    std::cout << "newly_filtered_out_reads/recognized_reads: " << newly_filtered_out_reads << "/" << recognized_reads << " = " << ((double)newly_filtered_out_reads)/recognized_reads << "\n";
+    this->filtered_out_distinct_genes += newly_filtered_out_distinct_genes;
+    this->filtered_out_reads += newly_filtered_out_reads;
 }

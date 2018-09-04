@@ -2,6 +2,8 @@
 
 #include <cstdlib>
 #include <fstream>
+#include <sstream>
+#include <map>
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -135,6 +137,78 @@ void Ig::print_statistics()
     std::cout << "mirna_gene_arcs.size() = " << mirna_gene_arcs.size() << "\n";
     std::cout << "mirna_to_genes_arcs.size() = " << mirna_to_genes_arcs.size() << "\n";
     std::cout << "gene_to_mirnas_arcs.size() = " << gene_to_mirnas_arcs.size() << "\n";
+}
+
+void Ig::export_adjacency_matrices(std::string patient_folder)
+{
+    // matrix with one row for each mirna, one column for each gene and with the cells showing the number of sites for the mirna-gene combination
+    std::string filename = patient_folder + "mirna_gene_adjacency_matrix.mat";
+    unsigned long long mirna_count = this->mirna_to_genes_arcs.size();
+    unsigned long long gene_count = this->gene_to_mirnas_arcs.size();
+    Timer::start();
+    std::cout << "writing an " << mirna_count << "x" << gene_count << " sparse matix to " << filename << "\n";
+    unsigned long long ** m = new unsigned long long * [mirna_count];
+    for(unsigned long long i = 0; i < mirna_count; i++) {
+        m[i] = new unsigned long long [gene_count];
+        for(unsigned long long j = 0; j < gene_count; j++) {
+            m[i][j] = 0;
+        }
+    }
+    boost::bimap<unsigned long long, Mirna_id> i_to_mirna_id;
+    boost::bimap<unsigned long long, Gene_id> j_to_gene_id;
+    for(auto & e : this->mirna_to_genes_arcs) {
+        Mirna_id mirna_id = e.first;
+        if(i_to_mirna_id.right.find(mirna_id) == i_to_mirna_id.right.end()) {
+            unsigned long long new_i = i_to_mirna_id.size();
+            i_to_mirna_id.insert(boost::bimap<unsigned long long, Mirna_id>::value_type(new_i, mirna_id));
+        }
+    }
+    for(auto & e : this->gene_to_mirnas_arcs) {
+        Gene_id gene_id = e.first;
+        if(j_to_gene_id.right.find(gene_id) == j_to_gene_id.right.end()) {
+            unsigned long long new_j = j_to_gene_id.size();
+            j_to_gene_id.insert(boost::bimap<unsigned long long, Gene_id>::value_type(new_j, gene_id));
+        }
+    }
+    if(i_to_mirna_id.size() != mirna_count) {
+        std::cerr << "error: i_to_mirna_id.size() = " << i_to_mirna_id.size() << ", mirna_count = " << mirna_count << "\n";
+        exit(1);
+    }
+    if(j_to_gene_id.size() != gene_count) {
+        std::cerr << "error: j_to_gene_id.size() = " << j_to_gene_id.size() << ", gene_count = " << gene_count << "\n";
+        exit(1);
+    }
+    
+    for(auto & e : this->mirna_to_genes_arcs) {
+        Mirna_id mirna_id = e.first;
+        unsigned long long i = i_to_mirna_id.right.at(mirna_id);
+        for(auto & f: e.second) {
+            Gene_id gene_id = f;
+            unsigned long long j = j_to_gene_id.right.at(gene_id);
+            m[i][j] = this->mirna_gene_arcs[std::make_pair(mirna_id, gene_id)].size();
+        }
+    }
+    std::stringstream ss;
+    for(unsigned long long j = 0; j < gene_count; j++) {
+        // the \" are used by the R function read.table() to distinguish between entries and the column and row names
+        ss << "\"" << j_to_gene_id.left.at(j) << "\"" << ((j == gene_count - 1) ? "\n" : "\t");
+    }
+    for(unsigned long long i = 0; i < mirna_count; i++) {
+        ss << "\"" << i_to_mirna_id.left.at(i) << "\"" << "\t";
+        for(unsigned long long j = 0; j < gene_count; j++) {
+            ss << m[i][j] << ((j == gene_count - 1) ? "\n" : "\t");
+        }
+    }
+    std::ofstream out(filename);
+    out << ss.str();
+    out.close();
+
+    for(unsigned long long i = 0; i < mirna_count; i++) {
+        delete [] m[i];
+    }
+    delete [] m;
+    std::cout << "written, ";
+    Timer::stop();
 }
 
 Ig::~Interaction_graph()

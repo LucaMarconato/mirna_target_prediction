@@ -60,14 +60,15 @@ Patient::Patient(std::string case_id) : case_id(case_id)
                 genes.insert(e.first);
             }
             this->interaction_graph.build_interaction_graph(mirnas, genes);
+            this->normal_sites = Site_expression_profile(this->normal_genes, this->interaction_graph);
+            this->tumor_sites = Site_expression_profile(this->tumor_genes, this->interaction_graph);
 
             if(!dont_use_boost_serialization_here) {
                 std::cout << "writing " << patient_file << "\n";
                 Timer::start();
                 std::ofstream out(patient_file, std::ios::binary);
                 boost::archive::binary_oarchive oa(out);
-                oa << this->case_id;
-                oa << this->normal_mirnas << this->normal_genes << this->tumor_mirnas << this->tumor_genes;
+                oa << this->normal_mirnas << this->normal_genes << this->tumor_mirnas << this->tumor_genes << this->normal_sites << this->tumor_sites;
                 oa << this->interaction_graph;
                 out.close();
                 std::cout << "written, ";
@@ -78,8 +79,7 @@ Patient::Patient(std::string case_id) : case_id(case_id)
             Timer::start();
             std::ifstream in(patient_file, std::ios::binary);
             boost::archive::binary_iarchive ia(in);
-            in >> this->case_id;
-            ia >> this->normal_mirnas >> this->normal_genes >> this->tumor_mirnas >> this->tumor_genes;
+            ia >> this->normal_mirnas >> this->normal_genes >> this->tumor_mirnas >> this->tumor_genes >> this->normal_sites >> this->tumor_sites;
             ia >> this->interaction_graph;
             in.close();
             std::cout << "loaded, ";
@@ -90,5 +90,6 @@ Patient::Patient(std::string case_id) : case_id(case_id)
         this->tumor_mirnas.print_statistics();
         this->tumor_genes.print_statistics();
         this->interaction_graph.print_statistics();
+        this->interaction_graph.export_adjacency_matrices(patient_folder);
     }
 }

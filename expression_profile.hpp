@@ -63,7 +63,7 @@ public:
 
 class Expression_profile {
 public:
-    bool initialized = false;
+    bool initialized = false;    
 };
 
 #include "expression_profile.tpp"
