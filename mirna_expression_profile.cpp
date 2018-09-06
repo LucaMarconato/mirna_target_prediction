@@ -1,11 +1,12 @@
 #include "mirna_expression_profile.hpp"
 
 #include <cstdlib>
+#include <fstream>
+#include <sstream>
 
 #include <boost/filesystem.hpp>
 
 #include <strasser/csv.h>
-#include <marconato/output_buffer/output_buffer.hpp>
 
 #include "mirna.hpp"
 
@@ -20,8 +21,13 @@ void Mep::load_from_gdc_file(std::string filename, std::string patient_folder)
         io::CSVReader<4, io::trim_chars<' '>, io::no_quote_escape<'\t'>> in(patient_folder + filename);
         in.read_header(io::ignore_extra_column, "miRNA_ID", "read_count", "reads_per_million_miRNA_mapped", "cross-mapped");
 
-        Output_buffer ob(patient_folder + "mirna_not_recognized.tsv", 10000, 1000);
-        std::string s = "mirna_family\treads\n";
+        std::ofstream out0(patient_folder + "mirna_not_recognized.tsv");
+        std::stringstream ss0;
+        ss0 << "mirna_family\treads\n";
+
+        std::ofstream out1(patient_folder + "mirna_recognized.tsv");
+        std::stringstream ss1;
+        ss1 << "mirna_family\treads\n";
 
         std::string mirna_family, reads, unused0, unused1;
         while(in.read_row(mirna_family, reads, unused0, unused1)) {
@@ -31,8 +37,7 @@ void Mep::load_from_gdc_file(std::string filename, std::string patient_folder)
             if(e == Mirna::mirna_id_dictionary.left.end()) {
                 this->not_recognized_distinct_mirnas++;
                 this->not_recognized_reads += reads_ull;
-                std::string line = mirna_family + "\t" + reads + "\n";
-                ob.add_chunk(line);
+                ss0 << mirna_family << "\t" << reads << "\n";
             } else {
                 this->recognized_distinct_mirnas++;
                 this->recognized_reads += reads_ull;
@@ -44,13 +49,19 @@ void Mep::load_from_gdc_file(std::string filename, std::string patient_folder)
                     exit(1);
                 }
                 this->profile[mirna_id] = expression;
+                ss1 << mirna_family << "\t" << reads.value << "\n";
             }
         }
+        out0 << ss0.str();
+        out0.close();
+        out1 << ss1.str();
+        out1.close();
         this->total_distinct_mirnas = this->recognized_distinct_mirnas + this->not_recognized_distinct_mirnas;
         this->total_reads = this->recognized_reads + this->not_recognized_reads;
         for(auto & e : this->profile) {
             e.second.normalize_reads(total_reads);
         }
+        // TODO: the filter threshold shuold be decided by considering many patients
         this->filter(1.0);
         this->initialized = true;
     }
@@ -84,8 +95,11 @@ void Mep::filter(double threshold_rpm)
             ++it;
         }
     }
-    std::cout << "newly_filtered_out_distinc_mirnas/recognized_distinct_mirnas: " << newly_filtered_out_distinct_mirnas << "/" << recognized_distinct_mirnas << " = " << ((double)newly_filtered_out_distinct_mirnas)/recognized_distinct_mirnas << "\n";
+    std::cout << "newly_filtered_out_distinct_mirnas/recognized_distinct_mirnas: " << newly_filtered_out_distinct_mirnas << "/" << recognized_distinct_mirnas << " = " << ((double)newly_filtered_out_distinct_mirnas)/recognized_distinct_mirnas << "\n";
     std::cout << "newly_filtered_out_reads/recognized_reads: " << newly_filtered_out_reads << "/" << recognized_reads << " = " << ((double)newly_filtered_out_reads)/recognized_reads << "\n";
     this->filtered_out_distinct_mirnas += newly_filtered_out_distinct_mirnas;
     this->filtered_out_reads += newly_filtered_out_reads;
+    std::cout << "remaining = recognized - filtered_out)\n";
+    std::cout << "remaining/recognized_distinct_mirnas: " << recognized_distinct_mirnas - filtered_out_distinct_mirnas << "/" << recognized_distinct_mirnas << " = " << ((double)recognized_distinct_mirnas - filtered_out_distinct_mirnas)/recognized_distinct_mirnas << "\n";
+    std::cout << "remaining/recognized_reads: " << recognized_reads - filtered_out_reads << "/" << recognized_reads << " = " << ((double)recognized_reads - filtered_out_reads)/recognized_reads << "\n";
 }

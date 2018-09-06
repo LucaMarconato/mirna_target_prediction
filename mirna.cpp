@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <sstream>
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -26,14 +27,25 @@ void Mirna::initialize_mirna_dictionary()
         }
         std::string line;
         Mirna_id i = 0;
+        // get the header
+        getline(in, line);
+        if(line != "mirna_family") {
+            std::cerr << "error: line = " << line << "\n";
+            exit(1);
+        }
         while(!in.eof()) {
             getline(in, line);
-            std::transform(line.begin(), line.end(), line.begin(), ::tolower);
-            Mirna mirna(line);
-            Mirna::mirna_id_dictionary.insert( boost::bimap<Mirna, Mirna_id>::value_type(mirna, i) );
-            i++;
+            // this addresses the case in which the file ends with a newline
+            if(line != "") {
+                std::transform(line.begin(), line.end(), line.begin(), ::tolower);
+                Mirna mirna(line);
+                if(Mirna::mirna_id_dictionary.left.find(mirna) == Mirna::mirna_id_dictionary.left.end()) {
+                    Mirna::mirna_id_dictionary.insert( boost::bimap<Mirna, Mirna_id>::value_type(mirna, i) );
+                    i++;
+                }
+            }
         }
-        in.close();
+        in.close();        
         std::cout << "writing mirna_id_dictionary.bin\n";
         Timer::start();
         std::ofstream out("mirna_id_dictionary.bin", std::ios::binary);
@@ -42,6 +54,15 @@ void Mirna::initialize_mirna_dictionary()
         out.close();
         std::cout << "written, ";
         Timer::stop();
+        
+        std::stringstream ss;
+        ss << "mirna_family\tmirna_id_cpp\n";
+        for(auto & e : Mirna::mirna_id_dictionary.left) {
+            ss << e.first.mirna_family << "\t" << e.second << "\n";
+        }
+        out.open("data/processed/mirna_id_dictionary.tsv");
+        out << ss.str();
+        out.close();
     } else {
         std::cout << "loading mirna_id_dictionary.bin\n";
         Timer::start();

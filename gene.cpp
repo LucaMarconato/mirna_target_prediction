@@ -46,8 +46,10 @@ void Gene::initialize_gene_dictionary()
     	std::string column0, column1, column2;
     	while(in.read_row(column0, column1, column2)) {
             Gene gene(column0, column1, column2);
-        	Gene::gene_id_dictionary.insert( boost::bimap<Gene, Gene_id>::value_type(gene, i) );
-        	i++;
+            if(Gene::gene_id_dictionary.left.find(gene) == Gene::gene_id_dictionary.left.end()) {
+                Gene::gene_id_dictionary.insert( boost::bimap<Gene, Gene_id>::value_type(gene, i) );
+                i++;                
+            }
     	}
         std::cout << "writing gene_id_dictionary.bin\n";
         Timer::start();
@@ -57,6 +59,15 @@ void Gene::initialize_gene_dictionary()
         out.close();
         std::cout << "written, ";
         Timer::stop();
+
+        std::stringstream ss;
+        ss << "gene_id\tgene_id_cpp\n";
+        for(auto & e : Gene::gene_id_dictionary.left) {
+            ss << e.first.gene_id << "\t" << e.second << "\n";
+        }
+        out.open("data/processed/gene_id_dictionary.tsv");
+        out << ss.str();
+        out.close();
     } else {
         std::cout << "loading gene_id_dictionary.bin\n";
         Timer::start();

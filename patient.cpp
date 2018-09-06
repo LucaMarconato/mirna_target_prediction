@@ -40,10 +40,15 @@ Patient::Patient(std::string case_id) : case_id(case_id)
             std::string tumor_genes_file = j["tumor_genes"]["uuid"].get<std::string>() + "/" + j["tumor_genes"]["file"].get<std::string>();
             // std::cout << "normal_mirnas_file = " << normal_mirnas_file << ", normal_genes_file = " << normal_genes_file << ", tumor_mirnas_file = " << tumor_mirnas_file << ", tumor_genes_file = " << tumor_genes_file << "\n";
 
+            std::cout << "\n***loading expression profiles***\n";
             this->normal_mirnas.load_from_gdc_file(normal_mirnas_file, patient_folder);
+            std::cout << "\n";
             this->normal_genes.load_from_gdc_file(normal_genes_file, patient_folder);
+            std::cout << "\n";
             this->tumor_mirnas.load_from_gdc_file(tumor_mirnas_file, patient_folder);
+            std::cout << "\n";
             this->tumor_genes.load_from_gdc_file(tumor_genes_file, patient_folder);
+            std::cout << "\n";
 
             std::set<Mirna_id> mirnas;
             for(auto & e : this->normal_mirnas.profile) {
@@ -59,6 +64,8 @@ Patient::Patient(std::string case_id) : case_id(case_id)
             for(auto & e : this->tumor_genes.profile) {
                 genes.insert(e.first);
             }
+
+            std::cout << "\n***building interaction graph***\n";
             this->interaction_graph.build_interaction_graph(mirnas, genes);
             this->normal_sites = Site_expression_profile(this->normal_genes, this->interaction_graph);
             this->tumor_sites = Site_expression_profile(this->tumor_genes, this->interaction_graph);
@@ -85,11 +92,17 @@ Patient::Patient(std::string case_id) : case_id(case_id)
             std::cout << "loaded, ";
             Timer::stop();
         }
+        std::cout << "\n***expression profiles statistics***\n";
         this->normal_mirnas.print_statistics();
+        std::cout << "\n";
         this->normal_genes.print_statistics();
+        std::cout << "\n";
         this->tumor_mirnas.print_statistics();
+        std::cout << "\n";
         this->tumor_genes.print_statistics();
+        std::cout << "\n";
         this->interaction_graph.print_statistics();
+        std::cout << "\n";
         this->interaction_graph.export_interactions_data(patient_folder);
         this->export_expression_profiles(patient_folder);
     }

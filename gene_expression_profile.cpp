@@ -20,15 +20,16 @@ void Gep::load_from_gdc_file(std::string filename, std::string patient_folder)
         std::cout << "parsing \"" << patient_folder + filename << "\"\n";
         io::CSVReader<2, io::trim_chars<' '>, io::no_quote_escape<'\t'>> in(patient_folder + filename);
         
-        Output_buffer ob(patient_folder + "mrna_not_recognized.tsv", 10000, 1000);
+        Output_buffer ob(patient_folder + "gene_not_recognized.tsv", 10000, 1000);
         std::string s = "gene_id\tgene_id_version\treads\n";
 
         std::string gene_id_and_version, reads;
         while(in.read_row(gene_id_and_version, reads)) {
-            if(gene_id_and_version == "__no_feature" || gene_id_and_version == "__ambiguos" || gene_id_and_version == "__too_low_aQual" || gene_id_and_version == "__not_aligned" || gene_id_and_version == "__alignment_not_unique" || gene_id_and_version == "__ambiguous") {
+            if(gene_id_and_version == "__no_feature" || gene_id_and_version == "__ambiguous" || gene_id_and_version == "__too_low_aQual" || gene_id_and_version == "__not_aligned" || gene_id_and_version == "__alignment_not_unique") {
                 // WARNING! the information about these reads could be relevant, so mind to consider them
                 // this sum is an overestimation, since some reads could belong to many of the above classes
                 // discarded_reads += reads_ull;
+                // TODO: the ratios of the reads considered should be comparable across all samples
                 continue;
             }
             Gene gene(gene_id_and_version, "", "");
@@ -59,6 +60,7 @@ void Gep::load_from_gdc_file(std::string filename, std::string patient_folder)
         for(auto & e : this->profile) {
             e.second.normalize_reads(total_reads);
         }
+        // TODO: the filter threshold shuold be decided by considering many patients
         this->filter(1.0);
         this->initialized = true;
     }
@@ -93,8 +95,11 @@ void Gep::filter(double threshold_rpm)
             ++it;
         }
     }
-    std::cout << "newly_filtered_out_distinc_genes/recognized_distinct_genes: " << newly_filtered_out_distinct_genes << "/" << recognized_distinct_genes << " = " << ((double)newly_filtered_out_distinct_genes)/recognized_distinct_genes << "\n";
+    std::cout << "newly_filtered_out_distinct_genes/recognized_distinct_genes: " << newly_filtered_out_distinct_genes << "/" << recognized_distinct_genes << " = " << ((double)newly_filtered_out_distinct_genes)/recognized_distinct_genes << "\n";
     std::cout << "newly_filtered_out_reads/recognized_reads: " << newly_filtered_out_reads << "/" << recognized_reads << " = " << ((double)newly_filtered_out_reads)/recognized_reads << "\n";
     this->filtered_out_distinct_genes += newly_filtered_out_distinct_genes;
     this->filtered_out_reads += newly_filtered_out_reads;
+    std::cout << "remaining = recognized - filtered_out)\n";
+    std::cout << "remaining/recognized_distinct_genes: " << recognized_distinct_genes - filtered_out_distinct_genes << "/ " << recognized_distinct_genes << " = " << ((double)recognized_distinct_genes - filtered_out_distinct_genes)/recognized_distinct_genes << "\n";
+    std::cout << "remaining/recognized_reads: " << recognized_reads - filtered_out_reads << "/ " << recognized_reads << " = " << ((double)recognized_reads - filtered_out_reads)/recognized_reads << "\n";
 }
