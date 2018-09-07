@@ -107,7 +107,6 @@ for(i in 1:4) {
     ## the file always exists, but it may contain only the header
     expression_profile <- read.table(plot_files_filtered[[i]], colClasses = c("numeric", "numeric"), header = T)
     expression_profile <- expression_profile[order(expression_profile[[1]]),]
-    from_cpp <<- expression_profile
     expression_profile <- expression_profile[[2]]
     if(length(expression_profile) == 0) {
         plot.new()
@@ -133,24 +132,26 @@ mirna_id_dictionary <- hashmap(mirna_id_dictionary[[1]], mirna_id_dictionary[[2]
 gene_id_dictionary <- read.table("processed/gene_id_dictionary.tsv", colClasses = c("character", "numeric"), header = T)
 gene_id_dictionary <- hashmap(gene_id_dictionary[[1]], gene_id_dictionary[[2]])
 
-rpm_from_gdc_mirna_data <- function(filename) {
-    a <- read.table(filename, colClasses = c("character", "numeric", "numeric", "factor"), header = T)
+## the graphs we are going to plot may be different from the one plotted just above for two reasons:
+## first, before we plotted only mirnas and genes above the selected threshold
+## second, before we plotted only mirnas and genes that were found in the interaction graph, here we plot the mirnas and the genes that belongs to the intersection between the GDC list and the TargetScan list of mirnas and gens, so we plot even mirnas and genes that are not found in the interaction graph
+
+rpm_from_gdc_mirna_data <- function(filename_unfiltered_data) {
+    a <- read.table(filename_unfiltered_data, colClasses = c("character", "numeric", "numeric", "factor"), header = T)
     a <- cbind(a, mirna_id_dictionary[[a$miRNA_ID]])
     colnames(a)[[5]] <- "mirna_id_cpp"
-    a <- a[order(a$mirna_id_cpp),]
+    a <- a[order(a$mirna_id_cpp),]    
     selected_rows <- a[!is.na(a$mirna_id_cpp),]
     rpm <- selected_rows["reads_per_million_miRNA_mapped"][[1]]
     rpm <- rpm[rpm > 0]
     return(rpm)
 }
 
-rpm_from_gdc_gene_data <- function(filename) {
-    ffilename <<- filename
-    a <- read.table(filename, colClasses = c("character", "numeric"))    
+rpm_from_gdc_gene_data <- function(filename_unfiltered_data) {
+    a <- read.table(filename_unfiltered_data, colClasses = c("character", "numeric"))    
     a <- a[!(a[[1]] %in% c("__no_feature", "__ambiguous", "__too_low_aQual", "__not_aligned", "__alignment_not_unique")),]
     colnames(a)[[2]] <- "reads"
     total_reads <- sum(a$reads)
-    print(total_reads)
     a$reads <- a$reads/total_reads*1000000
     colnames(a)[[2]] <- "rpm"
     colnames(a)[[1]] <- "gene_id_and_version"
@@ -160,9 +161,8 @@ rpm_from_gdc_gene_data <- function(filename) {
     colnames(a)[[3]] <- "gene_id_cpp"
     a <- a[!is.na(a$gene_id_cpp),]
     a <- a[order(a$gene_id_cpp),]
-    from_r <<- a
     rpm <- a$rpm
-    rpm <- rpm[rpm > 1]
+    rpm <- rpm[rpm > 0]
     return(rpm)
 }
 

@@ -57,6 +57,7 @@ void Gep::load_from_gdc_file(std::string filename, std::string patient_folder)
         }
         this->total_distinct_genes = this->recognized_distinct_genes + this->not_recognized_distinct_genes;
         this->total_reads = this->recognized_reads + this->not_recognized_reads;
+        std::cout << profile[19322].to_reads() << "\n";
         for(auto & e : this->profile) {
             e.second.normalize_reads(total_reads);
         }
@@ -85,6 +86,9 @@ void Gep::filter(double threshold_rpm)
     unsigned long long newly_filtered_out_distinct_genes = 0;
     unsigned long long newly_filtered_out_reads = 0;
     for(std::unordered_map<Gene_id, Expression>::iterator it = this->profile.begin(); it != this->profile.end();) {
+//        if(it->first == 19322) {
+//            int a = 0;
+//        }
         double rpm = it->second.to_rpm();
         unsigned long long reads = it->second.to_reads();
         if(rpm < threshold_rpm) {

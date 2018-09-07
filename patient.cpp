@@ -64,6 +64,10 @@ Patient::Patient(std::string case_id) : case_id(case_id)
             for(auto & e : this->tumor_genes.profile) {
                 genes.insert(e.first);
             }
+            
+            if(genes.find(19322) != genes.end()) {
+                std::cout << "all right\n";
+            }
 
             std::cout << "\n***building interaction graph***\n";
             this->interaction_graph.build_interaction_graph(mirnas, genes);
@@ -110,7 +114,7 @@ Patient::Patient(std::string case_id) : case_id(case_id)
 
 void Patient::export_expression_profiles(std::string patient_folder)
 {
-    // export expression profiles for the mirnas and the genes involved in the interaction graph    
+    // export expression profiles for the mirnas and the genes involved in the interaction graph
     auto export_mirna_expression_profile = [](Patient * patient, std::string filename, Mirna_expression_profile & ep) {
 		std::stringstream ss;
         ss << "mirna_id\trpm\n";
