@@ -79,7 +79,7 @@ def distinguish_mirna_isoforms(tissue: str):
 			to_set = df_merged.at[index,'ambiguous_mirna_id']
 			df_merged.at[index, 'disambiguated_mirna_id'] = to_set
 		global df_to_export
-		df_to_export = pd.DataFrame({'mirna_id': df_merged['disambiguated_mirna_id'], 'read_count': df_merged['read_count']})
+		df_to_export = pd.DataFrame({'mirna_id': df_merged['disambiguated_mirna_id'], 'reads': df_merged['read_count']})
 		df_to_export = df_to_export.groupby('mirna_id').sum().reset_index()
 		df_to_export['mirna_id'] = df_to_export['mirna_id'].str.lower()
 		filename = patient_folder + f'mirna_expression_profile_{tissue}.tsv'

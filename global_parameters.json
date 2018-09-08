@@ -1,0 +1,4 @@
+{
+    "mirna_threshold_rpm": 200.0,
+    "gene_threshold_rpm": 10.0
+}

@@ -217,6 +217,33 @@ gene_expression_profile.cpp.s:
 	$(MAKE) -f CMakeFiles/expression_profiles.dir/build.make CMakeFiles/expression_profiles.dir/gene_expression_profile.cpp.s
 .PHONY : gene_expression_profile.cpp.s
 
+global_parameters.o: global_parameters.cpp.o
+
+.PHONY : global_parameters.o
+
+# target to build an object file
+global_parameters.cpp.o:
+	$(MAKE) -f CMakeFiles/expression_profiles.dir/build.make CMakeFiles/expression_profiles.dir/global_parameters.cpp.o
+.PHONY : global_parameters.cpp.o
+
+global_parameters.i: global_parameters.cpp.i
+
+.PHONY : global_parameters.i
+
+# target to preprocess a source file
+global_parameters.cpp.i:
+	$(MAKE) -f CMakeFiles/expression_profiles.dir/build.make CMakeFiles/expression_profiles.dir/global_parameters.cpp.i
+.PHONY : global_parameters.cpp.i
+
+global_parameters.s: global_parameters.cpp.s
+
+.PHONY : global_parameters.s
+
+# target to generate assembly for a file
+global_parameters.cpp.s:
+	$(MAKE) -f CMakeFiles/expression_profiles.dir/build.make CMakeFiles/expression_profiles.dir/global_parameters.cpp.s
+.PHONY : global_parameters.cpp.s
+
 interaction_graph.o: interaction_graph.cpp.o
 
 .PHONY : interaction_graph.o
@@ -506,6 +533,9 @@ help:
 	@echo "... gene_expression_profile.o"
 	@echo "... gene_expression_profile.i"
 	@echo "... gene_expression_profile.s"
+	@echo "... global_parameters.o"
+	@echo "... global_parameters.i"
+	@echo "... global_parameters.s"
 	@echo "... interaction_graph.o"
 	@echo "... interaction_graph.i"
 	@echo "... interaction_graph.s"

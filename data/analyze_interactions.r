@@ -81,20 +81,20 @@ mirnas_per_gene <- apply(m, 2, function(x) sum(x != 0))
 hist(mirnas_per_gene, main = "number of miRNAs per gene")
 ## grid()
 
-print("miRNA 845 escluded")
-new_maximized_device()
-layout(rbind(matrix(rep(1,6),1,6),matrix(2:37, 6, 6, T)), heights = c(0.5,c(rep(3,10))))
-old_par <- par(mar=c(0,0,0,0), font = 2)
-plot.new()
-text(0.5, 0.5, "distributions of the number of sites for the various genes, one miRNA per plot")
-par(old_par)
-for(i in o) {
-    mirna_id <- rownames(m)[i]
-    if(mirna_id != "845") {
-        ## hist(m[i,][m[i,] > 0], main = paste("histogram of", mirna_id))
-        barplot(table(m[i,][m[i,] > 0]), main = paste("miRNA", mirna_id))
-    }
-}
+## print("miRNA 845 escluded")
+## new_maximized_device()
+## layout(rbind(matrix(rep(1,6),1,6),matrix(2:37, 6, 6, T)), heights = c(0.5,c(rep(3,10))))
+## old_par <- par(mar=c(0,0,0,0), font = 2)
+## plot.new()
+## text(0.5, 0.5, "distributions of the number of sites for the various genes, one miRNA per plot")
+## par(old_par)
+## for(i in o) {
+##     mirna_id <- rownames(m)[i]
+##     if(mirna_id != "845") {
+##         ## hist(m[i,][m[i,] > 0], main = paste("histogram of", mirna_id))
+##         barplot(table(m[i,][m[i,] > 0]), main = paste("miRNA", mirna_id))
+##     }
+## }
 
 ## plot expression profiles
 new_maximized_device()
@@ -112,17 +112,20 @@ for(i in 1:4) {
         plot.new()
     } else {
         ## plot(density(log10(expression_profile)), main = "")
-        ## hist(log10(expression_profile), main = "")
         
-        my_min <- -2
-        my_max <- 2
-        hist_data <- log10(expression_profile)
-        hist_data <- hist_data[hist_data >= my_min & hist_data <= my_max]
-        epsilon <- 0.001
-        my_breaks <- seq(max(-2, min(hist_data)) - epsilon, min(2, max(hist_data)) + epsilon, length.out = 50)
-        hist(hist_data, main = "", breaks = my_breaks)        
+        hist(log10(expression_profile), main = "")
+
         ## plot(density(expression_profile), main = "")
+        
         ## plot(log10(expression_profile), main = "")
+        
+        ## my_min <- -2
+        ## my_max <- 2
+        ## hist_data <- log10(expression_profile)
+        ## hist_data <- hist_data[hist_data >= my_min & hist_data <= my_max]
+        ## epsilon <- 0.001
+        ## my_breaks <- seq(max(-2, min(hist_data)) - epsilon, min(2, max(hist_data)) + epsilon, length.out = 50)
+        ## hist(hist_data, main = "", breaks = my_breaks)      
     }
     title(plot_titles_filtered[[i]])
 }
@@ -137,12 +140,15 @@ gene_id_dictionary <- hashmap(gene_id_dictionary[[1]], gene_id_dictionary[[2]])
 ## second, before we plotted only mirnas and genes that were found in the interaction graph, here we plot the mirnas and the genes that belongs to the intersection between the GDC list and the TargetScan list of mirnas and gens, so we plot even mirnas and genes that are not found in the interaction graph
 
 rpm_from_gdc_mirna_data <- function(filename_unfiltered_data) {
-    a <- read.table(filename_unfiltered_data, colClasses = c("character", "numeric", "numeric", "factor"), header = T)
-    a <- cbind(a, mirna_id_dictionary[[a$miRNA_ID]])
-    colnames(a)[[5]] <- "mirna_id_cpp"
+    a <- read.table(filename_unfiltered_data, colClasses = c("character", "numeric"), header = T)
+    total_reads <- sum(a$reads)
+    a$reads <- a$reads/total_reads*1000000
+    colnames(a)[[2]] <- "rpm"
+    a <- cbind(a, mirna_id_dictionary[[a$mirna_id]])
+    colnames(a)[[3]] <- "mirna_id_cpp"
     a <- a[order(a$mirna_id_cpp),]    
     selected_rows <- a[!is.na(a$mirna_id_cpp),]
-    rpm <- selected_rows["reads_per_million_miRNA_mapped"][[1]]
+    rpm <- selected_rows["rpm"][[1]]
     rpm <- rpm[rpm > 0]
     return(rpm)
 }
@@ -170,8 +176,9 @@ patient_info_file <- paste(patient_folder, "info.json", sep = "")
 info_json <- fromJSON(file = patient_info_file)
 
 ## normal mirna
-if(info_json$normal_mirnas$uuid != "NA") {
-    normal_mirna_file_unfiltered <- paste(patient_folder, info_json$normal_mirnas$uuid, "/", info_json$normal_mirnas$file, sep = "")
+filename <- paste(patient_folder, "mirna_expression_profile_normal.tsv", sep = "")
+if(file.exists(filename)) {
+    normal_mirna_file_unfiltered <- filename
 } else {
     normal_mirna_file_unfiltered <- ""
 }
@@ -182,8 +189,9 @@ if(info_json$normal_genes$uuid != "NA") {
     normal_gene_file_unfiltered <- ""
 }
 ## tumor mirna
-if(info_json$tumor_mirnas$uuid != "NA") {
-    tumor_mirna_file_unfiltered <- paste(patient_folder, info_json$tumor_mirnas$uuid, "/", info_json$tumor_mirnas$file, sep = "")
+filename <- paste(patient_folder, "mirna_expression_profile_tumor.tsv", sep = "")
+if(file.exists(filename)) {
+    tumor_mirna_file_unfiltered <- filename
 } else {
     tumor_mirna_file_unfiltered <- ""
 }
@@ -197,7 +205,12 @@ if(info_json$tumor_genes$uuid != "NA") {
 plot_files_unfiltered <- list(normal_mirna_file_unfiltered, normal_gene_file_unfiltered, tumor_mirna_file_unfiltered, tumor_gene_file_unfiltered)
 plot_titles_unfiltered <- lapply(plot_titles_temp, function(x) paste(x, "(unfiltered)"))
 
-threeshold_rpm = 1
+global_parameters_file <- "../global_parameters.json"
+global_parameters_json <- fromJSON(file = global_parameters_file)
+mirna_threshold_rpm = global_parameters_json$mirna_threshold_rpm
+gene_threshold_rpm = global_parameters_json$gene_threshold_rpm
+print(paste("mirna_threshold_rpm =", mirna_threshold_rpm))
+print(paste("gene_threshold_rpm =", gene_threshold_rpm))
 
 for(i in 1:4) {
     if(plot_files_unfiltered[[i]] != "") {
@@ -212,16 +225,22 @@ for(i in 1:4) {
         plot.new()
     } else {
         ## plot(density(log10(rpm)), main = "")
-        ## hist(log10(rpm), main = "")
         
-        my_min <- -2
-        my_max <- 2
-        hist_data <- log10(rpm)
-        hist_data <- hist_data[hist_data >= my_min & hist_data <= my_max]
-        epsilon <- 0.001
-        my_breaks <- seq(max(-2, min(hist_data)) - epsilon, min(2, max(hist_data)) + epsilon, length.out = 50)
-        hist(hist_data, main = "", breaks = my_breaks)
-        abline(v = log10(threeshold_rpm))
+        hist(log10(rpm), main = "")
+        
+        ## my_min <- -2
+        ## my_max <- 2
+        ## hist_data <- log10(rpm)
+        ## hist_data <- hist_data[hist_data >= my_min & hist_data <= my_max]
+        ## epsilon <- 0.001
+        ## my_breaks <- seq(max(-2, min(hist_data)) - epsilon, min(2, max(hist_data)) + epsilon, length.out = 50)
+        ## hist(hist_data, main = "", breaks = my_breaks)
+        
+        if(i %in% c(1,3)) {
+            abline(v = log10(mirna_threshold_rpm))
+        } else {
+            abline(v = log10(gene_threshold_rpm))
+        }
         
         ## plot(density(rpm), main = "")
         ## abline(v = threeshold_rpm)

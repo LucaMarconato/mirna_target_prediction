@@ -8,6 +8,7 @@
 
 #include <strasser/csv.h>
 
+#include "global_parameters.hpp"
 #include "mirna.hpp"
 
 #define Mep Mirna_expression_profile
@@ -27,7 +28,7 @@ void Mep::load_from_gdc_file(std::string tissue, std::string patient_folder)
     } else {
         std::cout << "parsing \"" << filename << "\"\n";
         io::CSVReader<2, io::trim_chars<' '>, io::no_quote_escape<'\t'>> in(filename);
-        in.read_header(io::ignore_extra_column, "mirna_id", "read_count");
+        in.read_header(io::ignore_extra_column, "mirna_id", "reads");
         std::ofstream out0(patient_folder + "mirna_not_recognized.tsv");
         std::stringstream ss0;
         ss0 << "mirna_family\treads\n";
@@ -71,7 +72,7 @@ void Mep::load_from_gdc_file(std::string tissue, std::string patient_folder)
             e.second.normalize_reads(total_reads);
         }
         // TODO: the filter threshold shuold be decided by considering many patients
-        this->filter(1.0);
+        this->filter(Global_parameters::mirna_threshold_rpm);
         this->initialized = true;
     }
 }

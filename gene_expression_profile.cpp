@@ -8,6 +8,7 @@
 #include <strasser/csv.h>
 #include <marconato/output_buffer/output_buffer.hpp>
 
+#include "global_parameters.hpp"
 #include "gene.hpp"
 
 #define Gep Gene_expression_profile
@@ -62,7 +63,7 @@ void Gep::load_from_gdc_file(std::string filename, std::string patient_folder)
             e.second.normalize_reads(total_reads);
         }
         // TODO: the filter threshold shuold be decided by considering many patients
-        this->filter(1.0);
+        this->filter(Global_parameters::gene_threshold_rpm);
         this->initialized = true;
     }
 }

@@ -77,7 +77,11 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
 
         // create mirna_site arcs
         Mirna_site_arc mirna_site_arc(seed_match_type, context_score, weighted_context_score, conserved);
-        this->mirna_site_arcs[std::make_pair(mirna_id, site)] = mirna_site_arc;
+        auto p0 = std::make_pair(mirna_id, site);
+        if(this->mirna_site_arcs.find(p0) != this->mirna_site_arcs.end()) {
+            std::cout << "warning: considering only one binding between a mirna and one sites\n";
+        }
+        this->mirna_site_arcs[p0] = mirna_site_arc;
         
         if(this->mirna_to_sites_arcs.find(mirna_id) == this->mirna_to_sites_arcs.end()) {
             this->mirna_to_sites_arcs[mirna_id];
@@ -90,11 +94,11 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
         this->site_to_mirnas_arcs[site].push_back(mirna_id);
         
         // create mirna_gene arcs
-        auto p = std::make_pair(mirna_id, gene_id);
-        if(this->mirna_gene_arcs.find(p) == this->mirna_gene_arcs.end()) {
-            this->mirna_gene_arcs[p];
+        auto p1 = std::make_pair(mirna_id, gene_id);
+        if(this->mirna_gene_arcs.find(p1) == this->mirna_gene_arcs.end()) {
+            this->mirna_gene_arcs[p1];
         }
-        this->mirna_gene_arcs[p].push_back(site);
+        this->mirna_gene_arcs[p1].push_back(site);
         
         if(this->mirna_to_genes_arcs.find(mirna_id) == this->mirna_to_genes_arcs.end()) {
             this->mirna_to_genes_arcs[mirna_id];
@@ -138,7 +142,19 @@ void Ig::print_statistics()
     std::cout << "mirna_to_genes_arcs.size() = " << mirna_to_genes_arcs.size() << "\n";
     std::cout << "gene_to_mirnas_arcs.size() = " << gene_to_mirnas_arcs.size() << "\n";
 
-    // note: gene_to_sites_arcs.size() and gene_to_mirnas_acrs.size() can be different (and we expect them to be) because
+    if(gene_to_sites_arcs.size() != gene_to_mirnas_arcs.size()) {
+        std::cerr << "error: gene_to_sites_arcs.size() = " << gene_to_sites_arcs.size() << ", gene_to_mirnas_arcs.size() = " << gene_to_mirnas_arcs.size() << "\n";
+        exit(1);
+    }
+    if(mirna_to_sites_arcs.size() != mirna_to_genes_arcs.size()) {
+        std::cerr << "error: mirna_to_sites_arcs.size() = " << mirna_to_sites_arcs.size() << ", mirna_to_genes_arcs.size() = " << mirna_to_genes_arcs.size() << "\n";
+        exit(1);
+    }
+    // note that if the condition is false (so that the equality holds), we are not considering sites in which the same mirna can bind in different ways
+    if(sites_by_location.size() != mirna_site_arcs.size()) {
+        std::cerr << "error: sites_by_location.size() = " << sites_by_location.size() << ", mirna_site_arcs.size() = " << mirna_site_arcs.size() << "\n";
+        exit(1);        
+    }
 }
 
 void Ig::export_interactions_data(std::string patient_folder)
