@@ -72,8 +72,8 @@ void Gep::print_statistics()
     if(this->initialized) {
         std::cout << "recognized_distinct_genes/total_distinct_genes: " << recognized_distinct_genes << "/" << total_distinct_genes << " = " << ((double)recognized_distinct_genes)/total_distinct_genes << "\n";
         std::cout << "recognized_reads/total_reads: " << recognized_reads << "/" << total_reads << " = " << ((double)recognized_reads)/total_reads << "\n";
-        std::cout << "filtered_out_distinct_genes/total_distinct_genes: " << filtered_out_distinct_genes << "/" << total_distinct_genes << " = " << ((double)filtered_out_distinct_genes)/total_distinct_genes << "\n";
-        std::cout << "filtered_out_reads/total_reads: " << filtered_out_reads << "/" << total_reads << " = " << ((double)filtered_out_reads)/total_reads << "\n";
+        // std::cout << "filtered_out_distinct_genes/total_distinct_genes: " << filtered_out_distinct_genes << "/" << total_distinct_genes << " = " << ((double)filtered_out_distinct_genes)/total_distinct_genes << "\n";
+        // std::cout << "filtered_out_reads/total_reads: " << filtered_out_reads << "/" << total_reads << " = " << ((double)filtered_out_reads)/total_reads << "\n";
         std::cout << "remaining = recognized - filtered_out\n";
         std::cout << "remaining/total_distinct_genes: " << (recognized_distinct_genes - filtered_out_distinct_genes) << "/" << total_distinct_genes << " = " << ((double)(recognized_distinct_genes - filtered_out_distinct_genes))/total_distinct_genes << "\n";
         std::cout << "remaining/total_reads: " << (recognized_reads - filtered_out_reads) << "/" << total_reads << " = " << ((double)(recognized_reads - filtered_out_reads))/total_reads << "\n";
@@ -99,11 +99,13 @@ void Gep::filter(double threshold_rpm)
             ++it;
         }
     }
-    std::cout << "newly_filtered_out_distinct_genes/recognized_distinct_genes: " << newly_filtered_out_distinct_genes << "/" << recognized_distinct_genes << " = " << ((double)newly_filtered_out_distinct_genes)/recognized_distinct_genes << "\n";
-    std::cout << "newly_filtered_out_reads/recognized_reads: " << newly_filtered_out_reads << "/" << recognized_reads << " = " << ((double)newly_filtered_out_reads)/recognized_reads << "\n";
+    // if we are performing the filtering process only once then the following lines print redundant information
+    // std::cout << "newly_filtered_out_distinct_genes/recognized_distinct_genes: " << newly_filtered_out_distinct_genes << "/" << recognized_distinct_genes << " = " << ((double)newly_filtered_out_distinct_genes)/recognized_distinct_genes << "\n";
+    // std::cout << "newly_filtered_out_reads/recognized_reads: " << newly_filtered_out_reads << "/" << recognized_reads << " = " << ((double)newly_filtered_out_reads)/recognized_reads << "\n";
+    
     this->filtered_out_distinct_genes += newly_filtered_out_distinct_genes;
     this->filtered_out_reads += newly_filtered_out_reads;
-    std::cout << "remaining = recognized - filtered_out)\n";
-    std::cout << "remaining/recognized_distinct_genes: " << recognized_distinct_genes - filtered_out_distinct_genes << "/ " << recognized_distinct_genes << " = " << ((double)recognized_distinct_genes - filtered_out_distinct_genes)/recognized_distinct_genes << "\n";
-    std::cout << "remaining/recognized_reads: " << recognized_reads - filtered_out_reads << "/ " << recognized_reads << " = " << ((double)recognized_reads - filtered_out_reads)/recognized_reads << "\n";
+    std::cout << "remaining = recognized - filtered_out\n";
+    std::cout << "remaining/recognized_distinct_genes: " << recognized_distinct_genes - filtered_out_distinct_genes << "/" << recognized_distinct_genes << " = " << ((double)recognized_distinct_genes - filtered_out_distinct_genes)/recognized_distinct_genes << "\n";
+    std::cout << "remaining/recognized_reads: " << recognized_reads - filtered_out_reads << "/" << recognized_reads << " = " << ((double)recognized_reads - filtered_out_reads)/recognized_reads << "\n";
 }

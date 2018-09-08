@@ -137,6 +137,8 @@ void Ig::print_statistics()
     std::cout << "mirna_gene_arcs.size() = " << mirna_gene_arcs.size() << "\n";
     std::cout << "mirna_to_genes_arcs.size() = " << mirna_to_genes_arcs.size() << "\n";
     std::cout << "gene_to_mirnas_arcs.size() = " << gene_to_mirnas_arcs.size() << "\n";
+
+    // note: gene_to_sites_arcs.size() and gene_to_mirnas_acrs.size() can be different (and we expect them to be) because
 }
 
 void Ig::export_interactions_data(std::string patient_folder)

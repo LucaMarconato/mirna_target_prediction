@@ -34,18 +34,20 @@ Patient::Patient(std::string case_id) : case_id(case_id)
             in.close();
             
             std::string file_prefix = patient_folder;
-            std::string normal_mirnas_file = j["normal_mirnas"]["uuid"].get<std::string>() + "/" + j["normal_mirnas"]["file"].get<std::string>();
+            // std::string normal_mirnas_file = j["normal_mirnas"]["uuid"].get<std::string>() + "/" + j["normal_mirnas"]["file"].get<std::string>();
             std::string normal_genes_file = j["normal_genes"]["uuid"].get<std::string>() + "/" + j["normal_genes"]["file"].get<std::string>();
-            std::string tumor_mirnas_file = j["tumor_mirnas"]["uuid"].get<std::string>() + "/" + j["tumor_mirnas"]["file"].get<std::string>();
+            // std::string tumor_mirnas_file = j["tumor_mirnas"]["uuid"].get<std::string>() + "/" + j["tumor_mirnas"]["file"].get<std::string>();
             std::string tumor_genes_file = j["tumor_genes"]["uuid"].get<std::string>() + "/" + j["tumor_genes"]["file"].get<std::string>();
             // std::cout << "normal_mirnas_file = " << normal_mirnas_file << ", normal_genes_file = " << normal_genes_file << ", tumor_mirnas_file = " << tumor_mirnas_file << ", tumor_genes_file = " << tumor_genes_file << "\n";
 
             std::cout << "\n***loading expression profiles***\n";
-            this->normal_mirnas.load_from_gdc_file(normal_mirnas_file, patient_folder);
+            // this->normal_mirnas.load_from_gdc_file(normal_mirnas_file, patient_folder);
+            this->normal_mirnas.load_from_gdc_file("normal", patient_folder);
             std::cout << "\n";
             this->normal_genes.load_from_gdc_file(normal_genes_file, patient_folder);
             std::cout << "\n";
-            this->tumor_mirnas.load_from_gdc_file(tumor_mirnas_file, patient_folder);
+            // this->tumor_mirnas.load_from_gdc_file(tumor_mirnas_file, patient_folder);
+            this->tumor_mirnas.load_from_gdc_file("tumor", patient_folder);
             std::cout << "\n";
             this->tumor_genes.load_from_gdc_file(tumor_genes_file, patient_folder);
             std::cout << "\n";

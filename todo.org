@@ -1,1 +1,2 @@
-* TODO implement the filtering process in gene_expression_profile.cpp
+
+* TODO check that reads_per_million_miRNA_mapped is equal to the RPM computed on read_count

@@ -19,7 +19,8 @@ public:
     unsigned long long filtered_out_distinct_mirnas = 0;
     unsigned long long filtered_out_reads = 0;
 
-    void load_from_gdc_file(std::string filename, std::string patient_folder);
+    // void load_from_gdc_file(std::string filename, std::string patient_folder);
+    void load_from_gdc_file(std::string tissue, std::string patient_folder);
     void print_statistics();
     void filter(double threshold_rpm);
     template<class Archive>
