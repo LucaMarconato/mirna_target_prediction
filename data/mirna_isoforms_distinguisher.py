@@ -27,6 +27,8 @@ def distinguish_mirna_isoforms(tissue: str):
 		global df
 		df = pd.read_csv(isoforms_filename, delimiter = '\t')
 		df = df.groupby(['miRNA_ID','miRNA_region']).sum()
+		len_before = len(df)
+		# print(f'len(df) = {len(df)} (before disambiguating)')
 		global df_excluded
 		df_excluded = df.iloc[0:0]
 		for index, row in df.iterrows():
@@ -35,15 +37,33 @@ def distinguish_mirna_isoforms(tissue: str):
 			split = mirna_region.split(',')
 			if len(split) != 2:
 				df_excluded = df_excluded.append(row)
+				df.drop(index, inplace = True)
 			else:
-				print('TODO')
-		print(f'to_process = {to_process}')
-			
+				if split[0] != 'mature':
+					print('found mirna with accession number but not mature')
+					df_excluded = df_excluded.append(row)
+				else:
+					df.rename({row.name[1]: split[1]}, axis = 'index', inplace = True, level = 1)
+		sum_len_after = len(df) + len(df_excluded)
+		# print(f'len(df) = {len(df)}, len(df_excluded) = {len(df_excluded)} (after disambiguating)')
+		if len_before != sum_len_after:
+			print(f'error: len_before = {len_before}, sum_len_after = {sum_len_after}')
+			os._exit(1)
+		df_isoform_dictionary = pd.read_csv('processed/mirna_isoforms_dictionary.tsv', delimiter = '\t')		
+		key_checker = df_isoform_dictionary.groupby(['ambiguous_mirna_id', 'accession_id']).count()
+		key_ambiguities_count = len(key_checker.loc[key_checker['disambiguated_mirna_id'] > 1, :])
+		if key_ambiguities_count > 0:
+			print(f'error: key_ambiguities_count = {key_ambiguities_count}')
+			os._exit(1)
+		df.reset_index(inplace = True)
+		df.rename(columns = {'miRNA_ID': 'ambiguous_mirna_id', 'miRNA_region': 'accession_id'}, inplace = True)
+		df_merged = pd.merge(df, df_isoform_dictionary, how = 'left', on = ['ambiguous_mirna_id', 'accession_id'])
+		global df1
+		df1 = df_merged
+		
 	else:
 		print(f'skipping {tissue} mirnas')
 
 distinguish_mirna_isoforms('normal')
 distinguish_mirna_isoforms('tumor')
 print('done')
-
-

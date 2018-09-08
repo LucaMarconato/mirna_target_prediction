@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3.7
 
 class Mirna:
 	def __init__(self, mirna_family):

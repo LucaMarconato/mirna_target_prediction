@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3.7
 import csv
 import json
 from collections import OrderedDict # to dump the json file respecting the order

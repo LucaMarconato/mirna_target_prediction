@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3.7
 
 # I used the name mirna_site for this file since site it is a standard library
 class Site:
