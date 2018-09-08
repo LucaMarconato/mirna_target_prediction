@@ -38,16 +38,18 @@ public:
 class Interaction_graph {
 public:    
     std::unordered_map<boost::tuple<Mirna_id, Gene_id, unsigned int, unsigned int>, Site *> sites_by_location;
-    // gene_site arcs
+    // gene-site arcs
     std::unordered_map<Gene_id, std::list<Site *>> gene_to_sites_arcs;
-    // mirna_site arcs
+    // mirna-site arcs
     std::unordered_map<std::pair<Mirna_id, Site *>, Mirna_site_arc> mirna_site_arcs;
     std::unordered_map<Mirna_id, std::list<Site *>> mirna_to_sites_arcs;
     std::unordered_map<Site *, std::list<Mirna_id>> site_to_mirnas_arcs;
-    // mirna_gene arcs
+    // mirna-gene arcs
     std::unordered_map<std::pair<Mirna_id, Gene_id>, std::list<Site *>> mirna_gene_arcs;
     std::unordered_map<Mirna_id, std::list<Gene_id>> mirna_to_genes_arcs;
     std::unordered_map<Gene_id, std::list<Mirna_id>> gene_to_mirnas_arcs;
+    // site-site arcs
+    std::unordered_map<Site *, std::list<Site *>> site_to_overlapping_sites;
     unsigned long long rows_processed = 0;
     unsigned long long rows_skipped = 0;
 

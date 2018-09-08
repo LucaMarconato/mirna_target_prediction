@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <map>
+#include <cmath>
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -68,14 +69,14 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
         bool conserved = atoi(columns[7].c_str());
         Site * site = this->get_site(mirna_id, gene_id, utr_start, utr_end);
 
-        // create gene_site arcs
+        // create gene-site arcs
         if(this->gene_to_sites_arcs.find(gene_id) == this->gene_to_sites_arcs.end()) {
             // this initialize the list as empty
             this->gene_to_sites_arcs[gene_id];
         }
         this->gene_to_sites_arcs[gene_id].push_back(site);       
 
-        // create mirna_site arcs
+        // create mirna-site arcs
         Mirna_site_arc mirna_site_arc(seed_match_type, context_score, weighted_context_score, conserved);
         auto p0 = std::make_pair(mirna_id, site);
         if(this->mirna_site_arcs.find(p0) != this->mirna_site_arcs.end()) {
@@ -93,7 +94,7 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
         }
         this->site_to_mirnas_arcs[site].push_back(mirna_id);
         
-        // create mirna_gene arcs
+        // create mirna-gene arcs
         auto p1 = std::make_pair(mirna_id, gene_id);
         if(this->mirna_gene_arcs.find(p1) == this->mirna_gene_arcs.end()) {
             this->mirna_gene_arcs[p1];
@@ -110,6 +111,26 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
         }
         this->gene_to_mirnas_arcs[gene_id].push_back(mirna_id);
     }
+    // create site-site arcs
+    for(auto & e : this->gene_to_sites_arcs) {
+        auto & gene_id = e.first;
+        auto & sites = e.second;
+        for(auto & site0 : sites) {
+            for(auto & site1 : sites) {
+                if(std::abs((((long long)site0->utr_start) - ((long long)site1->utr_start))) <= 8) {
+                    if(this->site_to_overlapping_sites.find(site0) == this->site_to_overlapping_sites.end()) {
+                        this->site_to_overlapping_sites[site0];
+                    }
+                    this->site_to_overlapping_sites[site0].push_back(site1);
+                    if(this->site_to_overlapping_sites.find(site1) == this->site_to_overlapping_sites.end()) {
+                        this->site_to_overlapping_sites[site1];
+                    }
+                    this->site_to_overlapping_sites[site1].push_back(site0);
+                }
+            }
+        }
+    }
+    
     std::cout << "built, ";
     Timer::stop();
 }
@@ -131,29 +152,34 @@ void Ig::print_statistics()
 {
     std::cout << "rows_processed/rows_skipped = " << rows_processed << "/" << rows_skipped << " = " << ((double)rows_processed)/rows_skipped << "\n";
     std::cout << "sites_by_location.size() = " << sites_by_location.size() << "\n";
-    std::cout << "arcs: gene_site\n";
+    std::cout << "arcs: gene-site\n";
     std::cout << "gene_to_sites_arcs.size() = " << gene_to_sites_arcs.size() << "\n";
-    std::cout << "arcs: mirna_site\n";
+    std::cout << "arcs: mirna-site\n";
     std::cout << "mirna_site_arcs.size() = " << mirna_site_arcs.size() << "\n";
     std::cout << "mirna_to_sites_arcs.size() = " << mirna_to_sites_arcs.size() << "\n";
     std::cout << "site_to_mirnas_arcs.size() = " << site_to_mirnas_arcs.size() << "\n";
-    std::cout << "arcs: mirna_gene\n";
+    std::cout << "arcs: mirna-gene\n";
     std::cout << "mirna_gene_arcs.size() = " << mirna_gene_arcs.size() << "\n";
     std::cout << "mirna_to_genes_arcs.size() = " << mirna_to_genes_arcs.size() << "\n";
     std::cout << "gene_to_mirnas_arcs.size() = " << gene_to_mirnas_arcs.size() << "\n";
+    std::cout << "site_to_overlapping_sites.size()/2 = " << site_to_overlapping_sites.size()/2 << "\n";    
 
-    if(gene_to_sites_arcs.size() != gene_to_mirnas_arcs.size()) {
+    if(this->gene_to_sites_arcs.size() != this->gene_to_mirnas_arcs.size()) {
         std::cerr << "error: gene_to_sites_arcs.size() = " << gene_to_sites_arcs.size() << ", gene_to_mirnas_arcs.size() = " << gene_to_mirnas_arcs.size() << "\n";
         exit(1);
     }
-    if(mirna_to_sites_arcs.size() != mirna_to_genes_arcs.size()) {
+    if(this->mirna_to_sites_arcs.size() != this->mirna_to_genes_arcs.size()) {
         std::cerr << "error: mirna_to_sites_arcs.size() = " << mirna_to_sites_arcs.size() << ", mirna_to_genes_arcs.size() = " << mirna_to_genes_arcs.size() << "\n";
         exit(1);
     }
     // note that if the condition is false (so that the equality holds), we are not considering sites in which the same mirna can bind in different ways
-    if(sites_by_location.size() != mirna_site_arcs.size()) {
+    if(this->sites_by_location.size() != this->mirna_site_arcs.size()) {
         std::cerr << "error: sites_by_location.size() = " << sites_by_location.size() << ", mirna_site_arcs.size() = " << mirna_site_arcs.size() << "\n";
         exit(1);        
+    }
+    if(this->site_to_overlapping_sites.size() % 2 != 0) {
+        std::cerr << "error: site_to_overlapping_sites.size() = " << site_to_overlapping_sites.size() << "\n";
+        exit(1);
     }
 }
 
