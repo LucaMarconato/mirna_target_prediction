@@ -11,6 +11,7 @@
 #include <boost/filesystem.hpp>
 
 #include <strasser/csv.h>
+#include <marconato/output_buffer/output_buffer.hpp>
 
 #include "seed_match_type.hpp"
 #include "timer.hpp"
@@ -251,6 +252,24 @@ void Ig::export_interactions_data(std::string patient_folder)
         delete [] m[i];
     }
     delete [] m;
+    std::cout << "written, ";
+    Timer::stop();
+    
+    // information about overlapping sites
+    std::cout << "writing information about overlapping sites\n";
+    Output_buffer ob(patient_folder + "overlapping_sites.tsv", 100000, 1000);
+    std::string s = "gene_id\tutr_start\toverlapping_sites_count\n";
+    ob.add_chunk(s);
+    for(auto & e : this->gene_to_sites_arcs) {
+        auto & gene_id = e.first;
+        auto & sites = e.second;
+        for(auto & site : sites) {
+            std::stringstream ss;
+            ss << gene_id << "\t" << site->utr_start << "\t" << this->site_to_overlapping_sites[site].size() << "\n";
+            s = ss.str();
+            ob.add_chunk(s);
+        }
+    }
     std::cout << "written, ";
     Timer::stop();
 }
