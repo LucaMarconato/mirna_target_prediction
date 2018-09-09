@@ -6,11 +6,6 @@
 #include "site.hpp"
 #include "patient.hpp"
 
-class My_test {
-public:
-    int a = 3;
-};
-
 int main(int argc, char * argv[])
 {
     Global_parameters::load_from_json();

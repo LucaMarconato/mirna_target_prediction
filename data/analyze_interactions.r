@@ -256,20 +256,46 @@ plot_expression_profiles_insights <- function(patient_folder)
 
 plot_overlapping_sites_insights <- function(patient_folder)
 {
-    new_maximized_device()
-    rows <- 7
-    layout(matrix(1:rows,rows,1))
-    par(mar = c(0,0,1,1))
+    ## I should use data.table instead of the code that I wrote
     filename <- paste(patient_folder, "overlapping_sites.tsv", sep = "")
     a <- read.table(filename, header = T)
+    aggregate_values <- unlist(lapply(unique(a[[1]]), function(x) max(a[a[[1]] == x,2])))
+    ## aggregate_values <- unlist(lapply(unique(a[[1]]), function(x) length(a[a[[1]] == x,2])))
+    gene_id_to_aggregate_value <- hashmap(unique(a[[1]]), aggregate_values)
+    aggregate_values_columns <- gene_id_to_aggregate_value[[a[[1]]]]
+    a <- cbind(a, aggregate_values_columns)
+    a <- a[order(a[,4]),]
+
+    new_maximized_device()
+    rows <- 10
+    layout(matrix(1:rows,rows,1))
+    par(mar = c(0,0,0,0))
     u <- unique(a[,1])
     u_split <- split(u, ceiling(seq_along(u)/(length(u)/rows)))
     for(i in seq_len(rows)){
-        ## x_data <- seq_along(u_split)
-        ## y_data <- 
-        barplot(u_split[[i]])
-        browser()
-        browser()
+        a_split <- a[a[[1]] %in% u_split[[i]],]
+        x_data <- seq_along(a_split[[1]])
+        y_data <- a_split[[2]]
+        ## barplot(u_split[[i]])
+        plot(x_data, y_data, pch = ".", cex = 3, xaxt = 'n', col = rgb(0.5,0.5,0.5,0.25)) #, ylim = c(0, max(a[[2]]))
+    }
+
+    aggregate_values <- unlist(lapply(unique(a[[1]]), function(x) mean(a[a[[1]] == x,3])))
+    gene_id_to_aggregate_value <- hashmap(unique(a[[1]]), aggregate_values)
+    aggregate_values_columns <- gene_id_to_aggregate_value[[a[[1]]]]
+    a <- cbind(a, aggregate_values_columns)
+    a <- a[order(a[,5]),]
+    new_maximized_device()
+    
+    rows <- 10
+    layout(matrix(1:rows,rows,1))
+    par(mar = c(0,0,0,0))
+    for(i in seq_len(rows)){
+        a_split <- a[a[[1]] %in% u_split[[i]],]
+        x_data <- seq_along(a_split[[1]])
+        y_data <- a_split[[3]]
+        ## barplot(u_split[[i]])
+        plot(x_data, y_data, pch = ".", cex = 3, xaxt = 'n', col = rgb(0.5,0.5,0.5,0.25)) #, ylim = c(0, max(a[[2]]))
     }
 }
 
