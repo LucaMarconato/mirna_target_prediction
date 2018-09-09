@@ -22,8 +22,8 @@ int dna_rna_mismatch(char * dna, char * rna, int length, bool watson_crick)
              (dna[i] == 'C' && rna[i] == 'G') ||
              (dna[i] == 'G' && rna[i] == 'C') ||
              (dna[i] == 'T' && rna[i] == 'A') ||
-             (watson_crick && dna[i] == 'G' && rna[i] == 'U') ||
-             (watson_crick && dna[i] == 'T' && rna[i] == 'G')
+             (!watson_crick && dna[i] == 'G' && rna[i] == 'U') ||
+             (!watson_crick && dna[i] == 'T' && rna[i] == 'G')
              )
            ) {
             return i;
@@ -58,8 +58,8 @@ int rna_rna_mismatch(char * rna0, char * rna1, int length, bool watson_crick)
              (rna0[i] == 'C' && rna1[i] == 'G') ||
              (rna0[i] == 'G' && rna1[i] == 'C') ||
              (rna0[i] == 'U' && rna1[i] == 'A') ||
-             (watson_crick && rna0[i] == 'G' && rna1[i] == 'U') ||
-             (watson_crick && rna0[i] == 'U' && rna1[i] == 'G')
+             (!watson_crick && rna0[i] == 'G' && rna1[i] == 'U') ||
+             (!watson_crick && rna0[i] == 'U' && rna1[i] == 'G')
              )
            ) {
             return i;
