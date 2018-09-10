@@ -118,15 +118,17 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
         auto & sites = e.second;
         for(auto & site0 : sites) {
             for(auto & site1 : sites) {
-                if(std::abs((((long long)site0->utr_start) - ((long long)site1->utr_start))) <= 8) {
-                    if(this->site_to_overlapping_sites.find(site0) == this->site_to_overlapping_sites.end()) {
-                        this->site_to_overlapping_sites[site0];
-                    }
-                    this->site_to_overlapping_sites[site0].push_back(site1);
-                    if(this->site_to_overlapping_sites.find(site1) == this->site_to_overlapping_sites.end()) {
-                        this->site_to_overlapping_sites[site1];
-                    }
-                    this->site_to_overlapping_sites[site1].push_back(site0);
+                if(site0 != site1) {
+                    if(std::abs((((long long)site0->utr_start) - ((long long)site1->utr_start))) <= 8) {
+                        if(this->site_to_overlapping_sites.find(site0) == this->site_to_overlapping_sites.end()) {
+                            this->site_to_overlapping_sites[site0];
+                        }
+                        this->site_to_overlapping_sites[site0].push_back(site1);
+                        // if(this->site_to_overlapping_sites.find(site1) == this->site_to_overlapping_sites.end()) {
+                        //     this->site_to_overlapping_sites[site1];
+                        // }
+                        // this->site_to_overlapping_sites[site1].push_back(site0);
+                    }                    
                 }
             }
         }
@@ -163,7 +165,7 @@ void Ig::print_statistics()
     std::cout << "mirna_gene_arcs.size() = " << mirna_gene_arcs.size() << "\n";
     std::cout << "mirna_to_genes_arcs.size() = " << mirna_to_genes_arcs.size() << "\n";
     std::cout << "gene_to_mirnas_arcs.size() = " << gene_to_mirnas_arcs.size() << "\n";
-    std::cout << "site_to_overlapping_sites.size()/2 = " << site_to_overlapping_sites.size()/2 << "\n";    
+    std::cout << "site_to_overlapping_sites.size() = " << site_to_overlapping_sites.size() << "\n";
 
     if(this->gene_to_sites_arcs.size() != this->gene_to_mirnas_arcs.size()) {
         std::cerr << "error: gene_to_sites_arcs.size() = " << gene_to_sites_arcs.size() << ", gene_to_mirnas_arcs.size() = " << gene_to_mirnas_arcs.size() << "\n";
@@ -177,10 +179,6 @@ void Ig::print_statistics()
     if(this->sites_by_location.size() != this->mirna_site_arcs.size()) {
         std::cerr << "error: sites_by_location.size() = " << sites_by_location.size() << ", mirna_site_arcs.size() = " << mirna_site_arcs.size() << "\n";
         exit(1);        
-    }
-    if(this->site_to_overlapping_sites.size() % 2 != 0) {
-        std::cerr << "error: site_to_overlapping_sites.size() = " << site_to_overlapping_sites.size() << "\n";
-        exit(1);
     }
 }
 

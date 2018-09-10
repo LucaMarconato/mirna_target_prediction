@@ -1,5 +1,6 @@
 library("rjson")
 library("hashmap")
+## library("RColorBrewer")
 
 get_screen_resolution <- function() {
     return(c(2560, 1440))
@@ -267,40 +268,168 @@ plot_overlapping_sites_insights <- function(patient_folder)
     a <- a[order(a[,4]),]
 
     new_maximized_device()
-    rows <- 10
+    rows <- 12
     layout(matrix(1:rows,rows,1))
-    par(mar = c(0,0,0,0))
+    old_par <- par(mar = c(0,4,0,0))
     u <- unique(a[,1])
     u_split <- split(u, ceiling(seq_along(u)/(length(u)/rows)))
     for(i in seq_len(rows)){
         a_split <- a[a[[1]] %in% u_split[[i]],]
-        x_data <- seq_along(a_split[[1]])
+        gene_id_to_seq_along <- hashmap(u_split[[i]], seq_along(u_split[[i]]))
+        x_data <- gene_id_to_seq_along[[a_split[[1]]]]
         y_data <- a_split[[2]]
         ## barplot(u_split[[i]])
-        plot(x_data, y_data, pch = ".", cex = 3, xaxt = 'n', col = rgb(0.5,0.5,0.5,0.25)) #, ylim = c(0, max(a[[2]]))
+        plot(x_data, y_data, pch = ".", cex = 1, xaxt = 'n', col = rgb(0.5,0.5,0.5,0.25)) #, ylim = c(0, max(a[[2]]))
     }
 
-    aggregate_values <- unlist(lapply(unique(a[[1]]), function(x) mean(a[a[[1]] == x,3])))
+    aggregate_values <- unlist(lapply(unique(a[[1]]), function(x) length(unique(a[a[[1]] == x,3]))))
     gene_id_to_aggregate_value <- hashmap(unique(a[[1]]), aggregate_values)
     aggregate_values_columns <- gene_id_to_aggregate_value[[a[[1]]]]
     a <- cbind(a, aggregate_values_columns)
     a <- a[order(a[,5]),]
+    ## browser()
     new_maximized_device()
     
     rows <- 10
-    layout(matrix(1:rows,rows,1))
-    par(mar = c(0,0,0,0))
+    first_rows_to_show <- 10
+    last_rows_to_show <- 0
+    total_rows_to_show <- first_rows_to_show + last_rows_to_show
+    layout_vector <- rep(0, 2 * total_rows_to_show - 1)
+    layout_vector[seq(1,2 * total_rows_to_show - 1, 2)] <- 1:total_rows_to_show
+    layout_vector[seq(2,2 * total_rows_to_show - 1, 2)] <- seq(total_rows_to_show + 1, 2 * total_rows_to_show - 1, 1)
+    widths_vector <- rep(1, 2 * total_rows_to_show - 1)
+    widths_vector[seq(2,2 * total_rows_to_show - 1, 2)] <- lcm(1)
+    layout(matrix(layout_vector, 2 * total_rows_to_show - 1, 1), widths = widths_vector)
+    par(mar = c(0,4,0,0))
+    u <- unique(a[,1])
+    u_split <- split(u, ceiling(seq_along(u)/(length(u)/rows)))
+    rows_drawn <- 0
     for(i in seq_len(rows)){
-        a_split <- a[a[[1]] %in% u_split[[i]],]
-        x_data <- seq_along(a_split[[1]])
-        y_data <- a_split[[3]]
-        ## barplot(u_split[[i]])
-        plot(x_data, y_data, pch = ".", cex = 3, xaxt = 'n', col = rgb(0.5,0.5,0.5,0.25)) #, ylim = c(0, max(a[[2]]))
+        if(i <= first_rows_to_show || i > rows - last_rows_to_show) {
+            a_split <- a[a[[1]] %in% u_split[[i]],]
+            gene_id_to_seq_along <- hashmap(u_split[[i]], seq_along(u_split[[i]]))
+            x_data <- gene_id_to_seq_along[[a_split[[1]]]]
+            y_data <- a_split[[3]]
+            unique_y <- unique(y_data)
+            ## barplot(u_split[[i]])
+            ## use a light color when you are visualizing thousands of genes at the same time, a dark one otherwise
+            ## my_color <- rgb(0.5,0.5,0.5,0.25) 
+            my_color <- "black"
+            plot(x_data, y_data, pch = ".", cex = 1, xaxt = 'n', col = my_color, axes = F) #, ylim = c(0, max(a[[2]]))
+            light_gray <- rgb(0.9,0.9,0.9,0.3)
+            ## abline(h = unique_y, lty = 1, col = light_gray)
+            axis(side = 2, at = unique_y)
+            rows_drawn <- rows_drawn + 1
+        }
     }
+    for(i in seq_len(rows_drawn - 1)) {
+        plot(1, 1, type = 'n', axes = F, ann = F)
+        abline(h = 1, col = "gray")
+    }
+
+    new_maximized_device()
+    layout(matrix(1:2,2,1))
+    barplot(table(a[[3]]))
+    grid()
+    barplot(table(a[[3]][a[[3]] > 1]))
+    grid()
+}
+
+study_overlaps_of_specific_gene <- function(patient_folder, gene_id = -1)
+{
+    filename <- paste(patient_folder, "overlapping_sites.tsv", sep = "")
+    a <<- read.table(filename, header = T)
+    if(gene_id == -1) {
+        gene_id <- a[sample(nrow(a), 1), ][[1]]
+    }
+    my_palette <- palette()
+    my_palette[7] <- "orange"
+    new_maximized_device()
+    rows_first_plot <- 60
+    layout(matrix(seq(1,rows_first_plot + 2), rows_first_plot + 2, 1), heights = c(lcm(2), rep(1, rows_first_plot), rows_first_plot/4))
+    old_par <- par(mar = c(0,0,2,0))
+    plot.new()
+    title(paste("sites for gene_id =", gene_id))
+    legend_labels = c(paste(0:6, "overlaps"),">= 7 overlaps")
+    legend("top", legend_labels, col = my_palette[8:1], ncol = 8, pch = 15)
+    mtext("position in the 3' UTR", side=3, at=par("usr")[1]+0.01*diff(par("usr")[1:2]), adj = 0, cex = 0.5)
+    
+    rows <- a[a[[1]] == gene_id, ]
+    max_site_position <- max(rows[[2]])
+    intervals <- seq(0, max_site_position + 1, length.out = rows_first_plot + 1)
+    left_values <- intervals[1:(length(intervals) - 1)]
+    ## this -1 compensates for the +1 of two rows above
+    right_values <- intervals[2:length(intervals)] - 1
+    utr_length_so_far <- 0
+    ## print(intervals)
+    ## print(left_values)
+    ## print(right_values)
+    for(j in seq_along(left_values)) {
+        left_value <- left_values[j]
+        right_value <- right_values[j]        
+        if(j == 1) {
+            par(mar = c(0,0,0,0))
+        } else {
+            par(mar = c(0,0,0,0))
+        }
+        rows_split <- rows[rows[[2]] >= left_value & rows[[2]] <= right_value,]
+        for(i in 1:8) {
+            if(i < 8) {
+                sites <- rows_split[rows_split[[3]] == i - 1, ]
+            } else {
+                sites <- rows_split[rows_split[[3]] >= 7, ]
+            }
+            my_xlim <- c(left_value, right_value)
+            my_color <- my_palette[8 - i + 1]
+            my_pch <- 1
+            my_cex <- 1
+            if(length(sites[[2]])) {
+                if(i == 1) {
+                    plot(sites[[2]], rep(1, length(sites[[2]])), xlim = my_xlim, xlab = "position in 3' UTR", yaxt = 'n', ylab = '', col = my_color, pch = my_pch, cex = my_cex, axes = F)
+                } else {
+                    points(sites[[2]], rep(1, length(sites[[2]])), xlim = my_xlim, xlab = "position in 3' UTR", yaxt = 'n', ylab = '', col = my_color, pch = my_pch, cex = my_cex)
+                }
+            } else {
+                if(i == 1) {
+                    plot.new()
+                }
+            }
+            box(col = "lightgray")
+            ## TODO: BUG: the text is not placed in the last row
+            mtext(paste(round(left_value)),side=3, at=par("usr")[1]+0.01*diff(par("usr")[1:2]), cex = 0.5)
+        }
+    }
+
+    par(old_par)
+    counts <- sapply(0:6, function(x) length(rows[[3]][rows[[3]] == x]))
+    greater_than7 <- length(rows[[3]][rows[[3]] >= 7])
+    if(greater_than7 == 0) {
+        greater_than7 <- 0
+    }
+    counts <- c(counts, greater_than7)
+    ## print(counts); print(greater_than7)
+    ## h <- hist(rows[[3]], plot = F)
+    ## colors_for_breaks <- 8 - h$breaks
+    ## colors_for_breaks[colors_for_breaks < 0] <- 0
+    colors_for_breaks <- 8:1
+    ## my_names <- h$mids - 0.5
+    ## found <- match(7, my_names)
+    ## if(!is.na(found)) {
+    ##     my_names[found] <- ">= 7"
+    ## }
+    my_names <- paste(0:6)
+    my_names <- c(my_names, ">= 7")
+    barplot(counts, names.arg = my_names, col = my_palette[colors_for_breaks], main = "Distribution of overlapping sites", horiz = T, las = 1, axes = F)
+    my_ticks <- round(seq(0,max(counts),5))
+    axis(side = 1, at = my_ticks)
+    abline(v = my_ticks, lty = 2, col = "lightgray")
 }
 
 patient_id <- "TCGA-CJ-4642"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
 ## plot_adjacency_matrix_insights(patient_folder)
 ## plot_expression_profiles_insights(patient_folder)
-plot_overlapping_sites_insights(patient_folder)
+## plot_overlapping_sites_insights(patient_folder)
+study_overlaps_of_specific_gene(patient_folder)
+study_overlaps_of_specific_gene(patient_folder, gene_id = 118)
+## study_overlaps_of_specific_gene(patient_folder, gene_id = 545)
