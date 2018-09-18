@@ -5,6 +5,8 @@
 #include <sstream>
 #include <map>
 #include <cmath>
+#include <set>
+#include <queue>
 
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
@@ -75,7 +77,7 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
             // this initialize the list as empty
             this->gene_to_sites_arcs[gene_id];
         }
-        this->gene_to_sites_arcs[gene_id].push_back(site);       
+        this->gene_to_sites_arcs[gene_id].push_back(site);        
 
         // create mirna-site arcs
         Mirna_site_arc mirna_site_arc(seed_match_type, context_score, weighted_context_score, conserved);
@@ -133,6 +135,41 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
             }
         }
     }
+
+    // extract clusters
+    for(auto & e : this->gene_to_sites_arcs) {
+        auto & gene_id = e.first;
+        std::set<Site *> processed;
+        for(auto & site : e.second) {
+            if(processed.find(site) == processed.end()) {
+                Cluster c;
+                std::queue<Site *> to_explore;
+                to_explore.push(site);                
+                while(to_explore.size() > 0) {
+                    // std::cout << "processed.size() = " << processed.size() << ", c.sites.size() = " << c.sites.size() << ", to_explore.size() = " << to_explore.size() << "\n";
+                    auto & e = to_explore.front();
+                    to_explore.pop();
+                    if(processed.find(e) != processed.end()) {
+                        continue;
+                    }
+                    processed.insert(e);
+                    c.sites.push_back(e);
+                    if(this->site_to_overlapping_sites.find(e) != this->site_to_overlapping_sites.end()) {
+                        for(auto & overlapping : this->site_to_overlapping_sites.at(e)) {
+                            if(processed.find(overlapping) == processed.end()) {
+                                to_explore.push(overlapping);            
+                            }
+                        }   
+                    }
+                }
+                // TODO: check if this line is needed (the constructor is probably called even withou the if)
+                if(this->gene_to_clusters.find(gene_id) == this->gene_to_clusters.end()) {
+                    this->gene_to_clusters[gene_id];
+                }
+                this->gene_to_clusters[gene_id].push_back(c);
+            }
+        }
+    }
     
     std::cout << "built, ";
     Timer::stop();
@@ -179,7 +216,14 @@ void Ig::print_statistics()
     if(this->sites_by_location.size() != this->mirna_site_arcs.size()) {
         std::cerr << "error: sites_by_location.size() = " << sites_by_location.size() << ", mirna_site_arcs.size() = " << mirna_site_arcs.size() << "\n";
         exit(1);        
+    }    
+    unsigned long long total_clusters = 0;
+    for(auto & e : this->gene_to_clusters) {
+        for(auto & c : e.second) {
+            total_clusters += c.sites.size();
+        }
     }
+    std::cout << "total_clusters = " << total_clusters << "\n";
 }
 
 void Ig::export_interactions_data(std::string patient_folder)
@@ -255,9 +299,9 @@ void Ig::export_interactions_data(std::string patient_folder)
     
     // information about overlapping sites
     std::cout << "writing information about overlapping sites\n";
-    Output_buffer ob(patient_folder + "overlapping_sites.tsv", 100000, 1000);
+    Output_buffer ob0(patient_folder + "overlapping_sites.tsv", 100000, 1000);
     std::string s = "gene_id\tutr_start\toverlapping_sites_count\n";
-    ob.add_chunk(s);
+    ob0.add_chunk(s);
     for(auto & e : this->gene_to_sites_arcs) {
         auto & gene_id = e.first;
         auto & sites = e.second;
@@ -265,11 +309,29 @@ void Ig::export_interactions_data(std::string patient_folder)
             std::stringstream ss;
             ss << gene_id << "\t" << site->utr_start << "\t" << this->site_to_overlapping_sites[site].size() << "\n";
             s = ss.str();
-            ob.add_chunk(s);
+            ob0.add_chunk(s);
         }
     }
     std::cout << "written, ";
     Timer::stop();
+
+    // information about clusters
+    std::cout << "writing information about clusters\n";
+    Output_buffer ob1(patient_folder + "clusters.tsv", 100000, 1000);
+    s = "gene_id\tcluster_size\n";
+    ob1.add_chunk(s);
+    for(auto & e : this->gene_to_clusters) {
+        auto & gene_id = e.first;
+        auto & clusters = e.second;
+        for(auto & cluster : clusters) {
+            std::stringstream ss;
+            ss << gene_id << "\t" << cluster.sites.size() << "\n";
+            s = ss.str();
+            ob1.add_chunk(s);
+        }
+    }
+    std::cout << "written, ";
+    Timer::stop();    
 }
 
 Ig::~Interaction_graph()

@@ -1,6 +1,11 @@
 [
 {
   "directory": "/Users/macbook/bioinformatics/github/mirna_target_prediction",
+  "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++    -I/Users/macbook/bioinformatics/github/mirna_target_prediction/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Ofast -o CMakeFiles/expression_profiles.dir/cluster.cpp.o -c /Users/macbook/bioinformatics/github/mirna_target_prediction/cluster.cpp",
+  "file": "/Users/macbook/bioinformatics/github/mirna_target_prediction/cluster.cpp"
+},
+{
+  "directory": "/Users/macbook/bioinformatics/github/mirna_target_prediction",
   "command": "/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++    -I/Users/macbook/bioinformatics/github/mirna_target_prediction/./dependencies -I/usr/local/Cellar/boost/1.67.0_1/include  -O3 -DNDEBUG   -std=c++14 -Ofast -o CMakeFiles/expression_profiles.dir/expression_profile.cpp.o -c /Users/macbook/bioinformatics/github/mirna_target_prediction/expression_profile.cpp",
   "file": "/Users/macbook/bioinformatics/github/mirna_target_prediction/expression_profile.cpp"
 },

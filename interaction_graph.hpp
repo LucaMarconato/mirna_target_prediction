@@ -14,6 +14,7 @@
 #include "mirna.hpp"
 #include "gene.hpp"
 #include "site.hpp"
+#include "cluster.hpp"
 #include "seed_match_type.hpp"
 
 class Interaction_graph;
@@ -40,6 +41,7 @@ public:
     std::unordered_map<boost::tuple<Mirna_id, Gene_id, unsigned int, unsigned int>, Site *> sites_by_location;
     // gene-site arcs
     std::unordered_map<Gene_id, std::list<Site *>> gene_to_sites_arcs;
+    std::unordered_map<Gene_id, std::list<Cluster>> gene_to_clusters;
     // mirna-site arcs
     std::unordered_map<std::pair<Mirna_id, Site *>, Mirna_site_arc> mirna_site_arcs;
     std::unordered_map<Mirna_id, std::list<Site *>> mirna_to_sites_arcs;

@@ -13,7 +13,8 @@ get_screen_resolution <- function() {
 
 ## returns the screen size in inches
 get_screen_physical_size <- function() {    
-    return(c(24 + 1/4 + 1/8, 13 + 1/32))
+    ## return(c(24 + 1/4 + 1/8, 13 + 1/32))
+    return(c(12.8, 7.5))
     ## or automatically, but I preferred to do it manually via a "binary search"
     ## cmd <- sprintf("%s | grep dimensions | perl -pe 's/^.*?(\\([0-9]+x[0-9]+)\ millimeters.*/$1/g' | tr -d '(' | tr 'x' ' '", xdpyinfo_path)
     ## output <- system(cmd, intern = T, ignore.stderr = T)
@@ -268,7 +269,7 @@ plot_overlapping_sites_insights <- function(patient_folder)
     a <- a[order(a[,4]),]
 
     new_maximized_device()
-    rows <- 12
+    rows <- 1
     layout(matrix(1:rows,rows,1))
     old_par <- par(mar = c(0,4,0,0))
     u <- unique(a[,1])
@@ -338,7 +339,7 @@ plot_overlapping_sites_insights <- function(patient_folder)
 study_overlaps_of_specific_gene <- function(patient_folder, gene_id = -1)
 {
     filename <- paste(patient_folder, "overlapping_sites.tsv", sep = "")
-    a <<- read.table(filename, header = T)
+    a <- read.table(filename, header = T)
     if(gene_id == -1) {
         gene_id <- a[sample(nrow(a), 1), ][[1]]
     }
@@ -351,6 +352,7 @@ study_overlaps_of_specific_gene <- function(patient_folder, gene_id = -1)
     plot.new()
     title(paste("sites for gene_id =", gene_id))
     legend_labels = c(paste(0:6, "overlaps"),">= 7 overlaps")
+    ## TODO: check if the colors are correct or shifted by one0
     legend("top", legend_labels, col = my_palette[8:1], ncol = 8, pch = 15)
     mtext("position in the 3' UTR", side=3, at=par("usr")[1]+0.01*diff(par("usr")[1:2]), adj = 0, cex = 0.5)
     
@@ -400,7 +402,7 @@ study_overlaps_of_specific_gene <- function(patient_folder, gene_id = -1)
         }
     }
 
-    par(old_par)
+    par(mar = c(3,4,0,0))
     counts <- sapply(0:6, function(x) length(rows[[3]][rows[[3]] == x]))
     greater_than7 <- length(rows[[3]][rows[[3]] >= 7])
     if(greater_than7 == 0) {
@@ -423,6 +425,23 @@ study_overlaps_of_specific_gene <- function(patient_folder, gene_id = -1)
     my_ticks <- round(seq(0,max(counts),5))
     axis(side = 1, at = my_ticks)
     abline(v = my_ticks, lty = 2, col = "lightgray")
+    par(old_par)
+}
+
+study_clusters <- function(patient_folder)
+{
+    filename <- paste(patient_folder, "clusters.tsv", sep = "")
+    a <<- read.table(filename, colClasses = c("numeric", "numeric"), header = T)
+    print(table(a$cluster_size))
+    new_maximized_device()
+    layout(matrix(1:3, 1, 3))
+    ## TODO: use colors to better recognize how the barplots are related to each other
+    barplot(table(a$cluster_size))
+    grid()
+    barplot(table(a$cluster_size[a$cluster_size > 2]))
+    grid()
+    barplot(table(a$cluster_size[a$cluster_size > 7]))
+    grid()
 }
 
 patient_id <- "TCGA-CJ-4642"
@@ -430,6 +449,7 @@ patient_folder <- paste("patients/", patient_id, "/", sep = "")
 ## plot_adjacency_matrix_insights(patient_folder)
 ## plot_expression_profiles_insights(patient_folder)
 ## plot_overlapping_sites_insights(patient_folder)
-study_overlaps_of_specific_gene(patient_folder)
-study_overlaps_of_specific_gene(patient_folder, gene_id = 118)
-## study_overlaps_of_specific_gene(patient_folder, gene_id = 545)
+## study_overlaps_of_specific_gene(patient_folder)
+## study_overlaps_of_specific_gene(patient_folder, gene_id = 118)
+## study_overlaps_of_specific_gene(patient_folder, gene_id = 10456)
+study_clusters(patient_folder)
