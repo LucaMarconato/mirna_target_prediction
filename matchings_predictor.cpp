@@ -53,7 +53,7 @@ void Matchings_predictor::compute()
 {
     std::cout << "for the moment, just a trivial explicit Euler scheme\n";
     double lambda = 1;
-    unsigned long long max_steps = 300;
+    unsigned long long max_steps = 2000;
     // h must be <= 1
     double h = 1;
     bool scaling = false;
@@ -74,7 +74,7 @@ void Matchings_predictor::compute()
         std::string cmd = "mkdir -p " + log_folder;
         std::system(cmd.c_str());
         std::cout << "deleting old log from \"" + log_folder + "\"\n";
-        cmd = "rm " + log_folder + "mirna_expression_profile*";
+        cmd = "rm " + log_folder + "/mirna_expression_profile*";
         std::system(cmd.c_str());
         ss1_header << "mirna_id\trelative_expression\n";
     }    
@@ -92,8 +92,7 @@ void Matchings_predictor::compute()
                     ss1 << e.first << "\t" << e.second << "\n";
                 }
                 std::stringstream mirna_log_filename;
-                mirna_log_filename << mirna_log_filename_prefix << std::setfill('0') << std::setw(3) << t << ".tsv";
-                std::cout << "mirna_log_filename.str() = " << mirna_log_filename.str() << "\n";
+                mirna_log_filename << mirna_log_filename_prefix << std::setfill('0') << std::setw(6) << t << ".tsv";
                 std::ofstream out1(mirna_log_filename.str());
                 out1 << ss1.str();
                 out1.close();
