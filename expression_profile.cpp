@@ -71,6 +71,7 @@ Expression::Expression(Relative_expression relative_expression) {
     this->relative_expression = Relative_expression(relative_expression);
     this->reads = Reads();
     this->rpm = Rpm();
+    this->valid_rpm = false;
 }
 
 Expression::Expression(Reads reads)
@@ -78,6 +79,7 @@ Expression::Expression(Reads reads)
     this->relative_expression = Relative_expression();
     this->reads = Reads(reads);
     this->rpm = Rpm();
+    this->valid_rpm = true;
 }
 
 Expression::Expression(Rpm rpm)
@@ -85,6 +87,7 @@ Expression::Expression(Rpm rpm)
     this->relative_expression = Relative_expression();
     this->reads = Reads();
     this->rpm = Rpm(rpm);
+    this->valid_rpm = true;
 }
 
 void swap(Expression & obj1, Expression & obj2)
@@ -93,6 +96,7 @@ void swap(Expression & obj1, Expression & obj2)
     obj1.relative_expression.swap(obj2.relative_expression);
     obj1.reads.swap(obj2.reads);
     obj1.rpm.swap(obj2.rpm);
+    std::swap(obj1.valid_rpm, obj2.valid_rpm);
 }
 
 Expression & Expression::operator=(Expression obj)
@@ -143,6 +147,10 @@ unsigned long long Expression::to_reads()
 double Expression::to_rpm()
 {
     integrity_check();
+    if(!this->valid_rpm) {
+        std::cerr << "error: requesting an rpm value which would be artificial\n";
+        exit(1);
+    }
     if(!this->relative_expression.undefined) {
         return this->relative_expression.value/1000000;            
     } else if(!this->reads.undefined) {

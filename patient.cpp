@@ -73,15 +73,15 @@ Patient::Patient(std::string case_id) : case_id(case_id)
 
             std::cout << "\n***building interaction graph***\n";
             this->interaction_graph.build_interaction_graph(mirnas, genes);
-            this->normal_sites = Site_expression_profile(this->normal_genes, this->interaction_graph);
-            this->tumor_sites = Site_expression_profile(this->tumor_genes, this->interaction_graph);
+            this->normal_clusters = Cluster_expression_profile(this->normal_genes, this->interaction_graph);
+            this->tumor_clusters = Cluster_expression_profile(this->tumor_genes, this->interaction_graph);
 
             if(!dont_use_boost_serialization_here) {
                 std::cout << "writing " << patient_file << "\n";
                 Timer::start();
                 std::ofstream out(patient_file, std::ios::binary);
                 boost::archive::binary_oarchive oa(out);
-                oa << this->normal_mirnas << this->normal_genes << this->tumor_mirnas << this->tumor_genes << this->normal_sites << this->tumor_sites;
+                oa << this->normal_mirnas << this->normal_genes << this->tumor_mirnas << this->tumor_genes << this->normal_clusters << this->tumor_clusters;
                 oa << this->interaction_graph;
                 out.close();
                 std::cout << "written, ";
@@ -92,7 +92,7 @@ Patient::Patient(std::string case_id) : case_id(case_id)
             Timer::start();
             std::ifstream in(patient_file, std::ios::binary);
             boost::archive::binary_iarchive ia(in);
-            ia >> this->normal_mirnas >> this->normal_genes >> this->tumor_mirnas >> this->tumor_genes >> this->normal_sites >> this->tumor_sites;
+            ia >> this->normal_mirnas >> this->normal_genes >> this->tumor_mirnas >> this->tumor_genes >> this->normal_clusters >> this->tumor_clusters;
             ia >> this->interaction_graph;
             in.close();
             std::cout << "loaded, ";
@@ -109,8 +109,9 @@ Patient::Patient(std::string case_id) : case_id(case_id)
         std::cout << "\n";
         this->interaction_graph.print_statistics();
         std::cout << "\n";
-        this->interaction_graph.export_interactions_data(patient_folder);
-        this->export_expression_profiles(patient_folder);
+        // WARNING: these two lines are temporarily commented out, put them back
+        // this->interaction_graph.export_interactions_data(patient_folder);
+        // this->export_expression_profiles(patient_folder);
     }
 }
 

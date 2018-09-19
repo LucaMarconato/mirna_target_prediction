@@ -116,7 +116,7 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
     }
     // create site-site arcs
     for(auto & e : this->gene_to_sites_arcs) {
-        auto & gene_id = e.first;
+        // auto & gene_id = e.first;
         auto & sites = e.second;
         for(auto & site0 : sites) {
             for(auto & site1 : sites) {
@@ -142,7 +142,7 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
         std::set<Site *> processed;
         for(auto & site : e.second) {
             if(processed.find(site) == processed.end()) {
-                Cluster c;
+                Cluster * c = new Cluster();
                 std::queue<Site *> to_explore;
                 to_explore.push(site);                
                 while(to_explore.size() > 0) {
@@ -153,7 +153,7 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
                         continue;
                     }
                     processed.insert(e);
-                    c.sites.push_back(e);
+                    c->sites.push_back(e);
                     if(this->site_to_overlapping_sites.find(e) != this->site_to_overlapping_sites.end()) {
                         for(auto & overlapping : this->site_to_overlapping_sites.at(e)) {
                             if(processed.find(overlapping) == processed.end()) {
@@ -163,10 +163,10 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
                     }
                 }
                 // TODO: check if this line is needed (the constructor is probably called even withou the if)
-                if(this->gene_to_clusters.find(gene_id) == this->gene_to_clusters.end()) {
-                    this->gene_to_clusters[gene_id];
+                if(this->gene_to_clusters_arcs.find(gene_id) == this->gene_to_clusters_arcs.end()) {
+                    this->gene_to_clusters_arcs[gene_id];
                 }
-                this->gene_to_clusters[gene_id].push_back(c);
+                this->gene_to_clusters_arcs[gene_id].push_back(c);
             }
         }
     }
@@ -218,12 +218,11 @@ void Ig::print_statistics()
         exit(1);        
     }    
     unsigned long long total_clusters = 0;
-    for(auto & e : this->gene_to_clusters) {
-        for(auto & c : e.second) {
-            total_clusters += c.sites.size();
-        }
+    for(auto & e : this->gene_to_clusters_arcs) {
+        total_clusters += e.second.size();
     }
-    std::cout << "total_clusters = " << total_clusters << "\n";
+    std::cout << "total_clusters/total_sites = " << total_clusters << "/" << mirna_site_arcs.size() << " = " << ((double)total_clusters)/mirna_site_arcs.size() << "\n";
+    
 }
 
 void Ig::export_interactions_data(std::string patient_folder)
@@ -320,27 +319,36 @@ void Ig::export_interactions_data(std::string patient_folder)
     Output_buffer ob1(patient_folder + "clusters.tsv", 100000, 1000);
     s = "gene_id\tcluster_size\n";
     ob1.add_chunk(s);
-    for(auto & e : this->gene_to_clusters) {
+    for(auto & e : this->gene_to_clusters_arcs) {
         auto & gene_id = e.first;
         auto & clusters = e.second;
         for(auto & cluster : clusters) {
             std::stringstream ss;
-            ss << gene_id << "\t" << cluster.sites.size() << "\n";
+            ss << gene_id << "\t" << cluster->sites.size() << "\n";
             s = ss.str();
             ob1.add_chunk(s);
         }
     }
     std::cout << "written, ";
-    Timer::stop();    
+    Timer::stop();
 }
 
 Ig::~Interaction_graph()
 {
     Timer::start();
-    std::cout << "deleting all_sites\n";
+    std::cout << "deleting all sites\n";
     for(auto & e : this->sites_by_location) {
         delete e.second;
     }
     std::cout << "deleted, ";
     Timer::stop();
+    Timer::start();
+    std::cout << "deleting all clusters\n";
+    for(auto & e : this->gene_to_clusters_arcs) {
+        for(auto & cluster : e.second) {
+            delete cluster;
+        }
+    }
+    std::cout << "deleted, ";
+    Timer::stop();    
 }

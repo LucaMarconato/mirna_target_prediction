@@ -5,7 +5,7 @@
 
 #include "mirna_expression_profile.hpp"
 #include "gene_expression_profile.hpp"
-#include "site_expression_profile.hpp"
+#include "cluster_expression_profile.hpp"
 #include "interaction_graph.hpp"
 
 class Patient {
@@ -13,7 +13,7 @@ public:
     std::string case_id;
     Mirna_expression_profile normal_mirnas, tumor_mirnas;
     Gene_expression_profile normal_genes, tumor_genes;
-    Site_expression_profile normal_sites, tumor_sites;
+    Cluster_expression_profile normal_clusters, tumor_clusters;
     // Site_expression_profile ...;
     Interaction_graph interaction_graph;
 

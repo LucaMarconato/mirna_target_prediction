@@ -26,4 +26,5 @@ void Expression::serialize(Archive & ar, const unsigned int version)
     ar & this->relative_expression;
     ar & this->reads;
     ar & this->rpm;
+    ar & this->valid_rpm;
 }

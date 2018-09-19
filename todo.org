@@ -1,4 +1,4 @@
 * TODO check that "reads_per_million_miRNA_mapped" is equal to the RPM computed on "reads"
 * TODO find the distribution of the length of the clusters and prepare the clustering procedure
-
+* TODO apply the changes I have been suggested in Python code
 

@@ -13,8 +13,8 @@ get_screen_resolution <- function() {
 
 ## returns the screen size in inches
 get_screen_physical_size <- function() {    
-    ## return(c(24 + 1/4 + 1/8, 13 + 1/32))
-    return(c(12.8, 7.5))
+    return(c(24 + 1/4 + 1/8, 13 + 1/32))
+    ## return(c(12.8, 7.5))
     ## or automatically, but I preferred to do it manually via a "binary search"
     ## cmd <- sprintf("%s | grep dimensions | perl -pe 's/^.*?(\\([0-9]+x[0-9]+)\ millimeters.*/$1/g' | tr -d '(' | tr 'x' ' '", xdpyinfo_path)
     ## output <- system(cmd, intern = T, ignore.stderr = T)
@@ -42,7 +42,7 @@ close_all_devices <- function() {
 
 plot_adjacency_matrix_insights <- function(patient_folder) {
     matrix_filename <- paste(patient_folder, "mirna_gene_adjacency_matrix.mat", sep = "")
-    m <- read.table(matrix_filename, sep = "\t")
+    m <<- read.table(matrix_filename, sep = "\t")
     m <- as.matrix(m)
     close_all_devices()
     new_maximized_device()
@@ -61,7 +61,7 @@ plot_adjacency_matrix_insights <- function(patient_folder) {
     barplot(table(m[m >= 10]), main = title)
     grid()
 
-    sites_per_mirna <- sapply(1:nrow(m), function(i) sum(m[i,]))
+    sites_per_mirna <<- sapply(1:nrow(m), function(i) sum(m[i,]))
     sites_per_mirna <- t(sites_per_mirna)
     colnames(sites_per_mirna) <- rownames(m)
     o <- order(sites_per_mirna)
@@ -446,7 +446,7 @@ study_clusters <- function(patient_folder)
 
 patient_id <- "TCGA-CJ-4642"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
-## plot_adjacency_matrix_insights(patient_folder)
+plot_adjacency_matrix_insights(patient_folder)
 ## plot_expression_profiles_insights(patient_folder)
 ## plot_overlapping_sites_insights(patient_folder)
 ## study_overlaps_of_specific_gene(patient_folder)

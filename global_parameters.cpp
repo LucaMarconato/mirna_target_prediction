@@ -9,6 +9,8 @@ using json = nlohmann::json;
 
 double Global_parameters::mirna_threshold_rpm;
 double Global_parameters::gene_threshold_rpm;
+// TODO: this has to be chosen wisely looking at the relative expression profiles of mirnas, genes, sites and clusters
+double Global_parameters::epsilon = 0.00000001;
 
 void Global_parameters::load_from_json()
 {

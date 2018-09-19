@@ -41,8 +41,10 @@ class Expression {
 private:
     Relative_expression relative_expression;
     Reads reads;
-    Rpm rpm;    
-public:    
+    Rpm rpm;
+public:
+    bool valid_rpm = false;
+    
     Expression();
     Expression(Relative_expression relative_expression);
     Expression(Reads reads);
