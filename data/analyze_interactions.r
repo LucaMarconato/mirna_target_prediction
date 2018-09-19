@@ -1,50 +1,12 @@
 library("rjson")
 library("hashmap")
+source("my_device.r")
 ## library("RColorBrewer")
-
-get_screen_resolution <- function() {
-    return(c(2560, 1440))
-    ## or automatically
-    ## xdpyinfo_path <- "/opt/X11/bin/xdpyinfo"    
-    ## cmd <- sprintf("%s | grep dimensions | perl -pe 's/^.*?([0-9]+x[0-9]+).*/$1/g' | tr 'x' ' '", xdpyinfo_path)
-    ## output <- system(cmd, intern = T, ignore.stderr = T)
-    ## return(as.numeric(unlist(strsplit(output, split = " "))))
-}
-
-## returns the screen size in inches
-get_screen_physical_size <- function() {    
-    return(c(24 + 1/4 + 1/8, 13 + 1/32))
-    ## return(c(12.8, 7.5))
-    ## or automatically, but I preferred to do it manually via a "binary search"
-    ## cmd <- sprintf("%s | grep dimensions | perl -pe 's/^.*?(\\([0-9]+x[0-9]+)\ millimeters.*/$1/g' | tr -d '(' | tr 'x' ' '", xdpyinfo_path)
-    ## output <- system(cmd, intern = T, ignore.stderr = T)
-    ## v <- as.numeric(unlist(strsplit(output, split = " ")))
-    ## return(v/25.4)
-}
-
-new_maximized_device <- function() {
-    resolution <- get_screen_resolution()
-    physical_size <- get_screen_physical_size()
-    ## for some reasons the ratio of the result I get is different from the ratio of the resolution so I am using only one value
-    ## physical_size[2] <- physical_size[1] * resolution[2]/resolution[1]
-    ## the option unit or units = "px" does not work for me, so I am using inches
-    ## print(physical_size)
-    dev.new(width = physical_size[1], height = physical_size[2])
-}
-
-close_all_devices <- function() {
-    if(length(dev.list()) > 0) {
-        for(l in dev.list()) {
-            dev.off(l)   
-        }
-    }
-}
 
 plot_adjacency_matrix_insights <- function(patient_folder) {
     matrix_filename <- paste(patient_folder, "mirna_gene_adjacency_matrix.mat", sep = "")
     m <<- read.table(matrix_filename, sep = "\t")
     m <- as.matrix(m)
-    close_all_devices()
     new_maximized_device()
     layout(matrix(c(1,2,3,4,5,5,6,6,7,8),5,2,T),c(1,1))
 
@@ -446,6 +408,7 @@ study_clusters <- function(patient_folder)
 
 patient_id <- "TCGA-CJ-4642"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
+close_all_devices()
 plot_adjacency_matrix_insights(patient_folder)
 ## plot_expression_profiles_insights(patient_folder)
 ## plot_overlapping_sites_insights(patient_folder)

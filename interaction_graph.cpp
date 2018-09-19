@@ -221,7 +221,7 @@ void Ig::print_statistics()
     for(auto & e : this->gene_to_clusters_arcs) {
         total_clusters += e.second.size();
     }
-    std::cout << "total_clusters/total_sites = " << total_clusters << "/" << mirna_site_arcs.size() << " = " << ((double)total_clusters)/mirna_site_arcs.size() << "\n";
+    std::cout << "total_clusters/total_sites: " << total_clusters << "/" << mirna_site_arcs.size() << " = " << ((double)total_clusters)/mirna_site_arcs.size() << "\n";
     
 }
 

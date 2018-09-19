@@ -5,8 +5,8 @@
 
 class Matchings_predictor {
     Patient & patient;
-    Mirna_expression_profile mirnas;
-    Cluster_expression_profile clusters;    
+    std::unordered_map<Mirna_id, double> mirna_profile;
+    std::unordered_map<Cluster *, double> cluster_profile;
 public:
     Matchings_predictor(Patient & patient);
     void compute();
