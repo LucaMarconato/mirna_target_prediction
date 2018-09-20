@@ -1,4 +1,24 @@
 * TODO check that "reads_per_million_miRNA_mapped" is equal to the RPM computed on "reads"
 * TODO find the distribution of the length of the clusters and prepare the clustering procedure
 * TODO apply the changes I have been suggested in Python code
+* TODO fix omp
+* TODO small cases
+* TODO validate the animation with the real data
+* TODO check the rate of convergence independently of the magnitude of the cluster level
+* TODO plot the animation for clusters
+* TODO compute the exchange for all the pairs, both the instant one and the cumulative
+* TODO compute the weighted context score and compare it the one computed trivially
+* TODO stability of the method, for the expression levels, the exchange and the context (do it in the log-scale to have comparable constant variance)
+* TODO check different RPM and choose the right treshold based on different samples and of the variance
+* TODO find the real GDC data and build the interaction graph on the difference of expressed mRNAs (consider using average levels of tumor and normal, to study the average differences)
+* TODO highlight the differences in the response between normal and tumor samples
+* TODO implicit first order approximation
+* TODO build the multiple linear regression model
+
+BONUS
+* TODO use the tool to find (with bruteforce and stepwise approach) to find a set of artificial sequences to insert in the cell colture to minimise the differences in down-regulation between normal and tumor cells
+
+
+
+
 

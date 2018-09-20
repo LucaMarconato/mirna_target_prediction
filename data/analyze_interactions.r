@@ -407,12 +407,14 @@ study_clusters <- function(patient_folder)
 }
 
 patient_id <- "TCGA-CJ-4642"
+## patient_id <- "artificial0"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
 close_all_devices()
-plot_adjacency_matrix_insights(patient_folder)
+## plot_adjacency_matrix_insights(patient_folder)
 ## plot_expression_profiles_insights(patient_folder)
 ## plot_overlapping_sites_insights(patient_folder)
 ## study_overlaps_of_specific_gene(patient_folder)
 ## study_overlaps_of_specific_gene(patient_folder, gene_id = 118)
 ## study_overlaps_of_specific_gene(patient_folder, gene_id = 10456)
 study_clusters(patient_folder)
+

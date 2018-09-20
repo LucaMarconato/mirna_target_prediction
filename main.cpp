@@ -15,6 +15,7 @@ int main(int argc, char * argv[])
     // Gene::print_gene_dictionary(10);
 
     Patient patient("TCGA-CJ-4642");
+    // Patient patient("artificial0");
 
     Matchings_predictor matching_predictor(patient);
     matching_predictor.compute();

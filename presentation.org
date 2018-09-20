@@ -1,0 +1,5 @@
+* TODO overview of the project (3 phases)
+* TODO limitations of ts
+* TODO graphs
+* TODO modelisation
+* TODO ode

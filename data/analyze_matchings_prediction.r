@@ -69,5 +69,5 @@ analyze_mirna_expression_profiles <- function(patient_folder) {
 patient_id <- "TCGA-CJ-4642"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
 close_all_devices()
-analyze_convergence(patient_folder)
-## analyze_mirna_expression_profiles(patient_folder)
+## analyze_convergence(patient_folder)
+analyze_mirna_expression_profiles(patient_folder)
