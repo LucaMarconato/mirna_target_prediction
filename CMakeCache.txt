@@ -342,7 +342,7 @@ CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
 //Details about finding OpenMP
 FIND_PACKAGE_MESSAGE_DETAILS_OpenMP:INTERNAL=[TRUE][TRUE][c ][v()]
 //Details about finding OpenMP_C
-FIND_PACKAGE_MESSAGE_DETAILS_OpenMP_C:INTERNAL=[-fopenmp=libomp -Wno-unused-command-line-argument][libomp;libgomp;libiomp5][libomp;libgomp;libiomp5][libomp;libgomp;libiomp5][v()]
+FIND_PACKAGE_MESSAGE_DETAILS_OpenMP_C:INTERNAL=[-fopenmp -Wno-unused-command-line-argument][libomp;libgomp;libiomp5][libomp;libgomp;libiomp5][libomp;libgomp;libiomp5][v()]
 //Details about finding OpenMP_CXX
 FIND_PACKAGE_MESSAGE_DETAILS_OpenMP_CXX:INTERNAL=[-fopenmp=libomp -Wno-unused-command-line-argument][libomp;libgomp;libiomp5][libomp;libgomp;libiomp5][libomp;libgomp;libiomp5][v()]
 //Result of TRY_COMPILE

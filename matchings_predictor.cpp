@@ -3,7 +3,12 @@
 #include <sstream>
 #include <fstream>
 #include <iomanip>
+
+#include "omp_disabler.h"
+#ifndef OMP_TEMPORARILY_DISABLED
 #include <omp.h>
+#else
+#endif
 
 #include "global_parameters.hpp"
 
@@ -53,7 +58,7 @@ void Matchings_predictor::compute()
 {
     std::cout << "for the moment, just a trivial explicit Euler scheme\n";
     double lambda = 1;
-    unsigned long long max_steps = 2000;
+    unsigned long long max_steps = 500;
     // h must be <= 1
     double h = 1;
     bool scaling = false;
@@ -142,16 +147,27 @@ void Matchings_predictor::compute()
         auto new_cluster_profile = this->cluster_profile;
 
         unsigned long long loop_size = this->patient.interaction_graph.gene_to_clusters_arcs.size();
+#ifndef OMP_TEMPORARILY_DISABLED
+        static bool print_only_once = true;
         unsigned long long my_num_threads = 4;
+        if(print_only_once) {
+            print_only_once = false;
+            std::cout << "my_num_threads = " << my_num_threads << "\n";
+        }
 #pragma omp parallel num_threads(my_num_threads)
         {
+            int rank = omp_get_thread_num();
+#else
+        {
+            unsigned long long my_num_threads = 1;
+            int rank = 0;
+#endif
             auto it = this->patient.interaction_graph.gene_to_clusters_arcs.begin();
             double rank_total_exchange = 0;
             auto rank_new_mirna_profile = new_mirna_profile;
             for(auto & e : rank_new_mirna_profile) {
                 e.second = 0;
             }
-            int rank = omp_get_thread_num();
             int i;            
             for(i = 0; i < loop_size && i < rank; i++) {
                 it++;
@@ -175,8 +191,9 @@ void Matchings_predictor::compute()
                     i++;
                 }
             }
-
+#ifndef OMP_TEMPORARILY_DISABLED
 #pragma omp critical
+#endif
             {
                 for(auto & e : rank_new_mirna_profile) {
                     new_mirna_profile.at(e.first) += e.second;
