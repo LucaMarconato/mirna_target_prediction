@@ -17,7 +17,7 @@ public:
     // Site_expression_profile ...;
     Interaction_graph interaction_graph;
 
-    Patient(std::string case_id);
+    Patient(std::string case_id, bool export_data);
     void export_expression_profiles(std::string patient_folder);
 };
 

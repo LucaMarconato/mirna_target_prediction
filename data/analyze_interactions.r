@@ -17,11 +17,20 @@ plot_adjacency_matrix_insights <- function(patient_folder) {
     barplot(table(m[m >= 1]), main = title)
     grid()
 
-    barplot(table(m[m >= 5]), main = title)
-    grid()
+    ## the table bins start from 0, so we need > and not >=
+    if(length(table(m)) > 5) {
+        barplot(table(m[m >= 5]), main = title)
+        grid()   
+    } else {
+        plot.new()
+    }
 
-    barplot(table(m[m >= 10]), main = title)
-    grid()
+    if(length(table(m)) > 10) {
+        barplot(table(m[m >= 10]), main = title)
+        grid()        
+    } else {
+        plot.new()
+    }
 
     sites_per_mirna <<- sapply(1:nrow(m), function(i) sum(m[i,]))
     sites_per_mirna <- t(sites_per_mirna)
@@ -267,7 +276,8 @@ plot_overlapping_sites_insights <- function(patient_folder)
     u <- unique(a[,1])
     u_split <- split(u, ceiling(seq_along(u)/(length(u)/rows)))
     rows_drawn <- 0
-    for(i in seq_len(rows)){
+    ## if u has less than rows elemens we cannot have a for loop with "rows" iterations, but a smaller number
+    for(i in seq_len(min(length(u_split),rows))) {
         if(i <= first_rows_to_show || i > rows - last_rows_to_show) {
             a_split <- a[a[[1]] %in% u_split[[i]],]
             gene_id_to_seq_along <- hashmap(u_split[[i]], seq_along(u_split[[i]]))
@@ -294,8 +304,13 @@ plot_overlapping_sites_insights <- function(patient_folder)
     layout(matrix(1:2,2,1))
     barplot(table(a[[3]]))
     grid()
-    barplot(table(a[[3]][a[[3]] > 1]))
-    grid()
+    to_plot <- a[[3]][a[[3]] > 1]
+    if(length(to_plot) > 0) {
+        barplot(table(a[[3]][a[[3]] > 1]))
+        grid()     
+    } else {
+        plot.new()
+    }
 }
 
 study_overlaps_of_specific_gene <- function(patient_folder, gene_id = -1)
@@ -394,26 +409,38 @@ study_clusters <- function(patient_folder)
 {
     filename <- paste(patient_folder, "clusters.tsv", sep = "")
     a <<- read.table(filename, colClasses = c("numeric", "numeric"), header = T)
+    print("clusters:")
     print(table(a$cluster_size))
     new_maximized_device()
     layout(matrix(1:3, 1, 3))
     ## TODO: use colors to better recognize how the barplots are related to each other
     barplot(table(a$cluster_size))
     grid()
-    barplot(table(a$cluster_size[a$cluster_size > 2]))
-    grid()
-    barplot(table(a$cluster_size[a$cluster_size > 7]))
-    grid()
+    to_plot <- table(a$cluster_size[a$cluster_size > 2])
+    if(length(to_plot) > 0) {
+        barplot()
+        grid()        
+    } else {
+        plot.new()
+    }
+
+    to_plot <- table(a$cluster_size[a$cluster_size > 7])
+    if(length(to_plot) > 0) {
+        barplot()
+        grid()        
+    } else {
+        plot.new()
+    }
 }
 
-patient_id <- "TCGA-CJ-4642"
-## patient_id <- "artificial0"
+## patient_id <- "TCGA-CJ-4642"
+patient_id <- "artificial0"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
 close_all_devices()
-## plot_adjacency_matrix_insights(patient_folder)
-## plot_expression_profiles_insights(patient_folder)
-## plot_overlapping_sites_insights(patient_folder)
-## study_overlaps_of_specific_gene(patient_folder)
+plot_adjacency_matrix_insights(patient_folder)
+plot_expression_profiles_insights(patient_folder)
+plot_overlapping_sites_insights(patient_folder)
+study_overlaps_of_specific_gene(patient_folder)
 ## study_overlaps_of_specific_gene(patient_folder, gene_id = 118)
 ## study_overlaps_of_specific_gene(patient_folder, gene_id = 10456)
 study_clusters(patient_folder)

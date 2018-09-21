@@ -58,7 +58,6 @@ void Gep::load_from_gdc_file(std::string filename, std::string patient_folder)
         }
         this->total_distinct_genes = this->recognized_distinct_genes + this->not_recognized_distinct_genes;
         this->total_reads = this->recognized_reads + this->not_recognized_reads;
-        std::cout << profile[19322].to_reads() << "\n";
         for(auto & e : this->profile) {
             e.second.normalize_reads(total_reads);
         }

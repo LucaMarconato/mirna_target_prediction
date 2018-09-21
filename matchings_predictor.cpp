@@ -57,31 +57,58 @@ Matchings_predictor::Matchings_predictor(Patient & patient) : patient(patient)
 void Matchings_predictor::compute()
 {
     std::cout << "for the moment, just a trivial explicit Euler scheme\n";
-    double lambda = 1;
-    unsigned long long max_steps = 500;
+    // not used for the moment
+    // double lambda = 1;
+    unsigned long long max_steps = 100;
     // h must be <= 1
     double h = 1;
-    bool scaling = false;
+    bool scaling = true;
     double mirna_cumulative_scaling = 1;
     double cluster_cumulative_scaling = 1;
     bool logging = true;
     bool export_mirna_expression_profile = true;
+    /*
+      Use this only with very small interaction graphs.
+      TODO: truncate logging if there are too many genes
+    */
+    // just to be sure to avoid logical errors in the future
+    bool export_cluster_expression_profile = true;
+    if(!logging && (export_mirna_expression_profile || export_cluster_expression_profile)) {
+        export_mirna_expression_profile = false;
+        export_cluster_expression_profile = false;
+        std::cout << "not logging (logging = false)\n";
+    }
     std::stringstream ss0;
     std::ofstream out0;
     std::stringstream ss1_header;
+    std::stringstream ss2_header;
     std::string mirna_log_filename_prefix;
+    std::string cluster_log_filename_prefix;
     if(logging) {
         std::string filename0 = "./data/patients/" + this->patient.case_id + "/matchings_prediction.tsv";
         out0.open(filename0);
         ss0 << "mirna_cumulative_scaling\tcluster_cumulative_scaling\tavg_mirna_level\tavg_cluster_level\ttotal_exchange\n";
-        std::string log_folder = "./data/patients/" + this->patient.case_id + "/mirna_expression_profiles";
-        mirna_log_filename_prefix = log_folder + "/mirna_expression_profile_";
-        std::string cmd = "mkdir -p " + log_folder;
-        std::system(cmd.c_str());
-        std::cout << "deleting old log from \"" + log_folder + "\"\n";
-        cmd = "rm " + log_folder + "/mirna_expression_profile*";
-        std::system(cmd.c_str());
-        ss1_header << "mirna_id\trelative_expression\n";
+        if(export_mirna_expression_profile) {
+            std::string log_folder = "./data/patients/" + this->patient.case_id + "/mirna_expression_profiles";
+            mirna_log_filename_prefix = log_folder + "/mirna_expression_profile_";
+            std::string cmd = "mkdir -p " + log_folder;
+            std::system(cmd.c_str());
+            std::cout << "deleting old log from \"" + log_folder + "\"\n";
+            cmd = "rm " + log_folder + "/mirna_expression_profile*";
+            std::system(cmd.c_str());
+            ss1_header << "mirna_id\trelative_expression\n";   
+        }
+        if(export_cluster_expression_profile) {
+            std::string log_folder = "./data/patients/" + this->patient.case_id + "/cluster_expression_profiles";
+            cluster_log_filename_prefix = log_folder + "/cluster_expression_profile_";
+            std::string cmd = "mkdir -p " + log_folder;
+            std::system(cmd.c_str());
+            std::cout << "deleting old log from \"" + log_folder + "\"\n";
+            cmd = "rm " + log_folder + "/cluster_expression_profile*";
+            std::system(cmd.c_str());
+            // you may want to export a file in which each Cluster * (i.e. what I call cluster_address below) is enriched with information to make you able to identify specific clusters
+            ss2_header << "cluster_address\trelative_expression\n";
+        }
     }    
     
     int latest_percentage = -1; 
@@ -90,17 +117,33 @@ void Matchings_predictor::compute()
         if(current_percentage > latest_percentage) {
             latest_percentage = current_percentage;
             std::cout << "t/max_steps: " << t << "/" << max_steps << " = " << current_percentage << "%\n";
-            if(logging && export_mirna_expression_profile) {
-                std::stringstream ss1;
-                ss1 << ss1_header.str();
-                for(auto & e : this->mirna_profile) {
-                    ss1 << e.first << "\t" << e.second << "\n";
+            if(logging) {
+                if(export_mirna_expression_profile) {
+                    std::stringstream ss1;
+                    ss1 << ss1_header.str();
+                    for(auto & e : this->mirna_profile) {
+                        double adjusted_value = e.second / mirna_cumulative_scaling;
+                        ss1 << e.first << "\t" << adjusted_value << "\n";
+                    }
+                    std::stringstream mirna_log_filename;
+                    mirna_log_filename << mirna_log_filename_prefix << std::setfill('0') << std::setw(6) << t << ".tsv";
+                    std::ofstream out1(mirna_log_filename.str());
+                    out1 << ss1.str();
+                    out1.close();
                 }
-                std::stringstream mirna_log_filename;
-                mirna_log_filename << mirna_log_filename_prefix << std::setfill('0') << std::setw(6) << t << ".tsv";
-                std::ofstream out1(mirna_log_filename.str());
-                out1 << ss1.str();
-                out1.close();
+                if(export_cluster_expression_profile) {
+                    std::stringstream ss2;
+                    ss2 << ss2_header.str();
+                    for(auto & e : this->cluster_profile) {
+                        double adjusted_value = e.second / cluster_cumulative_scaling;
+                        ss2 << e.first << "\t" << adjusted_value << "\n";
+                    }
+                    std::stringstream cluster_log_filename;
+                    cluster_log_filename << cluster_log_filename_prefix << std::setfill('0') << std::setw(6) << t << ".tsv";
+                    std::ofstream out1(cluster_log_filename.str());
+                    out1 << ss2.str();
+                    out1.close();
+                }
             }
         }
         if(scaling) {
@@ -138,7 +181,9 @@ void Matchings_predictor::compute()
                 avg_cluster_level += value;            
             }
             avg_cluster_level /= this->cluster_profile.size();
-            ss0 << avg_mirna_level << "\t" << avg_cluster_level << "\t";
+            double adjusted_avg_mirna_level = avg_mirna_level / mirna_cumulative_scaling;
+            double adjusted_avg_cluster_level = avg_cluster_level / cluster_cumulative_scaling;
+            ss0 << adjusted_avg_mirna_level << "\t" << adjusted_avg_cluster_level << "\t";
         }
 
         // perform the exchange
@@ -148,12 +193,7 @@ void Matchings_predictor::compute()
 
         unsigned long long loop_size = this->patient.interaction_graph.gene_to_clusters_arcs.size();
 #ifndef OMP_TEMPORARILY_DISABLED
-        static bool print_only_once = true;
         unsigned long long my_num_threads = 4;
-        if(print_only_once) {
-            print_only_once = false;
-            std::cout << "my_num_threads = " << my_num_threads << "\n";
-        }
 #pragma omp parallel num_threads(my_num_threads)
         {
             int rank = omp_get_thread_num();
@@ -162,6 +202,11 @@ void Matchings_predictor::compute()
             unsigned long long my_num_threads = 1;
             int rank = 0;
 #endif
+            static bool print_only_once = true;
+            if(print_only_once) {
+                print_only_once = false;
+                std::cout << "my_num_threads = " << my_num_threads << "\n";
+            }
             auto it = this->patient.interaction_graph.gene_to_clusters_arcs.begin();
             double rank_total_exchange = 0;
             auto rank_new_mirna_profile = new_mirna_profile;

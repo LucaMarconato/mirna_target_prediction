@@ -15,7 +15,7 @@ using json = nlohmann::json;
 
 #include "timer.hpp"
 
-Patient::Patient(std::string case_id) : case_id(case_id)
+Patient::Patient(std::string case_id, bool export_data) : case_id(case_id)
 {
     std::string patient_folder = "./data/patients/" + case_id + "/";
     if(!boost::filesystem::exists(patient_folder)) {
@@ -109,9 +109,10 @@ Patient::Patient(std::string case_id) : case_id(case_id)
         std::cout << "\n";
         this->interaction_graph.print_statistics();
         std::cout << "\n";
-        // WARNING: these two lines are temporarily commented out, put them back
-        // this->interaction_graph.export_interactions_data(patient_folder);
-        // this->export_expression_profiles(patient_folder);
+        if(export_data) {           
+            this->interaction_graph.export_interactions_data(patient_folder);
+            this->export_expression_profiles(patient_folder);
+        }
     }
 }
 

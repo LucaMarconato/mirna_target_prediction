@@ -37,6 +37,8 @@ analyze_mirna_expression_profiles <- function(patient_folder) {
 
     mirna_ids_ordered <- NULL
     original_y_data <- NULL
+    original_log_difference <- NULL
+    i <- 0
     for(file in files) {
         t <- read.table(file, header = T, colClasses = c("numeric", "numeric"))
         if(is.null(mirna_ids_ordered)) {
@@ -46,7 +48,7 @@ analyze_mirna_expression_profiles <- function(patient_folder) {
         new_path <- tools::file_path_sans_ext(file)
         new_path <- paste(new_path, ".png", sep = "")
         png(filename = new_path, width = 1920, height = 1080)
-        layout(matrix(1:2, 2, 1))
+        layout(matrix(1:3, 3, 1))
         timestep <- strsplit(file, "mirna_expression_profile_")[[1]][2]
         timestep <- strsplit(timestep, ".tsv")[[1]][1]
         my_order <- match(mirna_ids_ordered, t$mirna_id)
@@ -55,19 +57,42 @@ analyze_mirna_expression_profiles <- function(patient_folder) {
         if(is.null(original_y_data)) {
             original_y_data <- y_data
         }
-        plot(x_data, y_data, main = timestep, ylim = c(0, max(original_y_data)))
+        plot(x_data, y_data, main = paste(timestep, "miRNA expression"), ylim = c(0, max(original_y_data)))
         points(x_data, original_y_data, ylim = c(0, max(original_y_data)), col = "red", pch = "-")
-        plot(x_data, log10(y_data), main = timestep, ylim = c(-20, 0))
+        
+        plot(x_data, log10(y_data), main = paste(timestep, "miRNA expression (log10)"), ylim = c(-20, 0))
         points(x_data, log10(original_y_data), ylim = c(-20, 0), col = "red", pch = "-")
+
+        if(i > 0) {
+            previous_file <- files[i]
+            previous_t <- read.table(previous_file, header = T, colClasses = c("numeric", "numeric"))
+            previous_my_order <- match(mirna_ids_ordered, previous_t$mirna_id)
+            previous_y_data <- previous_t$relative_expression[previous_my_order]
+            difference <- previous_y_data - y_data
+            log_difference <- log10(difference)
+            ## log_difference[log_difference == -Inf] = 0
+            if(sum(is.nan(log_difference)) > 0) {
+                print("warning: found a NaN, probably this is due by having reached the machine precision during the simulation")
+                log_difference[is.nan(log_difference)] = 0
+                ## browser()
+            }
+            if(is.null(original_log_difference)) {
+                original_log_difference <- log_difference
+            }
+            plot(x_data, log_difference, main = paste(timestep, "exchanged"), ylim = c(-20, 0))
+            points(x_data, original_log_difference, ylim = c(-20, 0), col = "red", pch = "-")
+        }
         dev.off()
+        i <- i + 1
     }
     
     system(paste("convert -delay 10 -loop 0 ", expression_profile_folder, "/*.png ", expression_profile_folder, "/animation.gif", sep = ""))
     system(paste("open ", expression_profile_folder, "/animation.gif", sep = ""))
 }
 
-patient_id <- "TCGA-CJ-4642"
+## patient_id <- "TCGA-CJ-4642"
+patient_id <- "artificial0"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
 close_all_devices()
-## analyze_convergence(patient_folder)
+analyze_convergence(patient_folder)
 analyze_mirna_expression_profiles(patient_folder)
