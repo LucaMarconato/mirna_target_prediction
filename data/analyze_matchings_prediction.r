@@ -90,8 +90,8 @@ analyze_mirna_expression_profiles <- function(patient_folder) {
     system(paste("open ", expression_profile_folder, "/animation.gif", sep = ""))
 }
 
-## patient_id <- "TCGA-CJ-4642"
-patient_id <- "artificial0"
+patient_id <- "TCGA-CJ-4642"
+## patient_id <- "artificial0"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
 close_all_devices()
 analyze_convergence(patient_folder)
