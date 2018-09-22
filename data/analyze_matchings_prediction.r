@@ -1,5 +1,7 @@
 source("my_device.r")
 library(purrr)
+library(raster)
+library(RColorBrewer)
 
 analyze_convergence <- function(patient_folder)
 {    
@@ -37,10 +39,11 @@ analyze_convergence <- function(patient_folder)
 
 analyze_mirna_expression_profiles <- function(patient_folder)
 {
+    print("analyzing mirna expression profiles")
     expression_profile_folder <- paste(patient_folder, "mirna_expression_profiles", sep = "")
     expression_profile_copy_folder <- paste(patient_folder, "mirna_expression_profiles_copy", sep = "")
-    system(paste("mkdir -p ", expression_profile_folder, sep = ""))
-    system(paste("rm ", expression_profile_folder, "/mirna_expression_profile_*", sep = ""))
+    system(paste("mkdir -p ", expression_profile_copy_folder, sep = ""))
+    system(paste("rm ", expression_profile_copy_folder, "/mirna_expression_profile_*", sep = ""))
     system(paste("cp -r ", expression_profile_folder, "/* ", expression_profile_copy_folder, sep = ""))
     files <- list.files(path = expression_profile_copy_folder, pattern = "*.tsv", full.names = T, recursive = F)
 
@@ -102,10 +105,11 @@ analyze_mirna_expression_profiles <- function(patient_folder)
 
 analyze_cluster_expression_profiles <- function(patient_folder)
 {
+    print("analyzing cluster expression profiles")
     expression_profile_folder <- paste(patient_folder, "cluster_expression_profiles", sep = "")
     expression_profile_copy_folder <- paste(patient_folder, "cluster_expression_profiles_copy", sep = "")
-    system(paste("mkdir -p ", expression_profile_folder, sep = ""))
-    system(paste("rm ", expression_profile_folder, "/cluster_expression_profile_*", sep = ""))
+    system(paste("mkdir -p ", expression_profile_copy_folder, sep = ""))
+    system(paste("rm ", expression_profile_copy_folder, "/cluster_expression_profile_*", sep = ""))
     system(paste("cp -r ", expression_profile_folder, "/* ", expression_profile_copy_folder, sep = ""))
     files <- list.files(path = expression_profile_copy_folder, pattern = "*.tsv", full.names = T, recursive = F)
 
@@ -115,10 +119,10 @@ analyze_cluster_expression_profiles <- function(patient_folder)
     file_count <- length(files)
     max_timesteps <- 100
     for(i in seq_len(file_count)) {
-        ## if(i <= 10) {
-        ##     print(paste("skipping timestep", i))
-        ##     next
-        ## }
+        if(i <= 2) {
+            print(paste("skipping timestep", i))
+            next
+        }
         print(paste(round(i/min(file_count, max_timesteps)*100), "%", sep = ""))
         file <- files[i]
         t <- read.table(file, header = T, colClasses = c("numeric", "numeric"))
@@ -139,7 +143,7 @@ analyze_cluster_expression_profiles <- function(patient_folder)
         rows <- 10
         
         png(filename = new_path, width = 1920, height = 1080)
-        old_par <- par(mar = c(0,4,0,0))
+        old_par <- par(mar = c(0,4,2,0))
 
         if(length(x_data) < 50) {
             rows <- 1
@@ -186,29 +190,37 @@ analyze_dynamics_for_small_interaction_graphs <- function(patient_folder)
     files <- list.files(path = expression_profile_folder, pattern = "*.tsv", full.names = T, recursive = F)
     t <- read.table(files[1], header = T, colClasses = c("numeric", "numeric"))
     my_order <- order(t$relative_expression)
-    mirna_ids_ordered <- t$mirna_id[my_order]
+    mirna_ids_ordered <<- t$mirna_id[my_order]
 
     expression_profile_folder <- paste(patient_folder, "cluster_expression_profiles", sep = "")
     files <- list.files(path = expression_profile_folder, pattern = "*.tsv", full.names = T, recursive = F)
     t <- read.table(files[1], header = T, colClasses = c("numeric", "numeric"))
     my_order <- order(t$relative_expression)
-    cluster_addresses_ordered <- t$cluster_address[my_order]
+    cluster_addresses_ordered <<- t$cluster_address[my_order]
 
-    ## my_order <- match(mirna_ids_ordered, t$mirna_id)
     ## x_data <- 1:length(t$relative_expression)
     ## y_data <- t$relative_expression[my_order]
 
     matrix_filename <- paste(patient_folder, "interaction_matrix.mat", sep = "")
-    m <<- read.table(matrix_filename, sep = "\t")
+    m <- read.table(matrix_filename, sep = "\t")
     m <- as.matrix(m)
+    my_order <- match(mirna_ids_ordered, rownames(m))
+    m <- m[my_order, ]
+    colnames(m) <- lapply(colnames(m), function(x) as.numeric(strsplit(x, "X")[[1]][2]))
+    my_order <- match(cluster_addresses_ordered, colnames(m))
+    m <<- m[, my_order]
+    new_maximized_device()
+    ## 16/9 is my monitor size ratio
+    plot(raster(m), asp = 9/16, col = sapply(seq(1, 0, length.out = max(m)), function(x) rgb(x,x,x)))
     ## my_order_rows <- // need to export the matrix
 }
 
-patient_id <- "TCGA-CJ-4642"
+## patient_id <- "TCGA-CJ-4642"
 ## patient_id <- "artificial0"
+patient_id <- "artificial1"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
 close_all_devices()
-analyze_convergence(patient_folder)
-analyze_mirna_expression_profiles(patient_folder)
+## analyze_convergence(patient_folder)
+## analyze_mirna_expression_profiles(patient_folder)
 ## analyze_cluster_expression_profiles(patient_folder)
 analyze_dynamics_for_small_interaction_graphs(patient_folder)
