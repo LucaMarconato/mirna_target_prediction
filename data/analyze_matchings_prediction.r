@@ -31,7 +31,8 @@ analyze_convergence <- function(patient_folder)
     grid()
 }
 
-analyze_mirna_expression_profiles <- function(patient_folder) {
+analyze_mirna_expression_profiles <- function(patient_folder)
+{
     expression_profile_folder <- paste(patient_folder, "mirna_expression_profiles", sep = "")
     files <- list.files(path = expression_profile_folder, pattern = "*.tsv", full.names = T, recursive = F)
 
@@ -82,17 +83,125 @@ analyze_mirna_expression_profiles <- function(patient_folder) {
             plot(x_data, log_difference, main = paste(timestep, "exchanged"), ylim = c(-20, 0))
             points(x_data, original_log_difference, ylim = c(-20, 0), col = "red", pch = "-")
         }
-        dev.off()
+        dev.ff()
         i <- i + 1
     }
-    
-    system(paste("convert -delay 10 -loop 0 ", expression_profile_folder, "/*.png ", expression_profile_folder, "/animation.gif", sep = ""))
+    filename <- paste(expression_profile_folder, "/animation.gif", sep = "")
+    print(paste("generating", filename))
+    system(paste("convert -delay 10 -loop 0 ", expression_profile_folder, "/*.png ", filename, sep = ""))
     system(paste("open ", expression_profile_folder, "/animation.gif", sep = ""))
+}
+
+analyze_cluster_expression_profiles <- function(patient_folder)
+{
+    expression_profile_folder <- paste(patient_folder, "cluster_expression_profiles", sep = "")
+    files <- list.files(path = expression_profile_folder, pattern = "*.tsv", full.names = T, recursive = F)
+
+    cluster_addresses_ordered <- NULL
+    original_y_data <- NULL
+    ## original_log_difference <- NULL
+    file_count <- length(files)
+    max_timesteps <- 10
+    for(i in seq_len(file_count)) {
+        if(i > 10) {
+            break
+        }
+        print(paste(round(i/min(file_count, max_timesteps)), "%", sep = ""))
+        file <- files[i]
+        t <- read.table(file, header = T, colClasses = c("numeric", "numeric"))
+        if(is.null(cluster_addresses_ordered)) {
+            my_order <- order(t$relative_expression)
+            cluster_addresses_ordered <- t$cluster_address[my_order]
+        }
+        timestep <- strsplit(file, "cluster_expression_profile_")[[1]][2]
+        timestep <- strsplit(timestep, ".tsv")[[1]][1]
+        my_order <- match(cluster_addresses_ordered, t$cluster_address)
+        x_data <- 1:length(t$relative_expression)
+        y_data <- t$relative_expression[my_order]
+        if(is.null(original_y_data)) {
+            original_y_data <- y_data
+        }
+        new_path <- tools::file_path_sans_ext(file)
+        new_path <- paste(new_path, ".png", sep = "")
+        rows <- 10
+        
+        png(filename = new_path, width = 1920, height = 1080)
+        old_par <- par(mar = c(0,4,0,0))
+
+        if(length(x_data) < 50) {
+            rows <- 1
+        }
+        u <- seq_along(x_data)
+        u_split <- split(u, ceiling(seq_along(u)/(length(u)/rows)))
+        rows <- min(length(u_split), rows)
+
+        ## we add an extra row for the title
+        heights_vector <- rep(1, rows + 1)
+        heights_vector[1] <- lcm(2)
+        layout(matrix(seq(1, rows + 1), rows + 1, 1), heights = heights_vector)
+        plot.new()
+        title(main = paste(timestep, "cluster expression"))
+        par(mar = c(2,4,2,0))
+
+        for(i in seq_len(rows)){
+            x_data_split <- x_data[u_split[[i]]]
+            y_data_split <- y_data[u_split[[i]]]
+            original_y_data_split <- original_y_data[u_split[[i]]]
+            y_lim_split <- c(0, max(original_y_data_split))
+
+            plot(x_data_split, y_data_split, ylim = y_lim_split, pch = ".")
+            points(x_data_split, original_y_data_split, ylim = y_lim_split, col = "red", pch = "-")
+            ## plot(x_data, log10(y_data), main = paste(timestep, "miRNA expression (log10)"), ylim = c(-20, 0))
+            ## points(x_data, log10(original_y_data), ylim = c(-20, 0), col = "red", pch = "-")
+        }
+
+        ## probably useless
+        par(mar = old_par)
+        dev.off()
+    }
+    filename <- paste(expression_profile_folder, "/animation.gif", sep = "")
+    print(paste("generating", filename))
+    system(paste("convert -delay 10 -loop 0 ", expression_profile_folder, "/*.png ", filename, sep = ""))
+    print("generating .gif")
+    system(paste("open ", expression_profile_folder, "/animation.gif", sep = ""))
+
+    ##     if(i > 0) {
+    ##         previous_file <- files[i]
+    ##         previous_t <- read.table(previous_file, header = T, colClasses = c("numeric", "numeric"))
+    ##         previous_my_order <- match(cluster_addresses_ordered, previous_t$cluster_address)
+    ##         previous_y_data <- previous_t$relative_expression[previous_my_order]
+    ##         difference <- previous_y_data - y_data
+    ##         log_difference <- log10(difference)
+    ##         ## log_difference[log_difference == -Inf] = 0
+    ##         if(sum(is.nan(log_difference)) > 0) {
+    ##             print("warning: found a NaN, probably this is due by having reached the machine precision during the simulation")
+    ##             log_difference[is.nan(log_difference)] = 0
+    ##             ## browser()
+    ##         }
+    ##         if(is.null(original_log_difference)) {
+    ##             original_log_difference <- log_difference
+    ##         }
+    ##         plot(x_data, log_difference, main = paste(timestep, "exchanged"), ylim = c(-20, 0))
+    ##         points(x_data, original_log_difference, ylim = c(-20, 0), col = "red", pch = "-")
+    ##     }
+    ##     dev.off()
+    ## }
+
+    ## system(paste("convert -delay 10 -loop 0 ", expression_profile_folder, "/*.png ", expression_profile_folder, "/animation1.gif", sep = ""))
+    ## system(paste("open ", expression_profile_folder, "/animation1.gif", sep = ""))
+    ## par(mar = old_par)
+}
+
+analyze_dynamics_for_small_interaction_graphs <- function(patient_folder)
+{
+    
 }
 
 patient_id <- "TCGA-CJ-4642"
 ## patient_id <- "artificial0"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
 close_all_devices()
-analyze_convergence(patient_folder)
-analyze_mirna_expression_profiles(patient_folder)
+## analyze_convergence(patient_folder)
+## analyze_mirna_expression_profiles(patient_folder)
+cluster_addressed_ordered <-analyze_cluster_expression_profiles(patient_folder)
+## analyze_dynamics_for_small_interaction_graphs(patient_folder)

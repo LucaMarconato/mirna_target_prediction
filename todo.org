@@ -1,8 +1,9 @@
 * TODO check that "reads_per_million_miRNA_mapped" is equal to the RPM computed on "reads"
-* DONE find the distribution of the length of the clusters and prepare the clustering procedure
 * TODO apply the changes I have been suggested in Python code
+* DONE find the distribution of the length of the clusters and prepare the clustering procedure
 * DONE fix omp
-* TODO small cases
+* TODO small cases (write also a python code for showing what it is happening in this cases)
+* TODO introduce the various lambdas for taking into account of the effect of clusterization in the ratio between mirna and target absolute quantities and introduce a second lambda acting as a tuning parameter for modeling the ratio between the mirna absolute quantity and the gene absolute quantity
 * TODO validate the animation with the real data
 * DONE check the rate of convergence independently of the magnitude of the mirna level
 * TODO plot the animation for clusters

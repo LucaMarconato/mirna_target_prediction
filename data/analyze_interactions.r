@@ -267,17 +267,17 @@ plot_overlapping_sites_insights <- function(patient_folder)
     last_rows_to_show <- 0
     total_rows_to_show <- first_rows_to_show + last_rows_to_show
     layout_vector <- rep(0, 2 * total_rows_to_show - 1)
-    layout_vector[seq(1,2 * total_rows_to_show - 1, 2)] <- 1:total_rows_to_show
-    layout_vector[seq(2,2 * total_rows_to_show - 1, 2)] <- seq(total_rows_to_show + 1, 2 * total_rows_to_show - 1, 1)
+    layout_vector[seq(1, 2 * total_rows_to_show - 1, 2)] <- 1:total_rows_to_show
+    layout_vector[seq(2, 2 * total_rows_to_show - 1, 2)] <- seq(total_rows_to_show + 1, 2 * total_rows_to_show - 1, 1)
     widths_vector <- rep(1, 2 * total_rows_to_show - 1)
-    widths_vector[seq(2,2 * total_rows_to_show - 1, 2)] <- lcm(1)
+    widths_vector[seq(2, 2 * total_rows_to_show - 1, 2)] <- lcm(1)
     layout(matrix(layout_vector, 2 * total_rows_to_show - 1, 1), widths = widths_vector)
     par(mar = c(0,4,0,0))
     u <- unique(a[,1])
     u_split <- split(u, ceiling(seq_along(u)/(length(u)/rows)))
     rows_drawn <- 0
     ## if u has less than rows elemens we cannot have a for loop with "rows" iterations, but a smaller number
-    for(i in seq_len(min(length(u_split),rows))) {
+    for(i in seq_len(min(length(u_split), rows))) {
         if(i <= first_rows_to_show || i > rows - last_rows_to_show) {
             a_split <- a[a[[1]] %in% u_split[[i]],]
             gene_id_to_seq_along <- hashmap(u_split[[i]], seq_along(u_split[[i]]))

@@ -65,7 +65,7 @@ void Matchings_predictor::compute()
     bool scaling = true;
     double mirna_cumulative_scaling = 1;
     double cluster_cumulative_scaling = 1;
-    bool logging = false;
+    bool logging = true;
     bool export_mirna_expression_profile = true;
     /*
       Use this only with very small interaction graphs.
@@ -242,11 +242,26 @@ void Matchings_predictor::compute()
                         for(const Mirna_id & mirna_id : this->patient.interaction_graph.site_to_mirnas_arcs.at(site)) {
                             double exchange = h * this->mirna_profile.at(mirna_id) * this->cluster_profile.at(cluster);
                             if(exchange < 0) {
-                                std::cout << "error: exchange = " << exchange << "\n";
-                                exit(1);
+                                static bool warning_already_presented = false;
+                                if(abs(exchange) < Global_parameters::epsilon) {
+                                    if(!warning_already_presented) {
+                                        warning_already_presented = true;
+                                        std::cerr << "warning: exchange = " << exchange << ", silening further warnings like this\n";   
+                                    }
+                                } else {
+                                    std::cout << "error: exchange = " << exchange << "\n";
+                                    exit(1);   
+                                }
                             }
-                            rank_new_mirna_profile.at(mirna_id) -= exchange;
-                            rank_new_cluster_profile.at(cluster) -= exchange;
+                            double mirna_lambda = 1;
+                            double cluster_lambda = 1;
+                            if(Global_parameters::lambda < 1) {
+                                mirna_lambda = Global_parameters::lambda;
+                            } else {
+                                cluster_lambda = 1.0/Global_parameters::lambda;
+                            }
+                            rank_new_mirna_profile.at(mirna_id) -= mirna_lambda * exchange;
+                            rank_new_cluster_profile.at(cluster) -= cluster_lambda * exchange;
                             rank_total_exchange += exchange;
                         }
                     }
