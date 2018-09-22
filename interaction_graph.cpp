@@ -280,7 +280,7 @@ void Ig::export_interactions_data(std::string patient_folder)
         ss << "\"" << j_to_gene_id.left.at(j) << "\"" << ((j == gene_count - 1) ? "\n" : "\t");
     }
     for(unsigned long long i = 0; i < mirna_count; i++) {
-        ss << "\"" << i_to_mirna_id.left.at(i) << "\"" << "\t";
+        ss << "\"" << i_to_mirna_id.left.at(i) << "\"\t";
         for(unsigned long long j = 0; j < gene_count; j++) {
             ss << m[i][j] << ((j == gene_count - 1) ? "\n" : "\t");
         }

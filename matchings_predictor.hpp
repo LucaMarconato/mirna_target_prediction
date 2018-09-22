@@ -7,10 +7,11 @@ class Matchings_predictor {
     Patient & patient;
     std::unordered_map<Mirna_id, double> mirna_profile;
     std::unordered_map<Cluster *, double> cluster_profile;
+
+    void export_interaction_matrix();
 public:
     Matchings_predictor(Patient & patient);
     void compute();
-    
 };
 
 #endif // MATCHINGS_PREDICTOR_H

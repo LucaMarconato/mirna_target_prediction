@@ -54,12 +54,44 @@ Matchings_predictor::Matchings_predictor(Patient & patient) : patient(patient)
     
 }
 
+void Matchings_predictor::export_interaction_matrix()
+{
+    std::string filename = "./data/patients/" + this->patient.case_id + "/interaction_matrix.mat";
+    std::ofstream out(filename);
+    std::stringstream ss;
+    unsigned long long cluster_count = this->cluster_profile.size();
+    unsigned long long i = 0;
+    for(auto & e : this->cluster_profile) {
+        ss << "\"" << e.first << "\"" << ((i == cluster_count - 1) ? "\n" : "\t");
+        i++;
+    }
+    ss << "\n";
+    for(auto & mirna : this->mirna_profile) {
+        auto & mirna_id = mirna.first;
+        ss << "\"" << mirna_id << "\"\t";
+        unsigned long long i = 0;
+        for(auto & cluster : this->cluster_profile) {
+            int matching = 0;
+            for(auto & site : cluster.first->sites) {
+                auto p = std::make_pair(mirna_id, site);
+                if(this->patient.interaction_graph.mirna_site_arcs.find(p) != this->patient.interaction_graph.mirna_site_arcs.end()) {
+                    matching++;
+                }
+            }
+            ss << matching << ((i == cluster_count - 1) ? "\n" : "\t");
+            i++;
+        }
+    }
+    out << ss.str();
+    out.close();
+}
+
 void Matchings_predictor::compute()
 {
     std::cout << "for the moment, just a trivial explicit Euler scheme\n";
     // not used for the moment
     // double lambda = 1;
-    unsigned long long max_steps = 100;
+    unsigned long long max_steps = 1000;
     // h must be <= 1
     double h = 1;
     bool scaling = true;
@@ -67,15 +99,13 @@ void Matchings_predictor::compute()
     double cluster_cumulative_scaling = 1;
     bool logging = true;
     bool export_mirna_expression_profile = true;
-    /*
-      Use this only with very small interaction graphs.
-      TODO: truncate logging if there are too many genes
-    */
-    // just to be sure to avoid logical errors in the future
     bool export_cluster_expression_profile = true;
-    if(!logging && (export_mirna_expression_profile || export_cluster_expression_profile)) {
+    bool export_interaction_matrix = true;
+    // just to be sure to avoid logical errors in the future
+    if(!logging && (export_mirna_expression_profile || export_cluster_expression_profile || export_interaction_matrix)) {
         export_mirna_expression_profile = false;
         export_cluster_expression_profile = false;
+        export_interaction_matrix = false;
         std::cout << "not logging (logging = false)\n";
     }
     std::stringstream ss0;
@@ -87,7 +117,7 @@ void Matchings_predictor::compute()
     if(logging) {
         std::string filename0 = "./data/patients/" + this->patient.case_id + "/matchings_prediction.tsv";
         out0.open(filename0);
-        ss0 << "mirna_cumulative_scaling\tcluster_cumulative_scaling\tavg_mirna_level\tavg_cluster_level\ttotal_exchange\n";
+        ss0 << "mirna_cumulative_scaling\tcluster_cumulative_scaling\tavg_mirna_level\tavg_cluster_level\tmirna_total_exchange\tcluster_total_exchange\n";
         if(export_mirna_expression_profile) {
             std::string log_folder = "./data/patients/" + this->patient.case_id + "/mirna_expression_profiles";
             mirna_log_filename_prefix = log_folder + "/mirna_expression_profile_";
@@ -109,11 +139,15 @@ void Matchings_predictor::compute()
             // you may want to export a file in which each Cluster * (i.e. what I call cluster_address below) is enriched with information to make you able to identify specific clusters
             ss2_header << "cluster_address\trelative_expression\n";
         }
+        if(export_interaction_matrix) {
+            this->export_interaction_matrix();
+        }
     }    
     
     int latest_percentage = -1;
     // these four variables will be shared among the threads and set either only by the thread 0, either inside a #pragma omp critical
-    double total_exchange;
+    double mirna_total_exchange;
+    double cluster_total_exchange;
     std::unordered_map<Mirna_id, double> new_mirna_profile;
     std::unordered_map<Cluster *, double> new_cluster_profile;
     unsigned long long loop_size;
@@ -186,9 +220,25 @@ void Matchings_predictor::compute()
                                      }
                                      cumulative_scaling /= sum;                
                                  };
-                    
+                    double previous_mirna_cumulative_scaling = mirna_cumulative_scaling;
+                    double previous_cluster_cumulative_scaling = cluster_cumulative_scaling;
                     scale(this->mirna_profile, mirna_cumulative_scaling);
                     scale(this->cluster_profile, cluster_cumulative_scaling);
+                    // integrity check
+                    double mirna_lambda = 1;
+                    double cluster_lambda = 1;
+                    if(Global_parameters::lambda < 1) {
+                        mirna_lambda = Global_parameters::lambda;
+                    } else {
+                        cluster_lambda = 1.0/Global_parameters::lambda;
+                    }
+                    double mirna_scaling = previous_mirna_cumulative_scaling/mirna_cumulative_scaling;
+                    double cluster_scaling = previous_cluster_cumulative_scaling/cluster_cumulative_scaling;
+                    double should_be_zero = abs(mirna_scaling/mirna_lambda - cluster_scaling/cluster_lambda);
+                    if(should_be_zero > Global_parameters::epsilon) {
+                        std::cout << "should_be_zero = " << should_be_zero << ", mirna_scaling = " << mirna_scaling << ", cluster_scaling = " << cluster_scaling << "\n";
+                        exit(1);
+                    }
                 }
                 if(logging) {
                     ss0 << mirna_cumulative_scaling << "\t" << cluster_cumulative_scaling << "\t";
@@ -209,7 +259,8 @@ void Matchings_predictor::compute()
                     ss0 << adjusted_avg_mirna_level << "\t" << adjusted_avg_cluster_level << "\t";
                 }
                 // perform the exchange
-                total_exchange = 0;
+                mirna_total_exchange = 0;
+                cluster_total_exchange = 0;
                 new_mirna_profile = this->mirna_profile;
                 new_cluster_profile = this->cluster_profile;
                 loop_size = this->patient.interaction_graph.gene_to_clusters_arcs.size();
@@ -225,7 +276,8 @@ void Matchings_predictor::compute()
             for(auto & e : this->cluster_profile) {
                 rank_new_cluster_profile[e.first] = 0;
             }
-            double rank_total_exchange;
+            double rank_mirna_total_exchange = 0;
+            double rank_cluster_total_exchange = 0;
             auto it = this->patient.interaction_graph.gene_to_clusters_arcs.begin();
             for(auto & e : rank_new_mirna_profile) {
                 e.second = 0;
@@ -250,7 +302,7 @@ void Matchings_predictor::compute()
                                     }
                                 } else {
                                     std::cout << "error: exchange = " << exchange << "\n";
-                                    exit(1);   
+                                    exit(1);
                                 }
                             }
                             double mirna_lambda = 1;
@@ -262,7 +314,8 @@ void Matchings_predictor::compute()
                             }
                             rank_new_mirna_profile.at(mirna_id) -= mirna_lambda * exchange;
                             rank_new_cluster_profile.at(cluster) -= cluster_lambda * exchange;
-                            rank_total_exchange += exchange;
+                            rank_mirna_total_exchange += mirna_lambda * exchange;
+                            rank_cluster_total_exchange += cluster_lambda * exchange;
                         }
                     }
                 }
@@ -282,7 +335,8 @@ void Matchings_predictor::compute()
                 for(auto & e : rank_new_cluster_profile) {
                     new_cluster_profile.at(e.first) += e.second;
                 }
-                total_exchange += rank_total_exchange;
+                mirna_total_exchange += rank_mirna_total_exchange;
+                cluster_total_exchange += rank_cluster_total_exchange;
             }
 #ifndef OMP_TEMPORARILY_DISABLED
             if(rank == 0) {
@@ -293,12 +347,13 @@ void Matchings_predictor::compute()
             if(rank == 0) {
                 this->mirna_profile = new_mirna_profile;
                 this->cluster_profile = new_cluster_profile;
-                if(abs(mirna_cumulative_scaling - cluster_cumulative_scaling) > Global_parameters::epsilon) {
-                    std::cerr << "error: mirna_cumulative_scaling = " << mirna_cumulative_scaling << ", cluster_cumulative_scaling = " << cluster_cumulative_scaling << "\n";
-                    exit(1);
-                }
+                // no, this is true only for lambda = 1
+                // if(abs(mirna_cumulative_scaling - cluster_cumulative_scaling) > Global_parameters::epsilon) {
+                //     std::cerr << "error: mirna_cumulative_scaling = " << mirna_cumulative_scaling << ", cluster_cumulative_scaling = " << cluster_cumulative_scaling << "\n";
+                //     exit(1);
+                // }
                 if(logging) {
-                    ss0 << total_exchange << "\n";
+                    ss0 << mirna_total_exchange << "\t" << cluster_total_exchange << "\n";
                     out0 << ss0.str();
                     ss0.str("");
                 }

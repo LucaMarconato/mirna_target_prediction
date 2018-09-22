@@ -1,3 +1,4 @@
+
 * TODO check that "reads_per_million_miRNA_mapped" is equal to the RPM computed on "reads"
 * TODO apply the changes I have been suggested in Python code
 * DONE find the distribution of the length of the clusters and prepare the clustering procedure
@@ -15,6 +16,12 @@
 * TODO highlight the differences in the response between normal and tumor samples
 * TODO implicit first order approximation
 * TODO build the multiple linear regression model
-
+NEXT
+* TODO copy the gif to not having to generate them again
+* TODO test new plot about convergence
+* TODO test lambda
+* TODO plot the interaction matrix
+* TODO textual log of convergence
+* TODO try different lambdas and look at the textual log
 BONUS
 * TODO use the tool to find (with bruteforce and stepwise approach) to find a set of artificial sequences to insert in the cell colture to minimise the differences in down-regulation between normal and tumor cells
