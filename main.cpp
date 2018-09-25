@@ -15,8 +15,8 @@ int main(int argc, char * argv[])
     // Gene::print_gene_dictionary(10);
 
     // Patient patient("TCGA-CJ-4642", true);
-    // Patient patient("artificial0", true);
-    Patient patient("artificial1", true);
+    Patient patient("artificial0", true);
+    // Patient patient("artificial1", true);
 
     Matchings_predictor matching_predictor(patient);
     matching_predictor.compute();

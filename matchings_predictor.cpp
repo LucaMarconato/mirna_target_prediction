@@ -89,9 +89,14 @@ void Matchings_predictor::export_interaction_matrix()
 void Matchings_predictor::compute()
 {
     std::cout << "for the moment, just a trivial explicit Euler scheme\n";
-    // not used for the moment
-    // double lambda = 1;
-    unsigned long long max_steps = 1000;
+    unsigned long long max_steps = 100;
+    double mirna_lambda = 1;
+    double cluster_lambda = 1;
+    if(Global_parameters::lambda > 1) {
+        mirna_lambda = 1.0/Global_parameters::lambda;
+    } else {
+        cluster_lambda = Global_parameters::lambda;
+    }
     // h must be <= 1
     double h = 1;
     bool scaling = true;
@@ -225,19 +230,18 @@ void Matchings_predictor::compute()
                     scale(this->mirna_profile, mirna_cumulative_scaling);
                     scale(this->cluster_profile, cluster_cumulative_scaling);
                     // integrity check
-                    double mirna_lambda = 1;
-                    double cluster_lambda = 1;
-                    if(Global_parameters::lambda < 1) {
-                        mirna_lambda = Global_parameters::lambda;
-                    } else {
-                        cluster_lambda = 1.0/Global_parameters::lambda;
-                    }
-                    double mirna_scaling = previous_mirna_cumulative_scaling/mirna_cumulative_scaling;
-                    double cluster_scaling = previous_cluster_cumulative_scaling/cluster_cumulative_scaling;
-                    double should_be_zero = abs(mirna_scaling/mirna_lambda - cluster_scaling/cluster_lambda);
-                    if(should_be_zero > Global_parameters::epsilon) {
-                        std::cout << "should_be_zero = " << should_be_zero << ", mirna_scaling = " << mirna_scaling << ", cluster_scaling = " << cluster_scaling << "\n";
-                        exit(1);
+                    if(t > 0) {
+                        double mirna_scaling = mirna_cumulative_scaling/previous_mirna_cumulative_scaling;
+                        double cluster_scaling = cluster_cumulative_scaling/previous_cluster_cumulative_scaling;
+                        /*                          
+                          mirna_scaling = 1/(1 - lambda_mirna * exchange)
+                          cluster_scaling = 1/(1 - lambda_cluster * exchange)
+                         */
+                        double should_be_zero = abs((1 - 1/mirna_scaling)/mirna_lambda - (1 - 1/cluster_scaling)/cluster_lambda);
+                        if(should_be_zero > Global_parameters::epsilon) {
+                            std::cout << "should_be_zero = " << should_be_zero << ", mirna_scaling = " << mirna_scaling << ", cluster_scaling = " << cluster_scaling << "\n";
+                            exit(1);
+                        }   
                     }
                 }
                 if(logging) {
@@ -298,20 +302,14 @@ void Matchings_predictor::compute()
                                 if(abs(exchange) < Global_parameters::epsilon) {
                                     if(!warning_already_presented) {
                                         warning_already_presented = true;
-                                        std::cerr << "warning: exchange = " << exchange << ", silening further warnings like this\n";   
+                                        std::cerr << "warning: exchange = " << exchange << ", silencing further warnings like this\n";   
                                     }
                                 } else {
                                     std::cout << "error: exchange = " << exchange << "\n";
                                     exit(1);
                                 }
                             }
-                            double mirna_lambda = 1;
-                            double cluster_lambda = 1;
-                            if(Global_parameters::lambda < 1) {
-                                mirna_lambda = Global_parameters::lambda;
-                            } else {
-                                cluster_lambda = 1.0/Global_parameters::lambda;
-                            }
+                            std::cout << "mirna_lambda = " << mirna_lambda << "\n";
                             rank_new_mirna_profile.at(mirna_id) -= mirna_lambda * exchange;
                             rank_new_cluster_profile.at(cluster) -= cluster_lambda * exchange;
                             rank_mirna_total_exchange += mirna_lambda * exchange;

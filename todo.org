@@ -1,14 +1,14 @@
-
 * TODO check that "reads_per_million_miRNA_mapped" is equal to the RPM computed on "reads"
 * TODO apply the changes I have been suggested in Python code
 * DONE find the distribution of the length of the clusters and prepare the clustering procedure
 * DONE fix omp
-* TODO small cases (write also a python code for showing what it is happening in this cases)
+* TODO small cases
 * TODO introduce the various lambdas for taking into account of the effect of clusterization in the ratio between mirna and target absolute quantities and introduce a second lambda acting as a tuning parameter for modeling the ratio between the mirna absolute quantity and the gene absolute quantity
 * TODO validate the animation with the real data
 * DONE check the rate of convergence independently of the magnitude of the mirna level
-* TODO plot the animation for clusters
+* DONE plot the animation for clusters
 * TODO compute the exchange for all the pairs, both the instant one and the cumulative
+* TODO interseting: find the correlation between the density of the entries of the interaction matrix and the quantity of exchanged mirnas and clusters
 * TODO compute the weighted context score and compare it the one computed trivially
 * TODO stability of the method, for the expression levels, the exchange and the context (do it in the log-scale to have comparable constant variance)
 * TODO check different RPM and choose the right treshold based on different samples and of the variance
@@ -17,10 +17,7 @@
 * TODO implicit first order approximation
 * TODO build the multiple linear regression model
 NEXT
-* TODO copy the gif to not having to generate them again
-* TODO test new plot about convergence
-* TODO test lambda
-* TODO plot the interaction matrix
+* TODO test lambda, maybe in the code I have used the inverse of the lambda of the presentation, check
 * TODO textual log of convergence
 * TODO try different lambdas and look at the textual log
 BONUS

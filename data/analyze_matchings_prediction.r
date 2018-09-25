@@ -47,6 +47,8 @@ analyze_mirna_expression_profiles <- function(patient_folder)
     system(paste("cp -r ", expression_profile_folder, "/* ", expression_profile_copy_folder, sep = ""))
     files <- list.files(path = expression_profile_copy_folder, pattern = "*.tsv", full.names = T, recursive = F)
 
+    ## mirna_dynamics is the list of all the y_data
+    mirna_dynamics <- list()
     mirna_ids_ordered <- NULL
     original_y_data <- NULL
     original_log_difference <- NULL
@@ -66,6 +68,7 @@ analyze_mirna_expression_profiles <- function(patient_folder)
         my_order <- match(mirna_ids_ordered, t$mirna_id)
         x_data <- 1:length(t$relative_expression)
         y_data <- t$relative_expression[my_order]
+        mirna_dynamics[[length(mirna_dynamics) + 1]] <- y_data
         if(is.null(original_y_data)) {
             original_y_data <- y_data
         }
@@ -101,6 +104,7 @@ analyze_mirna_expression_profiles <- function(patient_folder)
     print(paste("generating", filename))
     system(paste("convert -delay 10 -loop 0 ", expression_profile_copy_folder, "/*.png ", filename, sep = ""))
     system(paste("open ", expression_profile_copy_folder, "/animation.gif", sep = ""))
+    return(mirna_dynamics)
 }
 
 analyze_cluster_expression_profiles <- function(patient_folder)
@@ -113,6 +117,8 @@ analyze_cluster_expression_profiles <- function(patient_folder)
     system(paste("cp -r ", expression_profile_folder, "/* ", expression_profile_copy_folder, sep = ""))
     files <- list.files(path = expression_profile_copy_folder, pattern = "*.tsv", full.names = T, recursive = F)
 
+    ## cluster_dynamics is the list of all the y_data
+    cluster_dynamics <- list()
     cluster_addresses_ordered <- NULL
     original_y_data <- NULL
     ## original_log_difference <- NULL
@@ -135,6 +141,7 @@ analyze_cluster_expression_profiles <- function(patient_folder)
         my_order <- match(cluster_addresses_ordered, t$cluster_address)
         x_data <- 1:length(t$relative_expression)
         y_data <- t$relative_expression[my_order]
+        cluster_dynamics[[length(cluster_dynamics) + 1]] <- y_data
         if(is.null(original_y_data)) {
             original_y_data <- y_data
         }
@@ -183,6 +190,79 @@ analyze_cluster_expression_profiles <- function(patient_folder)
     system(paste("open ", expression_profile_copy_folder, "/animation.gif", sep = ""))
 }
 
+generate_readable_dynamics_log <- function(patient_folder)
+{
+    ## note that we are reading data from the cluster_expression_profiles folder and not the cluster_expression_profiles_copy folder
+    ## the animated .gifs are made out of the copied folder, to avoid accidental deletion by the C++ code, so be sure that you have not called
+    ## the C++ code after having generated the animations, otherwise this function will agree with the data just produced by the C++ code and maybe not
+    ## with the animations, unless you have generated them again
+
+    extract_dynamics <- function(element)
+    {
+        expression_profile_folder <- paste(patient_folder, element, "_expression_profiles", sep = "")
+        files <- list.files(path = expression_profile_folder, pattern = "*.tsv", full.names = T, recursive = F)
+        ## element_dynamics is the list of all the y_data
+        element_dynamics <- list()
+        element_addresses_ordered <- NULL
+        file_count <- length(files)
+        for(i in seq_len(file_count)) {
+            file <- files[i]
+            t <- read.table(file, header = T, colClasses = c("numeric", "numeric"))
+            if(is.null(element_addresses_ordered)) {
+                my_order <- order(t$relative_expression)
+                element_addresses_ordered <- t[[1]][my_order]
+            }
+            timestep <- strsplit(file, paste(element, "_expression_profile_", sep = ""))[[1]][2]
+            timestep <- strsplit(timestep, ".tsv")[[1]][1]
+            my_order <- match(element_addresses_ordered, t[[1]])
+            y_data <- t$relative_expression[my_order]
+            element_dynamics[[length(element_dynamics) + 1]] <- y_data
+        }
+        return(element_dynamics)
+    }
+        
+    mirna_dynamics <- extract_dynamics("mirna")
+    cluster_dynamics <- extract_dynamics("cluster")
+
+    if(length(mirna_dynamics) != length(cluster_dynamics)) {
+        print(paste("error: length(mirna_dynamics) = ", length(mirna_dynamics), ", length(cluster_dynamics) = ", length(cluster_dynamics), sep = ""))
+        stop("fatal error")
+    }
+    maximum_mirnas <- 5
+    maximum_clusters <- 5
+    if(length(mirna_dynamics[[1]]) > maximum_mirnas) {
+        print("too many mirnas, not exporting the dynamics in a readable file")
+        return()
+    } else if(length(cluster_dynamics[[1]]) > maximum_clusters) {
+        print("too many clusters, not exporting the dynamics in a readable file")
+        return()
+    }
+    filename <- paste(patient_folder, "dynamics.txt", sep = "")
+    s <- ""
+    i <- 1
+
+    get_dynamics_string <- function(element_dynamics)
+    {
+        state <- element_dynamics[[i]]
+        state_string_formatted <- sapply(state, function(x)
+        {
+            if(x < 0.01) sprintf("%.e", x) else round(x, 3)
+        })
+        state_string_collapsed <- paste(state_string_formatted, collapse = ", ")
+    }
+    timesteps <- length(mirna_dynamics)
+    for(i in 1:timesteps) {
+        s <- paste(s, get_dynamics_string(mirna_dynamics), sep = "")
+        s <- paste(s, "\n", sep = "")
+        s <- paste(s, get_dynamics_string(cluster_dynamics), sep = "")
+        s <- paste(s, "\n", sep = "\n")
+    }
+    out <- file(filename)
+    writeLines(s, out)
+    close(out)
+    print(paste("saved dynamics into", filename))
+}
+
 analyze_dynamics_for_small_interaction_graphs <- function(patient_folder)
 {
     print("loading the interaction matrix")
@@ -201,6 +281,16 @@ analyze_dynamics_for_small_interaction_graphs <- function(patient_folder)
     ## x_data <- 1:length(t$relative_expression)
     ## y_data <- t$relative_expression[my_order]
 
+    maximum_mirnas <- 5
+    maximum_clusters <- 5
+    if(length(mirna_ids_ordered) > maximum_mirnas) {
+        print("too many mirnas, not showing the interaction graph")
+        return()
+    } else if(length(cluster_addresses_ordered) > maximum_clusters) {
+        print("too many clusters, not showing the interaction graph")
+        return()
+    }
+
     matrix_filename <- paste(patient_folder, "interaction_matrix.mat", sep = "")
     m <- read.table(matrix_filename, sep = "\t")
     m <- as.matrix(m)
@@ -211,16 +301,17 @@ analyze_dynamics_for_small_interaction_graphs <- function(patient_folder)
     m <<- m[, my_order]
     new_maximized_device()
     ## 16/9 is my monitor size ratio
-    plot(raster(m), asp = 9/16, col = sapply(seq(1, 0, length.out = max(m)), function(x) rgb(x,x,x)))
+    plot(raster(m), asp = 9/16, col = sapply(seq(1, 0, length.out = max(m) + 1), function(x) rgb(x,x,x)))
     ## my_order_rows <- // need to export the matrix
 }
 
 ## patient_id <- "TCGA-CJ-4642"
-## patient_id <- "artificial0"
-patient_id <- "artificial1"
+patient_id <- "artificial0"
+## patient_id <- "artificial1"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
 close_all_devices()
-## analyze_convergence(patient_folder)
-## analyze_mirna_expression_profiles(patient_folder)
-## analyze_cluster_expression_profiles(patient_folder)
+analyze_convergence(patient_folder)
+generate_readable_dynamics_log(patient_folder)
+analyze_mirna_expression_profiles(patient_folder)
+analyze_cluster_expression_profiles(patient_folder)
 analyze_dynamics_for_small_interaction_graphs(patient_folder)
