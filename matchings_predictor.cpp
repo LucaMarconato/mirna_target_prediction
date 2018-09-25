@@ -89,7 +89,7 @@ void Matchings_predictor::export_interaction_matrix()
 void Matchings_predictor::compute()
 {
     std::cout << "for the moment, just a trivial explicit Euler scheme\n";
-    unsigned long long max_steps = 100;
+    unsigned long long max_steps = 1000;
     double mirna_lambda = 1;
     double cluster_lambda = 1;
     if(Global_parameters::lambda > 1) {
@@ -100,8 +100,7 @@ void Matchings_predictor::compute()
     // h must be <= 1
     double h = 1;
     bool scaling = true;
-    double mirna_cumulative_scaling = 1;
-    double cluster_cumulative_scaling = 1;
+    double cumulative_scaling = 1;
     bool logging = true;
     bool export_mirna_expression_profile = true;
     bool export_cluster_expression_profile = true;
@@ -122,7 +121,7 @@ void Matchings_predictor::compute()
     if(logging) {
         std::string filename0 = "./data/patients/" + this->patient.case_id + "/matchings_prediction.tsv";
         out0.open(filename0);
-        ss0 << "mirna_cumulative_scaling\tcluster_cumulative_scaling\tavg_mirna_level\tavg_cluster_level\tmirna_total_exchange\tcluster_total_exchange\n";
+        ss0 << "cumulative_scaling\tavg_mirna_level\tavg_cluster_level\tmirna_total_exchange\tcluster_total_exchange\n";
         if(export_mirna_expression_profile) {
             std::string log_folder = "./data/patients/" + this->patient.case_id + "/mirna_expression_profiles";
             mirna_log_filename_prefix = log_folder + "/mirna_expression_profile_";
@@ -184,7 +183,7 @@ void Matchings_predictor::compute()
                             std::stringstream ss1;
                             ss1 << ss1_header.str();
                             for(auto & e : this->mirna_profile) {
-                                double adjusted_value = e.second / mirna_cumulative_scaling;
+                                double adjusted_value = e.second / cumulative_scaling;
                                 ss1 << e.first << "\t" << adjusted_value << "\n";
                             }
                             std::stringstream mirna_log_filename;
@@ -197,7 +196,7 @@ void Matchings_predictor::compute()
                             std::stringstream ss2;
                             ss2 << ss2_header.str();
                             for(auto & e : this->cluster_profile) {
-                                double adjusted_value = e.second / cluster_cumulative_scaling;
+                                double adjusted_value = e.second / cumulative_scaling;
                                 ss2 << e.first << "\t" << adjusted_value << "\n";
                             }
                             std::stringstream cluster_log_filename;
@@ -210,42 +209,29 @@ void Matchings_predictor::compute()
                 }
                 if(scaling) {
                     // perform the scaling
-                    auto scale = [](auto & profile, double & cumulative_scaling)
-                                 {
-                                     double sum = 0;
-                                     for(auto & e : profile) {
-                                         sum += e.second;
-                                     }
-                                     for(auto & e : profile) {
-                                         e.second /= sum;
-                                     }
-                                     if(sum > 1 + Global_parameters::epsilon) {
-                                         std::cerr << "error: sum = " << sum << "\n";
-                                         exit(1);
-                                     }
-                                     cumulative_scaling /= sum;                
-                                 };
-                    double previous_mirna_cumulative_scaling = mirna_cumulative_scaling;
-                    double previous_cluster_cumulative_scaling = cluster_cumulative_scaling;
-                    scale(this->mirna_profile, mirna_cumulative_scaling);
-                    scale(this->cluster_profile, cluster_cumulative_scaling);
-                    // integrity check
-                    if(t > 0) {
-                        double mirna_scaling = mirna_cumulative_scaling/previous_mirna_cumulative_scaling;
-                        double cluster_scaling = cluster_cumulative_scaling/previous_cluster_cumulative_scaling;
-                        /*                          
-                          mirna_scaling = 1/(1 - lambda_mirna * exchange)
-                          cluster_scaling = 1/(1 - lambda_cluster * exchange)
-                         */
-                        double should_be_zero = abs((1 - 1/mirna_scaling)/mirna_lambda - (1 - 1/cluster_scaling)/cluster_lambda);
-                        if(should_be_zero > Global_parameters::epsilon) {
-                            std::cout << "should_be_zero = " << should_be_zero << ", mirna_scaling = " << mirna_scaling << ", cluster_scaling = " << cluster_scaling << "\n";
-                            exit(1);
-                        }   
+                    double mirna_sum = 0;
+                    for(auto & e : this->mirna_profile) {
+                        mirna_sum += e.second;
                     }
+                    double cluster_sum = 0;
+                    for(auto & e : this->cluster_profile) {
+                        cluster_sum += e.second;
+                    }
+                    double sum = std::max(mirna_sum, cluster_sum);
+                    for(auto & e : this->mirna_profile) {
+                        e.second /= sum;
+                    }
+                    for(auto & e : this->cluster_profile) {
+                        e.second /= sum;
+                    }
+                    if(sum > 1 + Global_parameters::epsilon) {
+                        std::cerr << "error: sum = " << sum << "\n";
+                        exit(1);
+                    }
+                    cumulative_scaling /= sum;
                 }
                 if(logging) {
-                    ss0 << mirna_cumulative_scaling << "\t" << cluster_cumulative_scaling << "\t";
+                    ss0 << cumulative_scaling << "\t";
                     // compute the average level
                     double avg_mirna_level = 0;
                     for(auto & e : this->mirna_profile) {
@@ -258,8 +244,8 @@ void Matchings_predictor::compute()
                         avg_cluster_level += value;            
                     }
                     avg_cluster_level /= this->cluster_profile.size();
-                    double adjusted_avg_mirna_level = avg_mirna_level / mirna_cumulative_scaling;
-                    double adjusted_avg_cluster_level = avg_cluster_level / cluster_cumulative_scaling;
+                    double adjusted_avg_mirna_level = avg_mirna_level / cumulative_scaling;
+                    double adjusted_avg_cluster_level = avg_cluster_level / cumulative_scaling;
                     ss0 << adjusted_avg_mirna_level << "\t" << adjusted_avg_cluster_level << "\t";
                 }
                 // perform the exchange
@@ -309,7 +295,6 @@ void Matchings_predictor::compute()
                                     exit(1);
                                 }
                             }
-                            std::cout << "mirna_lambda = " << mirna_lambda << "\n";
                             rank_new_mirna_profile.at(mirna_id) -= mirna_lambda * exchange;
                             rank_new_cluster_profile.at(cluster) -= cluster_lambda * exchange;
                             rank_mirna_total_exchange += mirna_lambda * exchange;
@@ -345,11 +330,6 @@ void Matchings_predictor::compute()
             if(rank == 0) {
                 this->mirna_profile = new_mirna_profile;
                 this->cluster_profile = new_cluster_profile;
-                // no, this is true only for lambda = 1
-                // if(abs(mirna_cumulative_scaling - cluster_cumulative_scaling) > Global_parameters::epsilon) {
-                //     std::cerr << "error: mirna_cumulative_scaling = " << mirna_cumulative_scaling << ", cluster_cumulative_scaling = " << cluster_cumulative_scaling << "\n";
-                //     exit(1);
-                // }
                 if(logging) {
                     ss0 << mirna_total_exchange << "\t" << cluster_total_exchange << "\n";
                     out0 << ss0.str();

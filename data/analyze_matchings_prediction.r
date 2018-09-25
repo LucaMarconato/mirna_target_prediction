@@ -10,30 +10,28 @@ analyze_convergence <- function(patient_folder)
     x_values <- seq(1, length(a[[1]]))
     
     new_maximized_device()
-    layout(matrix(c(1,3,5,2,4,6,7,9,11,8,10,12), 4, 3, byrow = T))
-    plot(x_values, a[[1]], main = "mirna cumulative scaling", pch = 20)
+    layout(matrix(c(1,2,4,1,3,5,6,8,10,7,9,11), 4, 3, byrow = T))
+    plot(x_values, a$cumulative_scaling, main = "cumulative scaling", pch = 20)
     grid()
-    plot(x_values, a[[2]], main = "cluster cumulative scaling", pch = 20)
+    plot(x_values, a$avg_mirna_level, main = "average mirna level", pch = 20)
     grid()
-    plot(x_values, a[[3]], main = "average mirna level", pch = 20)
+    plot(x_values, log10(a$avg_mirna_level), main = "average mirna level (log10)", pch = 20)
     grid()
-    plot(x_values, log10(a[[3]]), main = "average mirna level (log10)", pch = 20)
+    plot(x_values, a$avg_cluster_level, main = "average cluster level", pch = 20)
     grid()
-    plot(x_values, a[[4]], main = "average cluster level", pch = 20)
+    plot(x_values, log10(a$avg_cluster_level), main = "average cluster level (log10)", pch = 20)
     grid()
-    plot(x_values, log10(a[[4]]), main = "average cluster level (log10)", pch = 20)
+    plot(x_values, a$mirna_total_exchange, main = "mirna total exchange in the step", pch = 20)
     grid()
-    plot(x_values, a[[5]], main = "mirna total exchange in the step", pch = 20)
+    plot(x_values, log10(a$mirna_total_exchange), main = "mirna total exchange in the step (log10)", pch = 20)
     grid()
-    plot(x_values, log10(a[[5]]), main = "mirna total exchange in the step (log10)", pch = 20)
+    plot(x_values, a$cluster_total_exchange, main = "cluster total exchange in the step", pch = 20)
     grid()
-    plot(x_values, a[[6]], main = "cluster total exchange in the step", pch = 20)
+    plot(x_values, log10(a$cluster_total_exchange), main = "cluster total exchange in the step (log10)", pch = 20)
     grid()
-    plot(x_values, log10(a[[6]]), main = "cluster total exchange in the step (log10)", pch = 20)
+    plot(x_values, cumsum(a$mirna_total_exchange), main = "mirna cumulative total exchange", pch = 20)
     grid()
-    plot(x_values, cumsum(a[[5]]), main = "mirna cumulative total exchange", pch = 20)
-    grid()
-    plot(x_values, cumsum(a[[6]]), main = "cluster cumulative total exchange", pch = 20)
+    plot(x_values, cumsum(a$cluster_total_exchange), main = "cluster cumulative total exchange", pch = 20)
     grid()
 }
 
@@ -305,8 +303,8 @@ analyze_dynamics_for_small_interaction_graphs <- function(patient_folder)
     ## my_order_rows <- // need to export the matrix
 }
 
-## patient_id <- "TCGA-CJ-4642"
-patient_id <- "artificial0"
+patient_id <- "TCGA-CJ-4642"
+## patient_id <- "artificial0"
 ## patient_id <- "artificial1"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
 close_all_devices()

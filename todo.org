@@ -2,9 +2,9 @@
 * TODO apply the changes I have been suggested in Python code
 * DONE find the distribution of the length of the clusters and prepare the clustering procedure
 * DONE fix omp
-* TODO small cases
-* TODO introduce the various lambdas for taking into account of the effect of clusterization in the ratio between mirna and target absolute quantities and introduce a second lambda acting as a tuning parameter for modeling the ratio between the mirna absolute quantity and the gene absolute quantity
-* TODO validate the animation with the real data
+* DONE small cases
+* DONE introduce the various lambdas for taking into account of the effect of clusterization in the ratio between mirna and target absolute quantities (this is not needed!) and introduce a second lambda acting as a tuning parameter for modeling the ratio between the mirna absolute quantity and the gene absolute quantity
+* DONE validate the animation with the real data
 * DONE check the rate of convergence independently of the magnitude of the mirna level
 * DONE plot the animation for clusters
 * TODO compute the exchange for all the pairs, both the instant one and the cumulative
@@ -17,8 +17,8 @@
 * TODO implicit first order approximation
 * TODO build the multiple linear regression model
 NEXT
-* TODO test lambda, maybe in the code I have used the inverse of the lambda of the presentation, check
-* TODO textual log of convergence
-* TODO try different lambdas and look at the textual log
+* DONE test lambda, maybe in the code I have used the inverse of the lambda of the presentation, check
+* DONE textual log of convergence
+* DONE try different lambdas and look at the textual log
 BONUS
 * TODO use the tool to find (with bruteforce and stepwise approach) to find a set of artificial sequences to insert in the cell colture to minimise the differences in down-regulation between normal and tumor cells
