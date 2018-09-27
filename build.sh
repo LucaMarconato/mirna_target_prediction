@@ -13,6 +13,6 @@ CXX=clang-omp++
 # LDFLAGS=-L/usr/local/opt/llvm/lib/
 # cmake -DCMAKE_BUILD_TYPE=Release .
 
-echo "" > omp_disabler.h
+# echo "" > omp_disabler.h
 cmake .
 make

@@ -111,7 +111,9 @@ Patient::Patient(std::string case_id, bool export_data) : case_id(case_id)
         std::cout << "\n";
         if(export_data) {           
             this->interaction_graph.export_interactions_data(patient_folder);
+            std::cout << "exporting expression profiles\n";
             this->export_expression_profiles(patient_folder);
+            std::cout << "finished\n";
         }
     }
 }

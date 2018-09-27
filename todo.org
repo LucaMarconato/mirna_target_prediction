@@ -17,8 +17,10 @@
 * TODO implicit first order approximation
 * TODO build the multiple linear regression model
 NEXT
-* DONE test lambda, maybe in the code I have used the inverse of the lambda of the presentation, check
-* DONE textual log of convergence
-* DONE try different lambdas and look at the textual log
+* TODO finish the simualtions which are trivial
+* TODO check 118
+* TODO check the simulation with conserved only
+* TODO in cons and not-cons check if the sipler methods would work, if not how many rows do not make it possible
 BONUS
 * TODO use the tool to find (with bruteforce and stepwise approach) to find a set of artificial sequences to insert in the cell colture to minimise the differences in down-regulation between normal and tumor cells
+

@@ -303,13 +303,36 @@ analyze_dynamics_for_small_interaction_graphs <- function(patient_folder)
     ## my_order_rows <- // need to export the matrix
 }
 
+analyze_probabilities <- function(patient_folder)
+{
+    new_maximized_device()
+    layout(matrix(1:4, 2, 2, byrow = T))
+    filename <- paste(patient_folder, "r_ic_values.tsv", sep = "")
+    a <- read.table(filename, header = T, colClasses = c("numeric", "numeric", "numeric"))
+    hist(log10(a$r_ic))
+
+    filename <- paste(patient_folder, "r_ijk_values.tsv", sep = "")
+    a <- read.table(filename, header = T, colClasses = c("numeric", "numeric", "numeric"))
+    hist(log10(a$r_ijk))
+
+    filename <- paste(patient_folder, "p_c_bound_values.tsv", sep = "")
+    a <- read.table(filename, header = T, colClasses = c("numeric", "numeric"))
+    aa <<- a
+    hist(log10(a$p_c_bound))
+
+    ## filename <- paste(patient_folder, "p_j_downregulated_given_c_bound_values.tsv", sep = "")
+    ## a <- read.table(filename, header = T, colClasses = c("numeric", "numeric", "numeric"))
+    ## hist(a$p_j_downregulated_given_c_bound_values)
+}
+
 patient_id <- "TCGA-CJ-4642"
 ## patient_id <- "artificial0"
 ## patient_id <- "artificial1"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
 close_all_devices()
-analyze_convergence(patient_folder)
+## analyze_convergence(patient_folder)
 ## generate_readable_dynamics_log(patient_folder)
 ## analyze_mirna_expression_profiles(patient_folder)
 ## analyze_cluster_expression_profiles(patient_folder)
 ## analyze_dynamics_for_small_interaction_graphs(patient_folder)
+analyze_probabilities(patient_folder)

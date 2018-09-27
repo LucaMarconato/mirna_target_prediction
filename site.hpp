@@ -78,6 +78,7 @@ namespace std {
         size_t operator()(const boost::tuple<Mirna_id, Gene_id, unsigned int, unsigned int> & e) const noexcept
         {
             size_t seed = 0;
+            // TODO: check if I should call boost::hash_value (as I do in cluster.hpp) or if this fine
             boost::hash_combine(seed, e.get<0>());
             boost::hash_combine(seed, e.get<1>());
             boost::hash_combine(seed, e.get<2>());

@@ -73,10 +73,6 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
         Site * site = this->get_site(mirna_id, gene_id, utr_start, utr_end);
 
         // create gene-site arcs
-        if(this->gene_to_sites_arcs.find(gene_id) == this->gene_to_sites_arcs.end()) {
-            // this initialize the list as empty
-            this->gene_to_sites_arcs[gene_id];
-        }
         this->gene_to_sites_arcs[gene_id].push_back(site);        
 
         // create mirna-site arcs
@@ -85,33 +81,14 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
         if(this->mirna_site_arcs.find(p0) != this->mirna_site_arcs.end()) {
             std::cout << "warning: considering only one binding between a mirna and one sites\n";
         }
-        this->mirna_site_arcs[p0] = mirna_site_arc;
-        
-        if(this->mirna_to_sites_arcs.find(mirna_id) == this->mirna_to_sites_arcs.end()) {
-            this->mirna_to_sites_arcs[mirna_id];
-        }
-        this->mirna_to_sites_arcs[mirna_id].push_back(site);
-        
-        if(this->site_to_mirnas_arcs.find(site) == this->site_to_mirnas_arcs.end()) {
-            this->site_to_mirnas_arcs[site];
-        }
+        this->mirna_site_arcs[p0] = mirna_site_arc;        
+        this->mirna_to_sites_arcs[mirna_id].push_back(site);        
         this->site_to_mirnas_arcs[site].push_back(mirna_id);
         
         // create mirna-gene arcs
         auto p1 = std::make_pair(mirna_id, gene_id);
-        if(this->mirna_gene_arcs.find(p1) == this->mirna_gene_arcs.end()) {
-            this->mirna_gene_arcs[p1];
-        }
-        this->mirna_gene_arcs[p1].push_back(site);
-        
-        if(this->mirna_to_genes_arcs.find(mirna_id) == this->mirna_to_genes_arcs.end()) {
-            this->mirna_to_genes_arcs[mirna_id];
-        }
-        this->mirna_to_genes_arcs[mirna_id].push_back(gene_id);
-        
-        if(this->gene_to_mirnas_arcs.find(gene_id) == this->gene_to_mirnas_arcs.end()) {
-            this->gene_to_mirnas_arcs[gene_id];
-        }
+        this->mirna_gene_arcs[p1].push_back(site);        
+        this->mirna_to_genes_arcs[mirna_id].push_back(gene_id);        
         this->gene_to_mirnas_arcs[gene_id].push_back(mirna_id);
     }
     // create site-site arcs
@@ -122,14 +99,7 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
             for(auto & site1 : sites) {
                 if(site0 != site1) {
                     if(std::abs((((long long)site0->utr_start) - ((long long)site1->utr_start))) <= 8) {
-                        if(this->site_to_overlapping_sites.find(site0) == this->site_to_overlapping_sites.end()) {
-                            this->site_to_overlapping_sites[site0];
-                        }
                         this->site_to_overlapping_sites[site0].push_back(site1);
-                        // if(this->site_to_overlapping_sites.find(site1) == this->site_to_overlapping_sites.end()) {
-                        //     this->site_to_overlapping_sites[site1];
-                        // }
-                        // this->site_to_overlapping_sites[site1].push_back(site0);
                     }                    
                 }
             }
@@ -161,10 +131,6 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
                             }
                         }   
                     }
-                }
-                // TODO: check if this line is needed (the constructor is probably called even withou the if)
-                if(this->gene_to_clusters_arcs.find(gene_id) == this->gene_to_clusters_arcs.end()) {
-                    this->gene_to_clusters_arcs[gene_id];
                 }
                 this->gene_to_clusters_arcs[gene_id].push_back(c);
             }
@@ -297,6 +263,7 @@ void Ig::export_interactions_data(std::string patient_folder)
     Timer::stop();
     
     // information about overlapping sites
+    Timer::start();
     std::cout << "writing information about overlapping sites\n";
     Output_buffer ob0(patient_folder + "overlapping_sites.tsv", 100000, 1000);
     std::string s = "gene_id\tutr_start\toverlapping_sites_count\n";
@@ -315,6 +282,7 @@ void Ig::export_interactions_data(std::string patient_folder)
     Timer::stop();
 
     // information about clusters
+    Timer::start();
     std::cout << "writing information about clusters\n";
     Output_buffer ob1(patient_folder + "clusters.tsv", 100000, 1000);
     s = "gene_id\tcluster_size\n";

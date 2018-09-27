@@ -3,6 +3,7 @@
 
 #include <list>
 
+#include <boost/functional/hash.hpp>
 #include <boost/serialization/list.hpp>
 
 #include "site.hpp"
@@ -13,6 +14,34 @@ public:
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version);
 };
+
+namespace std {
+    template <>
+    struct hash<std::pair<Mirna_id, Cluster *>>
+    {
+        size_t operator()(const std::pair<Mirna_id, Cluster *> & e) const noexcept
+        {
+            std::size_t seed = 0;
+            boost::hash_combine(seed, boost::hash_value(e.first));
+            boost::hash_combine(seed, boost::hash_value(e.second));
+            return seed;
+        }
+    };
+}
+
+// namespace std {
+//     template <>
+//     struct hash<std::pair<, Cluster *>>
+//     {
+//         size_t operator()(const std::pair<Mirna_id, Cluster *> & e) const noexcept
+//         {
+//             std::size_t seed = 0;
+//             boost::hash_combine(seed, boost::hash_value(e.first));
+//             boost::hash_combine(seed, boost::hash_value(e.second));
+//             return seed;
+//         }
+//     };
+// }
 
 #include "cluster.tpp"
 

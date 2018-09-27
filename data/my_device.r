@@ -14,8 +14,9 @@ get_screen_resolution <- function()
 get_screen_physical_size <- function() 
 {
     ## return(c(24 + 1/4 + 1/8, 13 + 1/32))
-    return(c(30 + 1/4 + 1/8, 17 + 1/32))
-    ## return(c(12.8, 7.5))
+    ## return(c(30 + 1/4 + 1/8, 17 + 1/32))
+    return(c(18.85, 10)) ## full hd monitor
+    ## return(c(18.85, 12)) ## built-in retina 15" monitor
     ## or automatically, but I preferred to do it manually via a "binary search"
     ## cmd <- sprintf("%s | grep dimensions | perl -pe 's/^.*?(\\([0-9]+x[0-9]+)\ millimeters.*/$1/g' | tr -d '(' | tr 'x' ' '", xdpyinfo_path)
     ## output <- system(cmd, intern = T, ignore.stderr = T)
@@ -38,7 +39,7 @@ new_browser_plot <- function()
 {
     if(plot_to_browser_enabled) {
 		# set the path you want
-        png(filename = "~/programming/web/r_image/plots/plot.png", width = 1920, height = 1080, units = "px", pointsize = 12)
+        png(filename = "~/programming/web/r_image/plots/plot.png", width = 2732, height = 1811, units = "px", pointsize = 12)
     } else {
         new_maximized_device()
     }

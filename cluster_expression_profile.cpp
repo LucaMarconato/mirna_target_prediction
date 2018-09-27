@@ -15,6 +15,11 @@ Cep::Cluster_expression_profile(Gene_expression_profile & gep, Interaction_graph
     for(auto & e : gep.profile) {
         if(ig.gene_to_clusters_arcs.find(e.first) != ig.gene_to_clusters_arcs.end()) {
             for(auto & l : ig.gene_to_clusters_arcs.at(e.first)) {
+                // experiment, with no biological meaning
+                // if(this->profile.find(l) == this->profile.end()) {
+                //     this->profile[l] = Expression(Reads(0));
+                // }
+                // this->profile[l] = Reads(this->profile.at(l).to_reads() + e.second.to_reads());
                 this->profile[l] = e.second;
                 total_reads += e.second.to_reads();
             }
