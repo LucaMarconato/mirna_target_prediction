@@ -384,7 +384,7 @@ void Matchings_predictor::compute_probabilities()
             this->sum_of_r_ijk_for_cluster[cluster] = 0;
         }
         this->sum_of_r_ijk_for_cluster[cluster] = this->sum_of_r_ijk_for_cluster.at(cluster) + value;
-        std::list<std::pair<Mirna_id, Site *>> just_added;       
+        std::list<std::pair<Mirna_id, Site *>> just_added;
         for(auto & site : cluster->sites) {
             auto & m = this->patient.interaction_graph.mirna_site_arcs;
             auto p = std::make_pair(mirna_id, site);
@@ -412,29 +412,38 @@ void Matchings_predictor::compute_probabilities()
     out.close();
     
     // compute p_j_downregulated_given_c_bound_values for the current cluster
-    // Gene_id gene_id = cluster->sites.front()->gene_id;
-    // std::unordered_map<Site *, std::list<std::pair<Mirna_id, Site *>>> just_added_by_site;
-    // for(auto & p : just_added) {
-    //     Site * site = p.second;
-    //     just_added_by_site[site].push_back(p);
-    // }
-    // for(auto & e : just_added_by_site) {
-    //     Site * site = e.first;
-    //     for(auto & p : e.second) {
-    //         auto key0 = std::make_pair(gene_id, cluster);
-    //         if(this->p_j_downregulated_given_c_bound_values.find(key0) == this->p_j_downregulated_given_c_bound_values.end()) {
-    //             this->p_j_downregulated_given_c_bound_values[key0] = 0;
-    //         }
-    //         Mirna_id mirna_id = p.first;
-    //         auto key1 = std::make_pair(mirna_id, site);
-    //         double r_ijk = this->r_ijk_values.at(key1);
-    //         Mirna_site_arc & mirna_site_arc = this->patient.interaction_graph.mirna_site_arcs.at(key1);
-    //         double context_score = mirna_site_arc.context_score;
-    //         double probability = std::pow(2, context_score);
-    //         double to_add = r_ijk * probability / sum_of_r_ic_for_this_cluster; -
-    //         this->p_j_downregulated_given_c_bound_values[key0] = this->p_j_downregulated_given_c_bound_values.at(key0) + to_add;
-    //     }
-    // }
+    for(auto & e : this->r_ic_values) {
+        auto & mirna_id = e.first.first;
+        Cluster * cluster = e.first.second;
+        Gene_id gene_id = cluster->sites.front()->gene_id;
+        std::unordered_map<Site *, std::list<std::pair<Mirna_id, Site *>>> just_added_by_site;
+        for(auto & site : cluster->sites) {
+            auto & m = this->patient.interaction_graph.mirna_site_arcs;
+            auto p = std::make_pair(mirna_id, site);
+            if(m.find(p) != m.end()) {
+                just_added_by_site[site].push_back(p);
+            }
+        }
+        if(just_added_by_site.size() == 0) {
+            std::cerr << "error: just_added_by_site.size() = " << just_added_by_site.size() << "\n";
+            exit(1);
+        }        
+        for(auto & e : just_added_by_site) {
+            Site * site = e.first;
+            for(auto & p : e.second) {
+                auto key0 = std::make_pair(gene_id, cluster);
+                if(this->p_j_downregulated_given_c_bound_values.find(key0) == this->p_j_downregulated_given_c_bound_values.end()) {
+                    this->p_j_downregulated_given_c_bound_values[key0] = 0;
+                }
+                double r_ijk = this->r_ijk_values.at(p);
+                Mirna_site_arc & mirna_site_arc = this->patient.interaction_graph.mirna_site_arcs.at(p);
+                double context_score = mirna_site_arc.context_score;
+                double probability = std::pow(2, 1 - context_score);
+                double to_add = r_ijk * probability / sum_of_r_ijk_for_cluster.at(cluster);
+                this->p_j_downregulated_given_c_bound_values[key0] = this->p_j_downregulated_given_c_bound_values.at(key0) + to_add;
+            }
+        }        
+    }
 }
 
 void Matchings_predictor::export_probabilities()

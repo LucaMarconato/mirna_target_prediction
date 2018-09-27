@@ -5,4 +5,4 @@ print(paste("rows with max value =", length(extracted)))
 v <- extracted[1]
 print(d[d$cluster_address == v,])
 
-a <- read.table("processed/scored_interactions_processed.tsv", colClasses = c("numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric"), header = T)
+## a <- read.table("processed/scored_interactions_processed.tsv", colClasses = c("numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric"), header = T)

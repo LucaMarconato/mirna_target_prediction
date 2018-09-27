@@ -320,9 +320,9 @@ analyze_probabilities <- function(patient_folder)
     aa <<- a
     hist(log10(a$p_c_bound))
 
-    ## filename <- paste(patient_folder, "p_j_downregulated_given_c_bound_values.tsv", sep = "")
-    ## a <- read.table(filename, header = T, colClasses = c("numeric", "numeric", "numeric"))
-    ## hist(a$p_j_downregulated_given_c_bound_values)
+    filename <- paste(patient_folder, "p_j_downregulated_given_c_bound_values.tsv", sep = "")
+    a <- read.table(filename, header = T, colClasses = c("numeric", "numeric", "numeric"))
+    hist(a$p_j_downregulated_given_c_bound_values)
 }
 
 patient_id <- "TCGA-CJ-4642"
