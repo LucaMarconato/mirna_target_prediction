@@ -371,9 +371,6 @@ void Matchings_predictor::compute()
 
 void Matchings_predictor::compute_probabilities()
 {
-    std::ofstream out("cluster_debugging");
-    std::stringstream ss;
-    
     for(auto & e : this->r_ic_values) {
         // compute r_ijk_values for the sites in the current cluster and binding to the current miRNA
         auto & mirna_id = e.first.first;
@@ -405,12 +402,9 @@ void Matchings_predictor::compute_probabilities()
         if(this->p_c_bound_values.find(cluster) == this->p_c_bound_values.end()) {
             this->p_c_bound_values[cluster] = 0;
         }        
-        ss << cluster << " " << cluster->sites.size() << " " << cluster->sites.front()->mirna_id << " " << cluster->sites.front()->gene_id << " " << cluster->sites.front()->utr_start << " " << this->p_c_bound_values.at(cluster) << " " << value << " " << this->original_cluster_profile.at(cluster) << " " << value / (this->original_cluster_profile.at(cluster) * cluster->sites.size()) << "\n";
         this->p_c_bound_values[cluster] = this->p_c_bound_values.at(cluster) + value / (this->original_cluster_profile.at(cluster) * cluster->sites.size());
     }
-    out << ss.str();
-    out.close();
-    
+
     // compute p_j_downregulated_given_c_bound_values for the current cluster
     for(auto & e : this->r_ic_values) {
         auto & mirna_id = e.first.first;
