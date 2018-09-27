@@ -303,15 +303,26 @@ void Matchings_predictor::compute()
                             }
                             rank_new_mirna_profile.at(mirna_id) -= mirna_lambda * exchange;
                             rank_new_cluster_profile.at(cluster) -= cluster_lambda * exchange;
-                            rank_mirna_total_exchange += mirna_lambda * exchange;
-                            rank_cluster_total_exchange += cluster_lambda * exchange;
+                            if(cumulative_scaling < 1 - Global_parameters::epsilon) {
+                                std::cerr << "error: cumulative_scaling = " << cumulative_scaling << "\n";
+                                exit(1);
+                            }
+                            rank_mirna_total_exchange += (mirna_lambda * exchange / cumulative_scaling);
+                            rank_cluster_total_exchange += (cluster_lambda * exchange / cumulative_scaling);
+                            // if(mirna_id == 397 && cluster->sites.front()->gene_id == 15242) {
+                            //     std::cout << "rank_mirna_total_exchange = " << rank_mirna_total_exchange << ", rank_cluster_total_exchange = " << rank_cluster_total_exchange << "\n";
+                            // }
                             auto p = std::make_pair(mirna_id, cluster);
                             if(this->r_ic_values.find(p) == this->r_ic_values.end()) {
                                 this->r_ic_values[p] = 0;
                             }
 
                             // TODO: modify the formula for r_ic in the document
-                            this->r_ic_values[p] += cluster_lambda * exchange;
+                            if(rank > 0) {
+                                std::cerr << "error: I have not parallelized the part of the code accessing r_ic_value yet\n";
+                                exit(1);
+                            }
+                            this->r_ic_values[p] += cluster_lambda * exchange / cumulative_scaling;
                         }
                     }
                 }
@@ -394,7 +405,7 @@ void Matchings_predictor::compute_probabilities()
         if(this->p_c_bound_values.find(cluster) == this->p_c_bound_values.end()) {
             this->p_c_bound_values[cluster] = 0;
         }        
-        ss << cluster << " " << cluster->sites.size() << " " << this->p_c_bound_values.at(cluster) << " " << value << " " << this->original_cluster_profile.at(cluster) << " " << value / (this->original_cluster_profile.at(cluster) * cluster->sites.size()) << "\n";
+        ss << cluster << " " << cluster->sites.size() << " " << cluster->sites.front()->mirna_id << " " << cluster->sites.front()->gene_id << " " << cluster->sites.front()->utr_start << " " << this->p_c_bound_values.at(cluster) << " " << value << " " << this->original_cluster_profile.at(cluster) << " " << value / (this->original_cluster_profile.at(cluster) * cluster->sites.size()) << "\n";
         this->p_c_bound_values[cluster] = this->p_c_bound_values.at(cluster) + value / (this->original_cluster_profile.at(cluster) * cluster->sites.size());
     }
     out << ss.str();

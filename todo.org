@@ -21,6 +21,6 @@ NEXT
 * TODO check 118
 * TODO check the simulation with conserved only
 * TODO in cons and not-cons check if the sipler methods would work, if not how many rows do not make it possible
+* TODO check th information on the complementary strands on miRNAs
 BONUS
 * TODO use the tool to find (with bruteforce and stepwise approach) to find a set of artificial sequences to insert in the cell colture to minimise the differences in down-regulation between normal and tumor cells
-
