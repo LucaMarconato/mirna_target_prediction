@@ -16,10 +16,12 @@ class Matchings_predictor {
     std::unordered_map<Cluster *, double> p_c_bound_values;
     std::unordered_map<Cluster *, double> sum_of_r_ijk_for_cluster;
     std::unordered_map<std::pair<Gene_id, Cluster *>, double> p_j_downregulated_given_c_bound_values;
+    std::unordered_map<Gene_id, double> p_j_downregulated_values;
 
     void export_interaction_matrix();
     void compute_probabilities();
     void export_probabilities();
+    inline void recusively_compute_p_j_downregulated(bool * b, int level, int max_level, double * sum, double p_j_downregulated_given_b, double p_b, double * p_j_downregulated_given_c_bound_values_flattened, double * p_c_bound_values_flattened);
 public:
     Matchings_predictor(Patient & patient);
     void compute();

@@ -19,7 +19,7 @@ int main(int argc, char * argv[])
     // Patient patient("artificial1", true);
 
     Matchings_predictor matching_predictor(patient);
-    matching_predictor.compute();
+    matching_predictor.compute();   
 
     std::cout << "cleaning up\n";
     return 0;

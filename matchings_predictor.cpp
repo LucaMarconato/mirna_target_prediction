@@ -71,21 +71,56 @@ void Matchings_predictor::export_interaction_matrix()
         i++;
     }
     ss << "\n";
+    std::unordered_map<Mirna_id, unsigned long long> sum_of_rows;
+    std::unordered_map<Cluster *, unsigned long long> sum_of_columns;
+    for(auto & e : this->mirna_profile) {
+        auto & mirna_id = e.first;
+        sum_of_rows[mirna_id] = 0;
+    }
+    for(auto & e : this->cluster_profile) {
+        Cluster * cluster = e.first;
+        sum_of_columns[cluster] = 0;
+    }
+        
     for(auto & mirna : this->mirna_profile) {
         auto & mirna_id = mirna.first;
         ss << "\"" << mirna_id << "\"\t";
         unsigned long long i = 0;
-        for(auto & cluster : this->cluster_profile) {
-            int matching = 0;
-            for(auto & site : cluster.first->sites) {
+        for(auto & e : this->cluster_profile) {
+            Cluster * cluster = e.first;
+            int matchings = 0;
+            for(auto & site : cluster->sites) {
                 auto p = std::make_pair(mirna_id, site);
                 if(this->patient.interaction_graph.mirna_site_arcs.find(p) != this->patient.interaction_graph.mirna_site_arcs.end()) {
-                    matching++;
+                    matchings++;
                 }
             }
-            ss << matching << ((i == cluster_count - 1) ? "\n" : "\t");
+
+            sum_of_rows[mirna_id] = sum_of_rows.at(mirna_id) + matchings;
+            sum_of_columns[cluster] = sum_of_columns.at(cluster) + matchings;
+            ss << matchings << ((i == cluster_count - 1) ? "\n" : "\t");
             i++;
         }
+    }
+    out << ss.str();
+    out.close();
+
+    filename = "./data/patients/" + this->patient.case_id + "/sum_of_rows.tsv";
+    out.open(filename);
+    ss.str("mirna_id\tsum_of_row\n");    
+    for(auto & e : this->mirna_profile) {
+        auto & mirna_id = e.first;
+        ss << mirna_id << "\t" << sum_of_rows.at(mirna_id) << "\n";
+    }
+    out << ss.str();
+    out.close();
+
+    filename = "./data/patients/" + this->patient.case_id + "/sum_of_columns.tsv";
+    out.open(filename);
+    ss.str("cluster_address\tsum_of_column\n");
+    for(auto & e : this->cluster_profile) {
+        Cluster * cluster = e.first;
+        ss << cluster << "\t" << sum_of_columns.at(cluster) << "\n";
     }
     out << ss.str();
     out.close();
@@ -106,7 +141,7 @@ void Matchings_predictor::compute()
     double h = 1;
     bool scaling = true;
     double cumulative_scaling = 1;
-    bool logging = false;
+    bool logging = true;
     bool export_mirna_expression_profile = true;
     bool export_cluster_expression_profile = true;
     bool export_interaction_matrix = true;
@@ -432,11 +467,86 @@ void Matchings_predictor::compute_probabilities()
                 double r_ijk = this->r_ijk_values.at(p);
                 Mirna_site_arc & mirna_site_arc = this->patient.interaction_graph.mirna_site_arcs.at(p);
                 double context_score = mirna_site_arc.context_score;
-                double probability = std::pow(2, 1 - context_score);
-                double to_add = r_ijk * probability / sum_of_r_ijk_for_cluster.at(cluster);
+                double probability_of_downregulation = 1 - std::pow(2, context_score);
+                double to_add = r_ijk * probability_of_downregulation / sum_of_r_ijk_for_cluster.at(cluster);
                 this->p_j_downregulated_given_c_bound_values[key0] = this->p_j_downregulated_given_c_bound_values.at(key0) + to_add;
             }
         }        
+    }
+
+    // compute p_j_downregulated_values
+    // avoid the computation for the genes which contains more than cluster_limit clusters, otherwise the computation is going to be too expensive
+    // TODO: this code can be trivially parallelized
+    double cluster_limit = 25;
+    std::cout << "computing the probabilities of down-regulation for genes with at most " << cluster_limit << " clusters\n";
+    Timer::start();
+    int genes_processed = 0;
+    int genes_skipped = 0;
+    bool * b = new bool [cluster_limit];
+    double * p_j_downregulated_given_c_bound_values_flattened = new double [cluster_limit];
+    double * p_c_bound_values_flattened = new double [cluster_limit];    
+
+    int latest_percentage = -1;
+    for(auto & e : this->patient.interaction_graph.gene_to_clusters_arcs) {
+        int total_genes = this->patient.interaction_graph.gene_to_clusters_arcs.size();
+        int current_percentage = (int)(100*((double)(genes_processed + genes_skipped)/total_genes));
+        if(current_percentage > latest_percentage) {
+            latest_percentage = current_percentage;
+            std::cout << "gene_processed/total_genes: " << genes_processed + genes_skipped << "/" << total_genes << " = " << current_percentage << "%\n";
+        }
+        Gene_id gene_id = e.first;
+        auto & clusters = e.second;
+        if(clusters.size() <= cluster_limit) {
+            double sum = 0;
+            int i = 0;
+            for(Cluster * cluster : clusters) {
+                b[i] = false;
+                p_j_downregulated_given_c_bound_values_flattened[i] = this->p_j_downregulated_given_c_bound_values[std::make_pair(gene_id, cluster)];
+                p_c_bound_values_flattened[i] = this->p_c_bound_values[cluster];
+                i++;
+            }
+
+            this->recusively_compute_p_j_downregulated(b, 0, clusters.size(), &sum, 1, 1, p_j_downregulated_given_c_bound_values_flattened, p_c_bound_values_flattened);
+            this->p_j_downregulated_values[gene_id] = sum;
+            genes_processed++;
+        } else {
+            // just an invalid value, we can choose not to add those invalid items
+            this->p_j_downregulated_values[gene_id] = -1;
+            genes_skipped++;
+        }
+    }
+    delete [] b;
+    delete [] p_j_downregulated_given_c_bound_values_flattened;
+    delete [] p_c_bound_values_flattened;
+
+    std::cout << "genes_processed/total_genes: " << genes_processed << "/" << (genes_processed + genes_skipped) << " = " << ((double)genes_processed)/(genes_processed + genes_skipped) << "\n";
+    std::cout << "finished, \n";
+    Timer::stop();
+}
+
+/*
+  the array b and the valus sum, p_j_downregulated_given_c_b and p_b are computed incrementally at every recursive call and hold the final value their name represents only when processed in the last level
+*/
+void Matchings_predictor::recusively_compute_p_j_downregulated(bool * b, int level, int max_level, double * sum, double p_j_downregulated_given_b, double p_b, double * p_j_downregulated_given_c_bound_values_flattened, double * p_c_bound_values_flattened)
+{
+    if(level == max_level) {
+        p_j_downregulated_given_b = 1 - p_j_downregulated_given_b;
+        *sum += p_j_downregulated_given_b * p_b;
+    } else {
+        double p_j_downregulated_given_c_bound = p_j_downregulated_given_c_bound_values_flattened[level];
+        double p_c_bound = p_c_bound_values_flattened[level];
+
+        double new_p_j_downregulated_given_b;
+        double new_p_b;
+        
+        b[level] = 0;
+        new_p_b = p_b * (1 - p_c_bound);
+        recusively_compute_p_j_downregulated(b, level + 1, max_level, sum, new_p_j_downregulated_given_b, new_p_b, p_j_downregulated_given_c_bound_values_flattened, p_c_bound_values_flattened);
+        
+        b[level] = 1;
+        new_p_j_downregulated_given_b = p_j_downregulated_given_b * (1 - p_j_downregulated_given_c_bound);
+        new_p_b = p_b * p_c_bound;
+        recusively_compute_p_j_downregulated(b, level + 1, max_level, sum, new_p_j_downregulated_given_b, new_p_b, p_j_downregulated_given_c_bound_values_flattened, p_c_bound_values_flattened);
     }
 }
 

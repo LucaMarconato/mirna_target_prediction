@@ -7,7 +7,7 @@
 * DONE validate the animation with the real data
 * DONE check the rate of convergence independently of the magnitude of the mirna level
 * DONE plot the animation for clusters
-* TODO compute the exchange for all the pairs, both the instant one and the cumulative
+* DONE compute the exchange for all the pairs, both the instant one and the cumulative
 * TODO interseting: find the correlation between the density of the entries of the interaction matrix and the quantity of exchanged mirnas and clusters
 * TODO compute the weighted context score and compare it the one computed trivially
 * TODO stability of the method, for the expression levels, the exchange and the context (do it in the log-scale to have comparable constant variance)
@@ -16,8 +16,9 @@
 * TODO highlight the differences in the response between normal and tumor samples
 * TODO implicit first order approximation
 * TODO build the multiple linear regression model
+* TODO remove cluster_debugging from the history
 NEXT
-* TODO finish the simualtions which are trivial
+* TODO analyze the trivial simulations
 * TODO check 118
 * TODO check the simulation with conserved only
 * TODO in cons and not-cons check if the sipler methods would work, if not how many rows do not make it possible

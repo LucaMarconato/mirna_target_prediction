@@ -1,22 +1,22 @@
 plot_to_browser_enabled <- T
 
-get_screen_resolution <- function() 
-{
-    return(c(2560, 1440))
-    ## or automatically
-    ## xdpyinfo_path <- "/opt/X11/bin/xdpyinfo"    
-    ## cmd <- sprintf("%s | grep dimensions | perl -pe 's/^.*?([0-9]+x[0-9]+).*/$1/g' | tr 'x' ' '", xdpyinfo_path)
-    ## output <- system(cmd, intern = T, ignore.stderr = T)
-    ## return(as.numeric(unlist(strsplit(output, split = " "))))
-}
+## get_screen_resolution <- function() 
+## {
+##     return(c(2560, 1440))
+##     ## or automatically
+##     ## xdpyinfo_path <- "/opt/X11/bin/xdpyinfo"    
+##     ## cmd <- sprintf("%s | grep dimensions | perl -pe 's/^.*?([0-9]+x[0-9]+).*/$1/g' | tr 'x' ' '", xdpyinfo_path)
+##     ## output <- system(cmd, intern = T, ignore.stderr = T)
+##     ## return(as.numeric(unlist(strsplit(output, split = " "))))
+## }
 
 ## returns the screen size in inches
 get_screen_physical_size <- function() 
 {
     ## return(c(24 + 1/4 + 1/8, 13 + 1/32))
     ## return(c(30 + 1/4 + 1/8, 17 + 1/32))
-    return(c(18.85, 10)) ## full hd monitor
-    ## return(c(18.85, 12)) ## built-in retina 15" monitor
+    ## return(c(18.85, 10)) ## full hd monitor
+    return(c(13, 7.85)) ## built-in retina 15" monitor
     ## or automatically, but I preferred to do it manually via a "binary search"
     ## cmd <- sprintf("%s | grep dimensions | perl -pe 's/^.*?(\\([0-9]+x[0-9]+)\ millimeters.*/$1/g' | tr -d '(' | tr 'x' ' '", xdpyinfo_path)
     ## output <- system(cmd, intern = T, ignore.stderr = T)
@@ -26,7 +26,7 @@ get_screen_physical_size <- function()
 
 new_maximized_device <- function() 
 {
-    resolution <- get_screen_resolution()
+    ## resolution <- get_screen_resolution()
     physical_size <- get_screen_physical_size()
     ## for some reasons the ratio of the result I get is different from the ratio of the resolution so I am using only one value
     ## physical_size[2] <- physical_size[1] * resolution[2]/resolution[1]
