@@ -23,6 +23,7 @@ NOT NOW OR NOT IMPORTANT
 * TODO remove cluster_debugging from the history
 * TODO analyze more trivial simulations
 * TODO check if I am missing information about complementary strands on miRNAs
+* TODO replace all the _H defines in the headers into _HPP
 PHD APPLICATION
 * TODO find the real GDC data and build the interaction graph on the difference of expressed mRNAs (consider using average levels of tumor and normal, to study the average differences)
 TO FINISH THE THESIS

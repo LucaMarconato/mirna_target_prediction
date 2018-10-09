@@ -129,7 +129,7 @@ void Matchings_predictor::export_interaction_matrix()
 void Matchings_predictor::compute()
 {
     std::cout << "for the moment, just a trivial explicit Euler scheme\n";
-    unsigned long long max_steps = 10000;
+    unsigned long long max_steps = 1000;
     double mirna_lambda = 1;
     double cluster_lambda = 1;
     if(Global_parameters::lambda > 1) {
@@ -144,8 +144,8 @@ void Matchings_predictor::compute()
     bool logging = true;
     bool export_mirna_expression_profile = true;
     bool export_cluster_expression_profile = true;
-    bool export_interaction_matrix = true;
-    bool export_partial_predicted_downregulation = true;
+    bool export_interaction_matrix = false;
+    bool export_partial_predicted_downregulation = false;
     // just to be sure to avoid logical errors in the future
     if(!logging && (export_mirna_expression_profile || export_cluster_expression_profile || export_interaction_matrix || export_partial_predicted_downregulation)) {
         export_mirna_expression_profile = false;
