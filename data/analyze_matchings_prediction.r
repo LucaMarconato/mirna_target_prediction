@@ -3,9 +3,9 @@ library(purrr)
 library(raster)
 library(RColorBrewer)
 
-analyze_convergence <- function(patient_folder)
+analyze_convergence <- function(simulation_output_path)
 {    
-    filename <- paste(patient_folder, "matchings_prediction.tsv", sep = "")
+    filename <- paste(simulation_output_path, "matchings_prediction.tsv", sep = "")
     a <<- read.table(filename, header = T, colClasses = c("numeric", "numeric", "numeric", "numeric", "numeric"))
     x_values <- seq(1, length(a[[1]]))
     
@@ -35,11 +35,11 @@ analyze_convergence <- function(patient_folder)
     grid()
 }
 
-analyze_mirna_expression_profiles <- function(patient_folder)
+analyze_mirna_expression_profiles <- function(simulation_output_path)
 {
     print("analyzing mirna expression profiles")
-    expression_profile_folder <- paste(patient_folder, "mirna_expression_profiles", sep = "")
-    expression_profile_copy_folder <- paste(patient_folder, "mirna_expression_profiles_copy", sep = "")
+    expression_profile_folder <- paste(simulation_output_path, "mirna_expression_profiles", sep = "")
+    expression_profile_copy_folder <- paste(simulation_output_path, "mirna_expression_profiles_copy", sep = "")
     system(paste("mkdir -p ", expression_profile_copy_folder, sep = ""))
     system(paste("rm ", expression_profile_copy_folder, "/mirna_expression_profile_*", sep = ""))
     system(paste("cp -r ", expression_profile_folder, "/* ", expression_profile_copy_folder, sep = ""))
@@ -61,6 +61,7 @@ analyze_mirna_expression_profiles <- function(patient_folder)
         new_path <- paste(new_path, ".png", sep = "")
         png(filename = new_path, width = 1920, height = 1080)
         layout(matrix(1:3, 3, 1))
+        print("TODO: check if the timestep has been split correctly")
         timestep <- strsplit(file, "mirna_expression_profile_")[[1]][2]
         timestep <- strsplit(timestep, ".tsv")[[1]][1]
         my_order <- match(mirna_ids_ordered, t$mirna_id)
@@ -105,11 +106,11 @@ analyze_mirna_expression_profiles <- function(patient_folder)
     return(mirna_dynamics)
 }
 
-analyze_cluster_expression_profiles <- function(patient_folder)
+analyze_cluster_expression_profiles <- function(simulation_output_path)
 {
     print("analyzing cluster expression profiles")
-    expression_profile_folder <- paste(patient_folder, "cluster_expression_profiles", sep = "")
-    expression_profile_copy_folder <- paste(patient_folder, "cluster_expression_profiles_copy", sep = "")
+    expression_profile_folder <- paste(simulation_output_path, "cluster_expression_profiles", sep = "")
+    expression_profile_copy_folder <- paste(simulation_output_path, "cluster_expression_profiles_copy", sep = "")
     system(paste("mkdir -p ", expression_profile_copy_folder, sep = ""))
     system(paste("rm ", expression_profile_copy_folder, "/cluster_expression_profile_*", sep = ""))
     system(paste("cp -r ", expression_profile_folder, "/* ", expression_profile_copy_folder, sep = ""))
@@ -134,6 +135,7 @@ analyze_cluster_expression_profiles <- function(patient_folder)
             my_order <- order(t$relative_expression)
             cluster_addresses_ordered <- t$cluster_address[my_order]
         }
+        print("TODO: check if the timestep has been split correctly")
         timestep <- strsplit(file, "cluster_expression_profile_")[[1]][2]
         timestep <- strsplit(timestep, ".tsv")[[1]][1]
         my_order <- match(cluster_addresses_ordered, t$cluster_address)
@@ -188,7 +190,7 @@ analyze_cluster_expression_profiles <- function(patient_folder)
     system(paste("open ", expression_profile_copy_folder, "/animation.gif", sep = ""))
 }
 
-generate_readable_dynamics_log <- function(patient_folder)
+generate_readable_dynamics_log <- function(simulation_output_path)
 {
     ## note that we are reading data from the cluster_expression_profiles folder and not the cluster_expression_profiles_copy folder
     ## the animated .gifs are made out of the copied folder, to avoid accidental deletion by the C++ code, so be sure that you have not called
@@ -197,7 +199,7 @@ generate_readable_dynamics_log <- function(patient_folder)
 
     extract_dynamics <- function(element)
     {
-        expression_profile_folder <- paste(patient_folder, element, "_expression_profiles", sep = "")
+        expression_profile_folder <- paste(simulation_output_path, element, "_expression_profiles", sep = "")
         files <- list.files(path = expression_profile_folder, pattern = "*.tsv", full.names = T, recursive = F)
         ## element_dynamics is the list of all the y_data
         element_dynamics <- list()
@@ -210,6 +212,7 @@ generate_readable_dynamics_log <- function(patient_folder)
                 my_order <- order(t$relative_expression)
                 element_addresses_ordered <- t[[1]][my_order]
             }
+            print("TODO: check if the timestep has been split correctly")
             timestep <- strsplit(file, paste(element, "_expression_profile_", sep = ""))[[1]][2]
             timestep <- strsplit(timestep, ".tsv")[[1]][1]
             my_order <- match(element_addresses_ordered, t[[1]])
@@ -235,7 +238,7 @@ generate_readable_dynamics_log <- function(patient_folder)
         print("too many clusters, not exporting the dynamics in a readable file")
         return()
     }
-    filename <- paste(patient_folder, "dynamics.txt", sep = "")
+    filename <- paste(simulation_output_path, "dynamics.txt", sep = "")
     s <- ""
     i <- 1
 
@@ -261,16 +264,16 @@ generate_readable_dynamics_log <- function(patient_folder)
     print(paste("saved dynamics into", filename))
 }
 
-analyze_dynamics_for_small_interaction_graphs <- function(patient_folder)
+analyze_dynamics_for_small_interaction_graphs <- function(simulation_output_path)
 {
     print("loading the interaction matrix")
-    expression_profile_folder <- paste(patient_folder, "mirna_expression_profiles", sep = "")
+    expression_profile_folder <- paste(simulation_output_path, "mirna_expression_profiles", sep = "")
     files <- list.files(path = expression_profile_folder, pattern = "*.tsv", full.names = T, recursive = F)
     t <- read.table(files[1], header = T, colClasses = c("numeric", "numeric"))
     my_order <- order(t$relative_expression)
     mirna_ids_ordered <<- t$mirna_id[my_order]
 
-    expression_profile_folder <- paste(patient_folder, "cluster_expression_profiles", sep = "")
+    expression_profile_folder <- paste(simulation_output_path, "cluster_expression_profiles", sep = "")
     files <- list.files(path = expression_profile_folder, pattern = "*.tsv", full.names = T, recursive = F)
     t <- read.table(files[1], header = T, colClasses = c("numeric", "numeric"))
     my_order <- order(t$relative_expression)
@@ -289,7 +292,7 @@ analyze_dynamics_for_small_interaction_graphs <- function(patient_folder)
         return()
     }
 
-    matrix_filename <- paste(patient_folder, "interaction_matrix.mat", sep = "")
+    matrix_filename <- paste(simulation_output_path, "interaction_matrix.mat", sep = "")
     m <- read.table(matrix_filename, sep = "\t")
     m <- as.matrix(m)
     my_order <- match(mirna_ids_ordered, rownames(m))
@@ -303,30 +306,30 @@ analyze_dynamics_for_small_interaction_graphs <- function(patient_folder)
     ## my_order_rows <- // need to export the matrix
 }
 
-analyze_probabilities <- function(patient_folder)
+analyze_probabilities <- function(patient_folder, simulation_output_path)
 {
     new_maximized_device()
     layout(matrix(1:4, 2, 2, byrow = T))
-    filename <- paste(patient_folder, "r_ic_values.tsv", sep = "")
+    filename <- paste(simulation_output_path, "r_ic_values.tsv", sep = "")
     a <- read.table(filename, header = T, colClasses = c("numeric", "numeric", "numeric"))
     hist(log10(a$r_ic))
 
-    filename <- paste(patient_folder, "r_ijk_values.tsv", sep = "")
+    filename <- paste(simulation_output_path, "r_ijk_values.tsv", sep = "")
     a <- read.table(filename, header = T, colClasses = c("numeric", "numeric", "numeric"))
     hist(log10(a$r_ijk))
 
-    filename <- paste(patient_folder, "p_c_bound_values.tsv", sep = "")
+    filename <- paste(simulation_output_path, "p_c_bound_values.tsv", sep = "")
     a <- read.table(filename, header = T, colClasses = c("numeric", "numeric"))
     aa <<- a
     hist(log10(a$p_c_bound))
 
-    filename <- paste(patient_folder, "p_j_downregulated_given_c_bound_values.tsv", sep = "")
+    filename <- paste(simulation_output_path, "p_j_downregulated_given_c_bound_values.tsv", sep = "")
     a <- read.table(filename, header = T, colClasses = c("numeric", "numeric", "numeric"))
     hist(a$p_j_downregulated_given_c_bound_values)
 
     new_maximized_device()
     par(mfrow = c(1, 2))
-    filename <- paste(patient_folder, "p_j_downregulated_values.tsv", sep = "")
+    filename <- paste(simulation_output_path, "predicted_downregulation/p_j_downregulated_values_999999.tsv", sep = "")
     a <- read.table(filename, header = T, colClasses = c("numeric", "numeric"))
     hist(a$p_j_downregulated_values)
 
@@ -339,15 +342,14 @@ analyze_probabilities <- function(patient_folder)
 
     new_maximized_device()
     print("analyzing downregulation")
-    predicted_downregulation_folder <- paste(patient_folder, "predicted_downregulation", sep = "")
-    predicted_downregulation_copy_folder <- paste(patient_folder, "predicted_downregulation_copy", sep = "")
+    predicted_downregulation_folder <- paste(simulation_output_path, "predicted_downregulation", sep = "")
+    predicted_downregulation_copy_folder <- paste(simulation_output_path, "predicted_downregulation_copy", sep = "")
     system(paste("mkdir -p ", predicted_downregulation_copy_folder, sep = ""))
     system(paste("rm ", predicted_downregulation_copy_folder, "/p_j_downregulated_values_*", sep = ""))
     system(paste("cp -r ", predicted_downregulation_folder, "/* ", predicted_downregulation_copy_folder, sep = ""))
     files <- list.files(path = predicted_downregulation_copy_folder, pattern = "*.tsv", full.names = T, recursive = F)
 
     genes_ordered <- NULL
-    original_y_data <- NULL
     file_count <- length(files)
     max_timesteps <- 100
     for(i in seq_len(file_count)) {
@@ -365,15 +367,14 @@ analyze_probabilities <- function(patient_folder)
             my_order <- order(t$rpm)
             genes_ordered <- t$gene_id[my_order]
         }
+        print("TODO: check if the timestep has been split correctly")
         timestep <- strsplit(file, "predicted_downregulation_")[[1]][2]
         timestep <- strsplit(timestep, ".tsv")[[1]][1]
         my_order <- match(genes_ordered, t$gene_id)
         x_data <- 1:length(t$final_rpm)
         y_data <- t$final_rpm[my_order]
+        original_y_data <- t$rpm[my_order]
         
-        if(is.null(original_y_data)) {
-            original_y_data <- y_data
-        }
         new_path <- tools::file_path_sans_ext(file)
         new_path <- paste(new_path, ".png", sep = "")
         rows <- 10
@@ -393,6 +394,7 @@ analyze_probabilities <- function(patient_folder)
         heights_vector[1] <- lcm(2)
         layout(matrix(seq(1, rows + 1), rows + 1, 1), heights = heights_vector)
         plot.new()
+        print("TODO: check if the timestep has been split correctly")
         title(main = paste(timestep, "predicted gene expression after downregulation"))
         par(mar = c(2,4,2,0))
 
@@ -403,7 +405,7 @@ analyze_probabilities <- function(patient_folder)
             y_lim_split <- c(0, max(original_y_data_split))
 
             plot(x_data_split, y_data_split, ylim = y_lim_split, pch = ".")
-            points(x_data_split, original_y_data_split, ylim = y_lim_split, col = "red", pch = "-")
+            points(x_data_split, original_y_data_split, ylim = y_lim_split, col = "red", pch = ".")
         }
         dev.off()
     }
@@ -434,10 +436,12 @@ patient_id <- "TCGA-CJ-4642"
 ## patient_id <- "artificial0"
 ## patient_id <- "artificial1"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
+simulation_id <- "original_data"
+simulation_output_path <- paste(patient_folder, "matchings_predictor_output/", simulation_id, "/", sep = "")
 close_all_devices()
-## analyze_convergence(patient_folder)
-## generate_readable_dynamics_log(patient_folder)
-## analyze_mirna_expression_profiles(patient_folder)
-## analyze_cluster_expression_profiles(patient_folder)
-## analyze_dynamics_for_small_interaction_graphs(patient_folder)
-analyze_probabilities(patient_folder)
+## analyze_convergence(simulation_output_path)
+## generate_readable_dynamics_log(simulation_output_path)
+## analyze_mirna_expression_profiles(simulation_output_path)
+## analyze_cluster_expression_profiles(simulation_output_path)
+## analyze_dynamics_for_small_interaction_graphs(simulation_output_path)
+analyze_probabilities(patient_folder, simulation_output_path)

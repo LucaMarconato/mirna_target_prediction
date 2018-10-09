@@ -16,7 +16,7 @@
 #include "global_parameters.hpp"
 #include "timer.hpp"
 
-Matchings_predictor::Matchings_predictor(Patient & patient) : patient(patient)
+Matchings_predictor::Matchings_predictor(Patient & patient, std::string simulation_id) : patient(patient)
 {
     // TODO: for the moment I am just considering tumor mirnas and tumor clusters. In the future I should consider the difference between normal and tumor expressions.
     // note that these are copies, we do not want to modify the original expressions
@@ -57,11 +57,23 @@ Matchings_predictor::Matchings_predictor(Patient & patient) : patient(patient)
     }
 
     this->original_cluster_profile = this->cluster_profile;
+
+    this->simulation_id = simulation_id;
+    std::string cmd = "mkdir -p ./data/patients/" + this->patient.case_id + "/matchings_predictor_output";
+    std::system(cmd.c_str());
+    cmd = "mkdir -p " + this->get_output_path();
+    std::system(cmd.c_str());
+}
+
+std::string Matchings_predictor::get_output_path()
+{
+    std::string path = "./data/patients/" + this->patient.case_id + "/matchings_predictor_output/" + simulation_id + "/";
+    return path;
 }
 
 void Matchings_predictor::export_interaction_matrix()
 {
-    std::string filename = "./data/patients/" + this->patient.case_id + "/interaction_matrix.mat";
+    std::string filename = this->get_output_path() + "interaction_matrix.mat";
     std::ofstream out(filename);
     std::stringstream ss;
     unsigned long long cluster_count = this->cluster_profile.size();
@@ -105,7 +117,7 @@ void Matchings_predictor::export_interaction_matrix()
     out << ss.str();
     out.close();
 
-    filename = "./data/patients/" + this->patient.case_id + "/sum_of_rows.tsv";
+    filename = this->get_output_path() + "sum_of_rows.tsv";
     out.open(filename);
     ss.str("mirna_id\tsum_of_row\n");    
     for(auto & e : this->mirna_profile) {
@@ -115,7 +127,7 @@ void Matchings_predictor::export_interaction_matrix()
     out << ss.str();
     out.close();
 
-    filename = "./data/patients/" + this->patient.case_id + "/sum_of_columns.tsv";
+    filename = this->get_output_path() + "/sum_of_columns.tsv";
     out.open(filename);
     ss.str("cluster_address\tsum_of_column\n");
     for(auto & e : this->cluster_profile) {
@@ -129,7 +141,7 @@ void Matchings_predictor::export_interaction_matrix()
 void Matchings_predictor::compute()
 {
     std::cout << "for the moment, just a trivial explicit Euler scheme\n";
-    unsigned long long max_steps = 1000;
+    unsigned long long max_steps = 100;
     double mirna_lambda = 1;
     double cluster_lambda = 1;
     if(Global_parameters::lambda > 1) {
@@ -144,7 +156,7 @@ void Matchings_predictor::compute()
     bool logging = true;
     bool export_mirna_expression_profile = true;
     bool export_cluster_expression_profile = true;
-    bool export_interaction_matrix = false;
+    bool export_interaction_matrix = true;
     bool export_partial_predicted_downregulation = false;
     // just to be sure to avoid logical errors in the future
     if(!logging && (export_mirna_expression_profile || export_cluster_expression_profile || export_interaction_matrix || export_partial_predicted_downregulation)) {
@@ -161,24 +173,27 @@ void Matchings_predictor::compute()
     std::string mirna_log_filename_prefix;
     std::string cluster_log_filename_prefix;
     if(logging) {
-        std::string filename0 = "./data/patients/" + this->patient.case_id + "/matchings_prediction.tsv";
+        std::string filename0 = this->get_output_path() + "matchings_prediction.tsv";
         out0.open(filename0);
         ss0 << "cumulative_scaling\tavg_mirna_level\tavg_cluster_level\tmirna_total_exchange\tcluster_total_exchange\n";
+        std::string log_folder;
+        std::string cmd;
+        log_folder = this->get_output_path() + "mirna_expression_profiles";
+        mirna_log_filename_prefix = log_folder + "/mirna_expression_profile_";
+        cmd = "mkdir -p " + log_folder;
+        std::system(cmd.c_str());
         if(export_mirna_expression_profile) {
-            std::string log_folder = "./data/patients/" + this->patient.case_id + "/mirna_expression_profiles";
-            mirna_log_filename_prefix = log_folder + "/mirna_expression_profile_";
-            std::string cmd = "mkdir -p " + log_folder;
-            std::system(cmd.c_str());
             std::cout << "deleting old log from \"" + log_folder + "\"\n";
             cmd = "rm " + log_folder + "/mirna_expression_profile*";
             std::system(cmd.c_str());
             ss1_header << "mirna_id\trelative_expression\n";   
         }
+
+        log_folder = this->get_output_path() + "cluster_expression_profiles";
+        cluster_log_filename_prefix = log_folder + "/cluster_expression_profile_";
+        cmd = "mkdir -p " + log_folder;
+        std::system(cmd.c_str());
         if(export_cluster_expression_profile) {
-            std::string log_folder = "./data/patients/" + this->patient.case_id + "/cluster_expression_profiles";
-            cluster_log_filename_prefix = log_folder + "/cluster_expression_profile_";
-            std::string cmd = "mkdir -p " + log_folder;
-            std::system(cmd.c_str());
             std::cout << "deleting old log from \"" + log_folder + "\"\n";
             cmd = "rm " + log_folder + "/cluster_expression_profile*";
             std::system(cmd.c_str());
@@ -186,13 +201,15 @@ void Matchings_predictor::compute()
             // you may want to export a file in which each Cluster * (i.e. what I call cluster_address below) is enriched with information to make you able to identify specific clusters
             ss2_header << "cluster_address\trelative_expression\n";
         }
+        
         if(export_interaction_matrix) {
             this->export_interaction_matrix();
         }
+        
+        log_folder = this->get_output_path() + "predicted_downregulation";
+        cmd = "mkdir -p " + log_folder;
+        std::system(cmd.c_str());
         if(export_partial_predicted_downregulation) {
-            std::string log_folder = "./data/patients/" + this->patient.case_id + "/predicted_downregulation";
-            std::string cmd = "mkdir -p " + log_folder;
-            std::system(cmd.c_str());
             std::cout << "deleting old log from \"" + log_folder + "\"\n";
             cmd = "rm " + log_folder + "/p_j_downregulated_values_*";
             std::system(cmd.c_str());
@@ -628,7 +645,7 @@ void Matchings_predictor::export_probabilities()
         double value = e.second;
         ss << mirna_id << "\t" << cluster << "\t" << value << "\n";
     }
-    filename = "./data/patients/" + this->patient.case_id + "/r_ic_values.tsv";
+    filename = this->get_output_path() + "r_ic_values.tsv";
     out.open(filename);
     out << ss.str();
     out.close();
@@ -645,7 +662,7 @@ void Matchings_predictor::export_probabilities()
         double value = e.second;
         ss << mirna_id << "\t" << site << "\t" << value << "\n";
     }
-    filename = "./data/patients/" + this->patient.case_id + "/r_ijk_values.tsv";
+    filename = this->get_output_path() + "r_ijk_values.tsv";
     out.open(filename);
     out << ss.str();
     out.close();
@@ -661,7 +678,7 @@ void Matchings_predictor::export_probabilities()
         double value = e.second;
         ss << cluster << "\t" << value << "\n";
     }
-    filename = "./data/patients/" + this->patient.case_id + "/p_c_bound_values.tsv";
+    filename = this->get_output_path() + "p_c_bound_values.tsv";
     out.open(filename);
     out << ss.str();
     out.close();
@@ -678,7 +695,7 @@ void Matchings_predictor::export_probabilities()
         double value = e.second;
         ss << gene_id << "\t" << cluster << "\t" << value << "\n";
     }
-    filename = "./data/patients/" + this->patient.case_id + "/p_j_downregulated_given_c_bound_values.tsv";
+    filename = this->get_output_path() + "p_j_downregulated_given_c_bound_values.tsv";
     out.open(filename);
     out << ss.str();
     out.close();
@@ -707,7 +724,7 @@ void Matchings_predictor::export_p_j_downregulated(int filename_suffix)
         }
     }
     std::stringstream filename;
-    filename << "./data/patients/" << this->patient.case_id << "/predicted_downregulation/p_j_downregulated_values_" << std::setfill('0') << std::setw(6) << filename_suffix << ".tsv";
+    filename << this->get_output_path() << "predicted_downregulation/p_j_downregulated_values_" << std::setfill('0') << std::setw(6) << filename_suffix << ".tsv";
     std::ofstream out(filename.str());
     out << ss.str();
     out.close();

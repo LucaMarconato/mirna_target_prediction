@@ -19,8 +19,11 @@ int main(int argc, char * argv[])
     // Patient patient("artificial0", true);
     // Patient patient("artificial1", true);
 
-    // Matchings_predictor matching_predictor(patient);
-    // matching_predictor.compute();
+    Matchings_predictor matching_predictor(patient);
+    matching_predictor.compute();
+    
+    Matchings_predictor matching_predictor1(patient, "test");
+    matching_predictor1.compute();
 
     Perturbation_analyzer perturbation_analyzer(patient);
     perturbation_analyzer.configure(Perturbation_type::Point_perturbation,
