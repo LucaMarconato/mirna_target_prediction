@@ -21,6 +21,7 @@ class Matchings_predictor {
     void export_interaction_matrix();
     void compute_probabilities();
     void export_probabilities();
+    void export_p_j_downregulated(int filename_suffix = 999999);
     inline void recusively_compute_p_j_downregulated(bool * b, int level, int max_level, double * sum, double p_j_downregulated_given_b, double p_b, double * p_j_downregulated_given_c_bound_values_flattened, double * p_c_bound_values_flattened);
     inline double iteratively_compute_p_j_downregulated(double * p_j_downregulated_given_c_bound_values_flattened, double * p_c_bound_values_flattened, int clusters_count);
 public:

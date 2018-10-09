@@ -123,10 +123,10 @@ analyze_cluster_expression_profiles <- function(patient_folder)
     file_count <- length(files)
     max_timesteps <- 100
     for(i in seq_len(file_count)) {
-        if(i <= 2) {
-            print(paste("skipping timestep", i))
-            next
-        }
+        ## if(i <= 2) {
+        ##     print(paste("skipping timestep", i))
+        ##     next
+        ## }
         print(paste(round(i/min(file_count, max_timesteps)*100), "%", sep = ""))
         file <- files[i]
         t <- read.table(file, header = T, colClasses = c("numeric", "numeric"))
@@ -177,8 +177,8 @@ analyze_cluster_expression_profiles <- function(patient_folder)
             ## points(x_data, log10(original_y_data), ylim = c(-20, 0), col = "red", pch = "-")
         }
 
-        ## probably useless
-        par(mar = old_par)
+        ## ## probably useless
+        ## par(mar = old_par)
         dev.off()
     }
     filename <- paste(expression_profile_copy_folder, "/animation.gif", sep = "")
@@ -337,10 +337,77 @@ analyze_probabilities <- function(patient_folder)
     d$rpm_downregulated <- d$rpm * d$p_j_downregulated_values
     hist(log(d$rpm_downregulated))
 
-    browser()
     new_maximized_device()
-    d$final_rpm <- d$rpm - d$rpm_downregulated
-    
+    print("analyzing downregulation")
+    predicted_downregulation_folder <- paste(patient_folder, "predicted_downregulation", sep = "")
+    predicted_downregulation_copy_folder <- paste(patient_folder, "predicted_downregulation_copy", sep = "")
+    system(paste("mkdir -p ", predicted_downregulation_copy_folder, sep = ""))
+    system(paste("rm ", predicted_downregulation_copy_folder, "/p_j_downregulated_values_*", sep = ""))
+    system(paste("cp -r ", predicted_downregulation_folder, "/* ", predicted_downregulation_copy_folder, sep = ""))
+    files <- list.files(path = predicted_downregulation_copy_folder, pattern = "*.tsv", full.names = T, recursive = F)
+
+    genes_ordered <- NULL
+    original_y_data <- NULL
+    file_count <- length(files)
+    max_timesteps <- 100
+    for(i in seq_len(file_count)) {
+        print(paste(round(i/min(file_count, max_timesteps)*100), "%", sep = ""))
+        file <- files[i]
+        t <- read.table(file, header = T, colClasses = c("numeric", "numeric"))
+        t <- merge(t, b)
+        t$rpm_downregulated <- t$rpm * t$p_j_downregulated_values
+        t$final_rpm <- t$rpm - t$rpm_downregulated
+        if(is.null(genes_ordered)) {
+            my_order <- order(t$rpm)
+            genes_ordered <- t$gene_id[my_order]
+        }
+        timestep <- strsplit(file, "predicted_downregulation_")[[1]][2]
+        timestep <- strsplit(timestep, ".tsv")[[1]][1]
+        my_order <- match(genes_ordered, t$gene_id)
+        x_data <- 1:length(t$final_rpm)
+        y_data <- t$final_rpm[my_order]
+        
+        if(is.null(original_y_data)) {
+            original_y_data <- y_data
+        }
+        new_path <- tools::file_path_sans_ext(file)
+        new_path <- paste(new_path, ".png", sep = "")
+        rows <- 10
+        
+        png(filename = new_path, width = 1920, height = 1080)
+        old_par <- par(mar = c(0,4,2,0))
+
+        if(length(x_data) < 50) {
+            rows <- 1
+        }
+        u <- seq_along(x_data)
+        u_split <- split(u, ceiling(seq_along(u)/(length(u)/rows)))
+        rows <- min(length(u_split), rows)
+
+        ## we add an extra row for the title
+        heights_vector <- rep(1, rows + 1)
+        heights_vector[1] <- lcm(2)
+        layout(matrix(seq(1, rows + 1), rows + 1, 1), heights = heights_vector)
+        plot.new()
+        title(main = paste(timestep, "predicted gene expression after downregulation"))
+        par(mar = c(2,4,2,0))
+
+        for(i in seq_len(rows)){
+            x_data_split <- x_data[u_split[[i]]]
+            y_data_split <- y_data[u_split[[i]]]
+            original_y_data_split <- original_y_data[u_split[[i]]]
+            y_lim_split <- c(0, max(original_y_data_split))
+
+            plot(x_data_split, y_data_split, ylim = y_lim_split, pch = ".")
+            points(x_data_split, original_y_data_split, ylim = y_lim_split, col = "red", pch = "-")
+        }
+        dev.off()
+    }
+    filename <- paste(predicted_downregulation_copy_folder, "/animation.gif", sep = "")
+    print(paste("generating", filename))
+    system(paste("convert -delay 10 -loop 0 ", predicted_downregulation_copy_folder, "/*.png ", filename, sep = ""))
+    print("generating .gif")
+    system(paste("open ", predicted_downregulation_copy_folder, "/animation.gif", sep = ""))
 }
 
 patient_id <- "TCGA-CJ-4642"
