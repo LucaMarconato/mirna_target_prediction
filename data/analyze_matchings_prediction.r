@@ -323,6 +323,24 @@ analyze_probabilities <- function(patient_folder)
     filename <- paste(patient_folder, "p_j_downregulated_given_c_bound_values.tsv", sep = "")
     a <- read.table(filename, header = T, colClasses = c("numeric", "numeric", "numeric"))
     hist(a$p_j_downregulated_given_c_bound_values)
+
+    new_maximized_device()
+    par(mfrow = c(1, 2))
+    filename <- paste(patient_folder, "p_j_downregulated_values.tsv", sep = "")
+    a <- read.table(filename, header = T, colClasses = c("numeric", "numeric"))
+    hist(a$p_j_downregulated_values)
+
+    filename <- paste(patient_folder, "tumor_gene_expression_profile.tsv", sep = "")
+    b <- read.table(filename, header = T, colClasses = c("numeric", "numeric"))
+
+    d <- merge(a, b)
+    d$rpm_downregulated <- d$rpm * d$p_j_downregulated_values
+    hist(log(d$rpm_downregulated))
+
+    browser()
+    new_maximized_device()
+    d$final_rpm <- d$rpm - d$rpm_downregulated
+    
 }
 
 patient_id <- "TCGA-CJ-4642"
