@@ -197,7 +197,7 @@ void Ig::export_interactions_data(std::string patient_folder)
     std::string filename = patient_folder + "mirna_gene_adjacency_matrix.mat";
     unsigned long long mirna_count = this->mirna_to_genes_arcs.size();
     unsigned long long gene_count = this->gene_to_mirnas_arcs.size();
-    Timer::start();
+    // Timer::start();
     std::cout << "writing an " << mirna_count << "x" << gene_count << " sparse matix to " << filename << "\n";
     unsigned long long ** m = new unsigned long long * [mirna_count];
     for(unsigned long long i = 0; i < mirna_count; i++) {
@@ -259,11 +259,11 @@ void Ig::export_interactions_data(std::string patient_folder)
         delete [] m[i];
     }
     delete [] m;
-    std::cout << "written, ";
-    Timer::stop();
+    // std::cout << "written, ";
+    // Timer::stop();
     
     // information about overlapping sites
-    Timer::start();
+    // Timer::start();
     std::cout << "writing information about overlapping sites\n";
     Output_buffer ob0(patient_folder + "overlapping_sites.tsv", 100000, 1000);
     std::string s = "gene_id\tutr_start\toverlapping_sites_count\n";
@@ -278,11 +278,11 @@ void Ig::export_interactions_data(std::string patient_folder)
             ob0.add_chunk(s);
         }
     }
-    std::cout << "written, ";
-    Timer::stop();
+    // std::cout << "written, ";
+    // Timer::stop();
 
     // information about clusters
-    Timer::start();
+    // Timer::start();
     std::cout << "writing information about clusters\n";
     Output_buffer ob1(patient_folder + "clusters.tsv", 100000, 1000);
     s = "gene_id\tcluster_size\n";
@@ -297,26 +297,26 @@ void Ig::export_interactions_data(std::string patient_folder)
             ob1.add_chunk(s);
         }
     }
-    std::cout << "written, ";
-    Timer::stop();
+    // std::cout << "written, ";
+    // Timer::stop();
 }
 
 Ig::~Interaction_graph()
 {
-    Timer::start();
+    // Timer::start();
     std::cout << "deleting all sites\n";
     for(auto & e : this->sites_by_location) {
         delete e.second;
     }
-    std::cout << "deleted, ";
-    Timer::stop();
-    Timer::start();
+    // std::cout << "deleted, ";
+    // Timer::stop();
+    // Timer::start();
     std::cout << "deleting all clusters\n";
     for(auto & e : this->gene_to_clusters_arcs) {
         for(auto & cluster : e.second) {
             delete cluster;
         }
     }
-    std::cout << "deleted, ";
-    Timer::stop();    
+    // std::cout << "deleted, ";
+    // Timer::stop();    
 }
