@@ -351,6 +351,10 @@ analyze_probabilities <- function(patient_folder)
     file_count <- length(files)
     max_timesteps <- 100
     for(i in seq_len(file_count)) {
+        if(i > 1) {
+            print("not generating the animation")
+            break
+        }
         print(paste(round(i/min(file_count, max_timesteps)*100), "%", sep = ""))
         file <- files[i]
         t <- read.table(file, header = T, colClasses = c("numeric", "numeric"))
@@ -408,6 +412,22 @@ analyze_probabilities <- function(patient_folder)
     system(paste("convert -delay 10 -loop 0 ", predicted_downregulation_copy_folder, "/*.png ", filename, sep = ""))
     print("generating .gif")
     system(paste("open ", predicted_downregulation_copy_folder, "/animation.gif", sep = ""))
+
+    new_maximized_device()
+    filename <- paste(predicted_downregulation_copy_folder, "/p_j_downregulated_values_999999.tsv", sep = "")
+    t <- read.table(filename, header = T, colClasses = c("numeric", "numeric"))
+    t <- merge(t, b)
+    t$rpm_downregulated <- t$rpm * t$p_j_downregulated_values
+    t$final_rpm <- t$rpm - t$rpm_downregulated
+    my_order <- match(genes_ordered, t$gene_id)
+    x_data <- 1:length(t$final_rpm)
+    y_data <- t$final_rpm[my_order]
+    ## cd stands for "cumulative downregulation"
+    cd <- cumsum(y_data)
+    plot(cd, main = "cumulative downregulation, genes order by ascending initial expressoin, lines at 1/4, 1/2, 3/4")
+    abline(v = which.min(abs(cd - tail(cd, n = 1)/2)))
+    abline(v = which.min(abs(cd - tail(cd, n = 1)/4)))
+    abline(v = which.min(abs(cd - tail(cd, n = 1)*3/4)))
 }
 
 patient_id <- "TCGA-CJ-4642"
