@@ -1,5 +1,5 @@
 template<class Archive>
-void Site::serialize(Archive & ar, const unsigned int version)
+void Site::serialize(Archive & ar, const unsigned int)
 {
     ar & this->mirna_id;
     ar & this->gene_id;

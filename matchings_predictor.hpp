@@ -5,6 +5,8 @@
 
 #include "patient.hpp"
 
+class Perturbation_analyzer;
+
 class Matchings_predictor {
     Patient & patient;
     std::unordered_map<Mirna_id, double> mirna_profile;
@@ -26,8 +28,14 @@ class Matchings_predictor {
     void export_p_j_downregulated(int filename_suffix = 999999);
     inline void recusively_compute_p_j_downregulated(bool * b, int level, int max_level, double * sum, double p_j_downregulated_given_b, double p_b, double * p_j_downregulated_given_c_bound_values_flattened, double * p_c_bound_values_flattened);
     inline double iteratively_compute_p_j_downregulated(double * p_j_downregulated_given_c_bound_values_flattened, double * p_c_bound_values_flattened, int clusters_count);
+    
 public:
+    double lambda;
+    
     Matchings_predictor(Patient & patient, std::string simulation_id = "original_data");
+    Matchings_predictor(const Matchings_predictor & obj);
+    friend void swap(Matchings_predictor & obj1, Matchings_predictor & obj2);
+    Matchings_predictor & operator=(Matchings_predictor obj);
     void compute();
 };
 

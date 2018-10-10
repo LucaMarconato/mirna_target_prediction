@@ -10,19 +10,19 @@ struct Relative_expression {
     Relative_expression(double value);
     void swap(Relative_expression & obj);
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version);
+    void serialize(Archive & ar, const unsigned int);
 };
 struct Reads {
-    unsigned long long value;
+    double value;
     bool undefined = true;
-    unsigned long long grand_total = 0;
+    double grand_total = 0;
     
     Reads();
     Reads(const Reads & obj);
-    Reads(unsigned long long value);
+    Reads(double value);
     void swap(Reads & obj);
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version);
+    void serialize(Archive & ar, const unsigned int);
 };
 // reads per million
 struct Rpm {
@@ -34,7 +34,7 @@ struct Rpm {
     Rpm(double value);
     void swap(Rpm & obj);
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version);
+    void serialize(Archive & ar, const unsigned int);
 };
 
 class Expression {
@@ -50,15 +50,16 @@ public:
     Expression(Reads reads);
     Expression(Rpm rpm);
     double to_relative_expression();
-    unsigned long long to_reads();
+    double to_reads();
     double to_rpm();
     void integrity_check();
     Expression & operator=(Expression obj);
     bool is_valid();
     void clear();
-    void normalize_reads(unsigned long long grand_total);
+    void normalize_reads(double grand_total);
+    double get_grand_total();
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version);
+    void serialize(Archive & ar, const unsigned int);
     
     friend void swap(Expression & obj1, Expression & obj2);
 };

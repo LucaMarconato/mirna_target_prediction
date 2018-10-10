@@ -18,4 +18,4 @@ rsync -avh global_parameters.json xcode/_build/Debug/global_parameters.json
 rsync -avh data/processed/mirnas_with_scored_interactions.tsv xcode/_build/Debug/data/processed/mirnas_with_scored_interactions.tsv
 rsync -avh data/processed/sites_with_scored_interactions.tsv xcode/_build/Debug/data/processed/sites_with_scored_interactions.tsv
 rsync -avh data/processed/scored_interactions_processed.tsv xcode/_build/Debug/data/processed/scored_interactions_processed.tsv
-rsync -avh data/patients xcode/_build/Debug/data/ --exclude=mirna_expression_profiles
+rsync -avh data/patients xcode/_build/Debug/data/ --exclude=matchings_predictor_output

@@ -1,12 +1,12 @@
 template<class Archive>
-void Relative_expression::serialize(Archive & ar, const unsigned int version)
+void Relative_expression::serialize(Archive & ar, const unsigned int)
 {
     ar & this->value;
     ar & this->undefined;
 }
 
 template<class Archive>
-void Reads::serialize(Archive & ar, const unsigned int version)
+void Reads::serialize(Archive & ar, const unsigned int)
 {
     ar & this->value;
     ar & this->undefined;
@@ -14,14 +14,14 @@ void Reads::serialize(Archive & ar, const unsigned int version)
 }
 
 template<class Archive>
-void Rpm::serialize(Archive & ar, const unsigned int version)
+void Rpm::serialize(Archive & ar, const unsigned int)
 {
     ar & this->value;
     ar & this->undefined;
 }
 
 template<class Archive>
-void Expression::serialize(Archive & ar, const unsigned int version)
+void Expression::serialize(Archive & ar, const unsigned int)
 {
     ar & this->relative_expression;
     ar & this->reads;

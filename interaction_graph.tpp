@@ -5,8 +5,9 @@ void Mirna_site_arc::serialize(Archive & ar, const unsigned int)
 }
 
 template<class Archive>
-void Interaction_graph::serialize(Archive & ar, const unsigned int version)
+void Interaction_graph::serialize(Archive & ar, const unsigned int)
 {
+    // TODO: if you want to use this you have to update this list
     ar & this->sites_by_location;
     ar & this->gene_to_sites_arcs;
     ar & this->mirna_site_arcs;

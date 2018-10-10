@@ -13,6 +13,40 @@
 
 #define Gep Gene_expression_profile
 
+Gep::Gene_expression_profile() {}
+
+Gep::Gep(const Gep & obj)
+{
+    this->profile = obj.profile;
+    this->recognized_distinct_genes = obj.recognized_distinct_genes;
+    this->recognized_reads = obj.recognized_reads;
+    this->not_recognized_distinct_genes = obj.not_recognized_distinct_genes;
+    this->not_recognized_reads = obj.not_recognized_reads;
+    this->total_distinct_genes = obj.total_distinct_genes;
+    this->total_reads = obj.total_reads;
+    this->filtered_out_distinct_genes = obj.filtered_out_distinct_genes;
+    this->filtered_out_reads = obj.filtered_out_reads;
+}
+
+void swap(Gep & obj1, Gep & obj2)
+{
+    std::swap(obj1.profile, obj2.profile);
+    std::swap(obj1.recognized_distinct_genes, obj2.recognized_distinct_genes);
+    std::swap(obj1.recognized_reads, obj2.recognized_reads);
+    std::swap(obj1.not_recognized_distinct_genes, obj2.not_recognized_distinct_genes);
+    std::swap(obj1.not_recognized_reads, obj2.not_recognized_reads);
+    std::swap(obj1.total_distinct_genes, obj2.total_distinct_genes);
+    std::swap(obj1.total_reads, obj2.total_reads);
+    std::swap(obj1.filtered_out_distinct_genes, obj2.filtered_out_distinct_genes);
+    std::swap(obj1.filtered_out_reads, obj2.filtered_out_reads);
+}
+
+Gep & Gep::operator=(Gep obj)
+{
+    swap(*this, obj);
+    return *this;
+}
+
 void Gep::load_from_gdc_file(std::string filename, std::string patient_folder)
 {
     if(!boost::filesystem::exists(patient_folder + filename)) {
@@ -34,7 +68,7 @@ void Gep::load_from_gdc_file(std::string filename, std::string patient_folder)
                 continue;
             }
             Gene gene(gene_id_and_version, "", "");
-            unsigned long long reads_ull = std::strtoull(reads.c_str(), nullptr, 10);
+            double reads_ull = std::strtod(reads.c_str(), nullptr);
             auto e = Gene::gene_id_dictionary.left.find(gene);
             if(e == Gene::gene_id_dictionary.left.end()) {
                 this->not_recognized_distinct_genes++;
@@ -84,13 +118,13 @@ void Gep::print_statistics()
 void Gep::filter(double threshold_rpm)
 {
     unsigned long long newly_filtered_out_distinct_genes = 0;
-    unsigned long long newly_filtered_out_reads = 0;
+    double newly_filtered_out_reads = 0;
     for(std::unordered_map<Gene_id, Expression>::iterator it = this->profile.begin(); it != this->profile.end();) {
 //        if(it->first == 19322) {
 //            int a = 0;
 //        }
         double rpm = it->second.to_rpm();
-        unsigned long long reads = it->second.to_reads();
+        double reads = it->second.to_reads();
         if(rpm < threshold_rpm) {
             newly_filtered_out_distinct_genes++;
             newly_filtered_out_reads += reads;

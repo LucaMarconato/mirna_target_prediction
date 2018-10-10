@@ -30,3 +30,6 @@ TO FINISH THE THESIS
 * TODO build the multiple linear regression model
 BONUS
 * TODO use the tool to find (with bruteforce and stepwise approach) to find a set of artificial sequences to insert in the cell colture to minimise the differences in down-regulation between normal and tumor cells
+TO PAAL
+* TODO show plot with cumulative down-regulation
+* TODO show results of the perturbation analysis

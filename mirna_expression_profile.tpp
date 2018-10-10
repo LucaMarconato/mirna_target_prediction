@@ -1,5 +1,5 @@
 template<class Archive>
-void Mirna_expression_profile::serialize(Archive & ar, const unsigned int version)
+void Mirna_expression_profile::serialize(Archive & ar, const unsigned int)
 {
     ar & this->initialized;
     ar & this->profile;

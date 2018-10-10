@@ -33,7 +33,7 @@ Reads::Reads(const Reads & obj) {
     this->grand_total = obj.grand_total;
 }
 
-Reads::Reads(unsigned long long value) : value(value) {
+Reads::Reads(double value) : value(value) {
     undefined = false;
 }
 
@@ -126,7 +126,7 @@ double Expression::to_relative_expression()
     }
 }
 
-unsigned long long Expression::to_reads()
+double Expression::to_reads()
 {
     integrity_check();
     if(!this->relative_expression.undefined) {
@@ -178,11 +178,22 @@ void Expression::integrity_check()
     }    
 }
 
-void Expression::normalize_reads(unsigned long long grand_total)
+void Expression::normalize_reads(double grand_total)
 {
     integrity_check();
     if(!this->reads.undefined) {
         this->reads.grand_total = grand_total;
+    } else {
+        std::cerr << "error: normalized_reads, reads not initialized; this->relative_expression.undefined = " << this->relative_expression.undefined << ", this->rpm.undefined = " << this->rpm.undefined << "\n";
+        exit(1);
+    }
+}
+
+double Expression::get_grand_total()
+{
+    integrity_check();
+    if(!this->reads.undefined) {
+        return this->reads.grand_total;
     } else {
         std::cerr << "error: normalized_reads, reads not initialized; this->relative_expression.undefined = " << this->relative_expression.undefined << ", this->rpm.undefined = " << this->rpm.undefined << "\n";
         exit(1);

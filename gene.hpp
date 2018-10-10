@@ -25,7 +25,7 @@ public:
     Gene(std::string gene_id_and_version, std::string gene_symbol, std::string transcript_id_and_version);
     Gene(std::string gene_id, int gene_id_version, std::string gene_symbol, std::string transcript_id, int transcript_id_version);
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version);
+    void serialize(Archive & ar, const unsigned int);
     static void initialize_gene_dictionary();
     static void print_gene_dictionary(unsigned int max_rows = -1);
     

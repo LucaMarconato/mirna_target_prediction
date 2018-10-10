@@ -23,7 +23,7 @@ Gene::Gene(std::string gene_id_and_version, std::string gene_symbol, std::string
 {
     auto split_into_id_and_version = [](std::string & to_split, std::string & id, int & version)
     {
-        int pos = to_split.find(".");
+        size_t pos = to_split.find(".");
         if(pos != std::string::npos) {
             id = to_split.substr(0, pos);
             version = atoi(to_split.substr(pos + 1, to_split.size() - 1 - id.size()).c_str());
@@ -82,10 +82,10 @@ void Gene::initialize_gene_dictionary()
 
 void Gene::print_gene_dictionary(unsigned int max_rows)
 {
-    if(max_rows != -1) {
+    if(max_rows != (unsigned int)-1) {
         std::cout << "printing at most " << max_rows << " rows\n";
     }
-    int j = 0;
+    unsigned int j = 0;
     for(auto & e : Gene::gene_id_dictionary.left) {
         if(j++ < max_rows) {
             Gene & gene = const_cast<Gene &>(e.first);

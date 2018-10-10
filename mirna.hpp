@@ -19,7 +19,7 @@ public:
 
     Mirna(std::string mirna_family);
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version);
+    void serialize(Archive & ar, const unsigned int);
     static void initialize_mirna_dictionary();
     static void print_mirna_dictionary(unsigned int max_rows = -1);
     

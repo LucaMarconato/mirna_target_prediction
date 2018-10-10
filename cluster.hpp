@@ -12,7 +12,7 @@ class Cluster {
 public:
     std::list<Site *> sites;
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version);
+    void serialize(Archive & ar, const unsigned int);
 };
 
 namespace std {

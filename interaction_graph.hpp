@@ -56,13 +56,16 @@ public:
     unsigned long long rows_skipped = 0;
 
     Interaction_graph();
+    Interaction_graph(const Interaction_graph & obj);
+    friend void swap(Interaction_graph & obj1, Interaction_graph & obj2);
+    Interaction_graph & operator=(Interaction_graph obj);
     void build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> & genes);
     Site * get_site(Mirna_id mirna_id, Gene_id gene_id, unsigned int utr_start, unsigned int utr_end);
     void print_statistics();
     void export_interactions_data(std::string patient_folder);
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version);
-    ~Interaction_graph();
+    void serialize(Archive & ar, const unsigned int);
+    void free_pointers();
 };
 
 #include "interaction_graph.tpp"

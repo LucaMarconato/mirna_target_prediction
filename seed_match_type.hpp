@@ -25,7 +25,7 @@ public:
     Seed_match_type();
     Seed_match_type(Seed_match_type::Mirna_site_matching mirna_site_matching);
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version);
+    void serialize(Archive & ar, const unsigned int);
     static std::string format_mirna_matching(Seed_match_type::Mirna_site_matching mirna_matching);
     friend std::ostream & operator<<(std::ostream & stream, const Seed_match_type & o);
 };

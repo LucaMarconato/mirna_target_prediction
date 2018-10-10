@@ -10,7 +10,7 @@
 Cep::Cluster_expression_profile() {}
 
 Cep::Cluster_expression_profile(Gene_expression_profile & gep, Interaction_graph & ig)
-{
+{    
     unsigned long long total_reads = 0;
     for(auto & e : gep.profile) {
         if(ig.gene_to_clusters_arcs.find(e.first) != ig.gene_to_clusters_arcs.end()) {
@@ -31,4 +31,20 @@ Cep::Cluster_expression_profile(Gene_expression_profile & gep, Interaction_graph
         // note that it is improper to talk about RPM for clusters, so we set this variable
         e.second.valid_rpm = false;
     }
+}
+
+Cep::Cep(const Cep & obj)
+{
+    this->profile = obj.profile;
+}
+
+void swap(Cep & obj1, Cep & obj2)
+{
+    std::swap(obj1.profile, obj2.profile);
+}
+
+Cep & Cep::operator=(Cep obj)
+{
+    swap(*this, obj);
+    return *this;
 }

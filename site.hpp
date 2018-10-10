@@ -27,7 +27,7 @@ public:
     unsigned int utr_start, utr_end;
 
     template<class Archive>
-    void serialize(Archive & ar, const unsigned int version);
+    void serialize(Archive & ar, const unsigned int);
     /*
       this function rewrites the file data/processed/scored_interactions.tsv 
       into a new file in which the columns mirna_family, gene_id, gene_symbol, transcript_id and seed_match_type are substituted with integers

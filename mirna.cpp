@@ -77,10 +77,10 @@ void Mirna::initialize_mirna_dictionary()
 
 void Mirna::print_mirna_dictionary(unsigned int max_rows)
 {
-    if(max_rows != -1) {
+    if(max_rows != (unsigned int)-1) {
         std::cout << "printing at most " << max_rows << " rows\n";
     }
-    int j = 0;
+    unsigned int j = 0;
     for(auto & e : Mirna::mirna_id_dictionary.left) {
         if(j++ < max_rows) {
             Mirna & mirna = const_cast<Mirna &>(e.first);

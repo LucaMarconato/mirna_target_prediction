@@ -5,13 +5,13 @@
 #include <iomanip>
 #include <cmath>
 
-#include <marconato/output_buffer/output_buffer.hpp>
-
 #include "omp_disabler.h"
 #ifndef OMP_TEMPORARILY_DISABLED
 #include <omp.h>
 #else
 #endif
+
+#include <marconato/output_buffer/output_buffer.hpp>
 
 #include "global_parameters.hpp"
 #include "timer.hpp"
@@ -43,7 +43,7 @@ Matchings_predictor::Matchings_predictor(Patient & patient, std::string simulati
     }
 
     /*
-      The mirna expression proile has been just normalized to 1.
+      The mirna expression profile has been just normalized to 1.
       The clusters are already normalized to 1, by construtction.
       Anyway, we check this last condition explicitly.
     */      
@@ -63,6 +63,44 @@ Matchings_predictor::Matchings_predictor(Patient & patient, std::string simulati
     std::system(cmd.c_str());
     cmd = "mkdir -p " + this->get_output_path();
     std::system(cmd.c_str());
+
+    this->lambda = Global_parameters::lambda;
+}
+
+Matchings_predictor::Matchings_predictor(const Matchings_predictor & obj) : patient(obj.patient)
+{
+    this->mirna_profile = obj.mirna_profile;
+    this->cluster_profile = obj.cluster_profile;
+    this->original_cluster_profile = obj.original_cluster_profile;
+    this->r_ic_values = obj.r_ic_values;
+    this->r_ijk_values = obj.r_ijk_values;
+    this->p_c_bound_values = obj.p_c_bound_values;
+    this->sum_of_r_ijk_for_cluster = obj.sum_of_r_ijk_for_cluster;
+    this->p_j_downregulated_given_c_bound_values = obj.p_j_downregulated_given_c_bound_values;
+    this->p_j_downregulated_values = obj.p_j_downregulated_values;
+    this->simulation_id = obj.simulation_id;
+    this->lambda = obj.lambda;
+}
+
+void swap(Matchings_predictor & obj1, Matchings_predictor & obj2)
+{    
+    std::swap(obj1.mirna_profile, obj2.mirna_profile);
+    std::swap(obj1.cluster_profile, obj2.cluster_profile);
+    std::swap(obj1.original_cluster_profile, obj2.original_cluster_profile);
+    std::swap(obj1.r_ic_values, obj2.r_ic_values);
+    std::swap(obj1.r_ijk_values, obj2.r_ijk_values);
+    std::swap(obj1.p_c_bound_values, obj2.p_c_bound_values);
+    std::swap(obj1.sum_of_r_ijk_for_cluster, obj2.sum_of_r_ijk_for_cluster);
+    std::swap(obj1.p_j_downregulated_given_c_bound_values, obj2.p_j_downregulated_given_c_bound_values);
+    std::swap(obj1.p_j_downregulated_values, obj2.p_j_downregulated_values);
+    std::swap(obj1.simulation_id, obj2.simulation_id);
+    std::swap(obj1.lambda, obj2.lambda);
+}
+
+Matchings_predictor & Matchings_predictor::operator=(Matchings_predictor obj)
+{
+    swap(*this, obj);
+    return *this;
 }
 
 std::string Matchings_predictor::get_output_path()
@@ -141,13 +179,13 @@ void Matchings_predictor::export_interaction_matrix()
 void Matchings_predictor::compute()
 {
     std::cout << "for the moment, just a trivial explicit Euler scheme\n";
-    unsigned long long max_steps = 100;
+    unsigned long long max_steps = 500;
     double mirna_lambda = 1;
     double cluster_lambda = 1;
-    if(Global_parameters::lambda > 1) {
-        mirna_lambda = 1.0/Global_parameters::lambda;
+    if(lambda > 1) {
+        mirna_lambda = 1.0/lambda;
     } else {
-        cluster_lambda = Global_parameters::lambda;
+        cluster_lambda = lambda;
     }
     // h must be <= 1
     double h = 1;
@@ -156,7 +194,7 @@ void Matchings_predictor::compute()
     bool logging = true;
     bool export_mirna_expression_profile = true;
     bool export_cluster_expression_profile = true;
-    bool export_interaction_matrix = true;
+    bool export_interaction_matrix = false;
     bool export_partial_predicted_downregulation = false;
     // just to be sure to avoid logical errors in the future
     if(!logging && (export_mirna_expression_profile || export_cluster_expression_profile || export_interaction_matrix || export_partial_predicted_downregulation)) {
@@ -186,6 +224,7 @@ void Matchings_predictor::compute()
             std::cout << "deleting old log from \"" + log_folder + "\"\n";
             cmd = "rm " + log_folder + "/mirna_expression_profile*";
             std::system(cmd.c_str());
+            std::cout << "deleted\n";
             ss1_header << "mirna_id\trelative_expression\n";   
         }
 
@@ -197,13 +236,15 @@ void Matchings_predictor::compute()
             std::cout << "deleting old log from \"" + log_folder + "\"\n";
             cmd = "rm " + log_folder + "/cluster_expression_profile*";
             std::system(cmd.c_str());
-
+            std::cout << "deleted\n";
             // you may want to export a file in which each Cluster * (i.e. what I call cluster_address below) is enriched with information to make you able to identify specific clusters
             ss2_header << "cluster_address\trelative_expression\n";
         }
         
         if(export_interaction_matrix) {
+            std::cout << "exporting the interaction matrix\n";
             this->export_interaction_matrix();
+            std::cout << "done\n";
         }
         
         log_folder = this->get_output_path() + "predicted_downregulation";
@@ -213,8 +254,9 @@ void Matchings_predictor::compute()
             std::cout << "deleting old log from \"" + log_folder + "\"\n";
             cmd = "rm " + log_folder + "/p_j_downregulated_values_*";
             std::system(cmd.c_str());
+            std::cout << "deleted\n";
         }
-    }    
+    }
     
     int latest_percentage = -1;
     // these four variables will be shared among the threads and set either only by the thread 0, either inside a #pragma omp critical
@@ -223,7 +265,7 @@ void Matchings_predictor::compute()
     std::unordered_map<Mirna_id, double> new_mirna_profile;
     std::unordered_map<Cluster *, double> new_cluster_profile;
     unsigned long long loop_size;
-    int t;
+    unsigned int t;
 
     std::cout << "starting the simulation\n";
 #ifndef OMP_TEMPORARILY_DISABLED
@@ -232,10 +274,10 @@ void Matchings_predictor::compute()
 #endif
     {
 #ifndef OMP_TEMPORARILY_DISABLED
-        int rank = omp_get_thread_num();
+        unsigned long long rank = omp_get_thread_num();
 #else
         unsigned long long my_num_threads = 1;
-        int rank = 0;
+        unsigned long long rank = 0;
 #endif
         if(rank == 0) {
             std::cout << "my_num_threads = " << my_num_threads << "\n";
@@ -348,7 +390,7 @@ void Matchings_predictor::compute()
             for(auto & e : rank_new_mirna_profile) {
                 e.second = 0;
             }
-            int i;            
+            unsigned long long int i;            
             for(i = 0; i < loop_size && i < rank; i++) {
                 it++;
             }
@@ -397,7 +439,7 @@ void Matchings_predictor::compute()
                     }
                 }
                 
-                for(int j = 0; j < my_num_threads && i < loop_size; j++) {
+                for(unsigned long long j = 0; j < my_num_threads && i < loop_size; j++) {
                     it++;
                     i++;
                 }
@@ -500,7 +542,7 @@ void Matchings_predictor::compute_probabilities()
             exit(1);
         }        
         for(auto & e : just_added_by_site) {
-            Site * site = e.first;
+            // Site * site = e.first;
             for(auto & p : e.second) {
                 auto key0 = std::make_pair(gene_id, cluster);
                 if(this->p_j_downregulated_given_c_bound_values.find(key0) == this->p_j_downregulated_given_c_bound_values.end()) {
@@ -510,8 +552,16 @@ void Matchings_predictor::compute_probabilities()
                 Mirna_site_arc & mirna_site_arc = this->patient.interaction_graph.mirna_site_arcs.at(p);
                 double context_score = mirna_site_arc.context_score;
                 double probability_of_downregulation = 1 - std::pow(2, context_score);
-                double to_add = r_ijk * probability_of_downregulation / sum_of_r_ijk_for_cluster.at(cluster);
-                this->p_j_downregulated_given_c_bound_values[key0] = this->p_j_downregulated_given_c_bound_values.at(key0) + to_add;
+                if(std::abs(sum_of_r_ijk_for_cluster.at(cluster)) < Global_parameters::epsilon) {
+                    static bool silence_warning = false;
+                    if(!silence_warning) {
+                        silence_warning = true;
+                        std::cerr << "warning: skipping a division by zero. This warning is fine and will be silenced. This warning is triggered when a cluster has not binded by miRNAs. You may want to desilence this warning when debugging, if you think that an error could be hidden by skipping this division.\n";
+                    }
+                } else {
+                    double to_add = r_ijk * probability_of_downregulation / sum_of_r_ijk_for_cluster.at(cluster);
+                    this->p_j_downregulated_given_c_bound_values[key0] = this->p_j_downregulated_given_c_bound_values.at(key0) + to_add;   
+                }
             }
         }        
     }
@@ -534,7 +584,7 @@ void Matchings_predictor::compute_probabilities()
     double * p_j_downregulated_given_c_bound_values_flattened = new double [max_number_of_clusters_per_gene];
     double * p_c_bound_values_flattened = new double [max_number_of_clusters_per_gene];    
 
-    int latest_percentage = -1;
+    // int latest_percentage = -1;
     for(auto & e : this->patient.interaction_graph.gene_to_clusters_arcs) {
         // int total_genes = this->patient.interaction_graph.gene_to_clusters_arcs.size();
         // int current_percentage = (int)(100*((double)(genes_debugged + genes_not_debugged)/total_genes));

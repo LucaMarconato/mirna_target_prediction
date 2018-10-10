@@ -48,6 +48,44 @@ Mirna_site_arc & Mirna_site_arc::operator=(Mirna_site_arc obj)
 
 Ig::Interaction_graph() {}
 
+Ig::Ig(const Ig & obj)
+{
+    this->sites_by_location = obj.sites_by_location;
+    this->gene_to_sites_arcs = obj.gene_to_sites_arcs;
+    this->gene_to_clusters_arcs = obj.gene_to_clusters_arcs;
+    this->mirna_site_arcs = obj.mirna_site_arcs;
+    this->mirna_to_sites_arcs = obj.mirna_to_sites_arcs;
+    this->site_to_mirnas_arcs = obj.site_to_mirnas_arcs;
+    this->mirna_gene_arcs = obj.mirna_gene_arcs;
+    this->mirna_to_genes_arcs = obj.mirna_to_genes_arcs;
+    this->gene_to_mirnas_arcs = obj.gene_to_mirnas_arcs;
+    this->site_to_overlapping_sites = obj.site_to_overlapping_sites;
+    this->rows_processed = obj.rows_processed;
+    this->rows_skipped = obj.rows_skipped;
+}
+
+void swap(Ig & obj1, Ig & obj2)
+{
+    std::swap(obj1.sites_by_location, obj2.sites_by_location);
+    std::swap(obj1.gene_to_sites_arcs, obj2.gene_to_sites_arcs);
+    std::swap(obj1.gene_to_clusters_arcs, obj2.gene_to_clusters_arcs);
+    std::swap(obj1.mirna_site_arcs, obj2.mirna_site_arcs);
+    std::swap(obj1.mirna_to_sites_arcs, obj2.mirna_to_sites_arcs);
+    std::swap(obj1.site_to_mirnas_arcs, obj2.site_to_mirnas_arcs);
+    std::swap(obj1.mirna_gene_arcs, obj2.mirna_gene_arcs);
+    std::swap(obj1.mirna_to_genes_arcs, obj2.mirna_to_genes_arcs);
+    std::swap(obj1.gene_to_mirnas_arcs, obj2.gene_to_mirnas_arcs);
+    std::swap(obj1.site_to_overlapping_sites, obj2.site_to_overlapping_sites);
+    std::swap(obj1.rows_processed, obj2.rows_processed);
+    std::swap(obj1.rows_skipped, obj2.rows_skipped);
+}
+
+Ig & Ig::operator=(Ig obj)
+{
+    swap(*this, obj);
+    return *this;
+}
+
 void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> & genes)
 {
     std::cout << "building the interaction graph\n";
@@ -301,7 +339,7 @@ void Ig::export_interactions_data(std::string patient_folder)
     // Timer::stop();
 }
 
-Ig::~Interaction_graph()
+void Interaction_graph::free_pointers()
 {
     // Timer::start();
     std::cout << "deleting all sites\n";

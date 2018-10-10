@@ -43,7 +43,7 @@ namespace boost { namespace serialization {
     template< typename Archive, BOOST_PP_ENUM_PARAMS(nargs,typename T) > \
     void serialize(Archive & ar,                                        \
                    boost::tuple< BOOST_PP_ENUM_PARAMS(nargs,T) > & t,   \
-                   const unsigned int version)                          \
+                   const unsigned int)                          \
     {                                                                   \
       ar & boost::serialization::make_nvp("head",t.head);               \
       ar & boost::serialization::make_nvp("tail",t.tail);               \

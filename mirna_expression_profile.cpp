@@ -13,6 +13,40 @@
 
 #define Mep Mirna_expression_profile
 
+Mep::Mirna_expression_profile() {}
+
+Mep::Mep(const Mep & obj)
+{
+    this->profile = obj.profile;
+    this->recognized_distinct_mirnas = obj.recognized_distinct_mirnas;
+    this->recognized_reads = obj.recognized_reads;
+    this->not_recognized_distinct_mirnas = obj.not_recognized_distinct_mirnas;
+    this->not_recognized_reads = obj.not_recognized_reads;
+    this->total_distinct_mirnas = obj.total_distinct_mirnas;
+    this->total_reads = obj.total_reads;
+    this->filtered_out_distinct_mirnas = obj.filtered_out_distinct_mirnas;
+    this->filtered_out_reads = obj.filtered_out_reads;
+}
+
+void swap(Mep & obj1, Mep & obj2)
+{
+    std::swap(obj1.profile, obj2.profile);
+    std::swap(obj1.recognized_distinct_mirnas, obj2.recognized_distinct_mirnas);
+    std::swap(obj1.recognized_reads, obj2.recognized_reads);
+    std::swap(obj1.not_recognized_distinct_mirnas, obj2.not_recognized_distinct_mirnas);
+    std::swap(obj1.not_recognized_reads, obj2.not_recognized_reads);
+    std::swap(obj1.total_distinct_mirnas, obj2.total_distinct_mirnas);
+    std::swap(obj1.total_reads, obj2.total_reads);
+    std::swap(obj1.filtered_out_distinct_mirnas, obj2.filtered_out_distinct_mirnas);
+    std::swap(obj1.filtered_out_reads, obj2.filtered_out_reads);
+}
+
+Mep & Mep::operator=(Mep obj)
+{
+    swap(*this, obj);
+    return *this;
+}
+
 // void Mep::load_from_gdc_file(std::string filename, std::string patient_folder)
 void Mep::load_from_gdc_file(std::string tissue, std::string patient_folder)
 {
@@ -42,7 +76,7 @@ void Mep::load_from_gdc_file(std::string tissue, std::string patient_folder)
         std::string mirna_family, reads;
         while(in.read_row(mirna_family, reads)) {
             Mirna mirna(mirna_family);
-            unsigned long long reads_ull = std::strtoull(reads.c_str(), nullptr, 10);
+            double reads_ull = std::strtod(reads.c_str(), nullptr);
             auto e = Mirna::mirna_id_dictionary.left.find(mirna);
             if(e == Mirna::mirna_id_dictionary.left.end()) {
                 this->not_recognized_distinct_mirnas++;
@@ -93,10 +127,10 @@ void Mep::print_statistics()
 void Mep::filter(double threshold_rpm)
 {
     unsigned long long newly_filtered_out_distinct_mirnas = 0;
-    unsigned long long newly_filtered_out_reads = 0;
+    double newly_filtered_out_reads = 0;
     for(std::unordered_map<Mirna_id, Expression>::iterator it = this->profile.begin(); it != this->profile.end();) {
         double rpm = it->second.to_rpm();
-        unsigned long long reads = it->second.to_reads();
+        double reads = it->second.to_reads();
         if(rpm < threshold_rpm) {
             newly_filtered_out_distinct_mirnas++;
             newly_filtered_out_reads += reads;

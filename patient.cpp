@@ -15,6 +15,38 @@ using json = nlohmann::json;
 
 #include "timer.hpp"
 
+Patient::Patient() {}
+
+Patient::Patient(const Patient & obj)
+{
+    this->case_id = obj.case_id;
+    this->normal_mirnas = obj.normal_mirnas;
+    this->tumor_mirnas = obj.tumor_mirnas;
+    this->normal_genes = obj.normal_genes;
+    this->tumor_genes = obj.tumor_genes;
+    this->normal_clusters = obj.normal_clusters;
+    this->tumor_clusters = obj.tumor_clusters;
+    this->interaction_graph = obj.interaction_graph;
+}
+
+void swap(Patient & obj1, Patient & obj2)
+{
+    std::swap(obj1.case_id, obj2.case_id);
+    std::swap(obj1.normal_mirnas, obj2.normal_mirnas);
+    std::swap(obj1.tumor_mirnas, obj2.tumor_mirnas);
+    std::swap(obj1.normal_genes, obj2.normal_genes);
+    std::swap(obj1.tumor_genes, obj2.tumor_genes);
+    std::swap(obj1.normal_clusters, obj2.normal_clusters);
+    std::swap(obj1.tumor_clusters, obj2.tumor_clusters);
+    std::swap(obj1.interaction_graph, obj2.interaction_graph);
+}
+
+Patient & Patient::operator=(Patient obj)
+{
+    swap(*this, obj);
+    return *this;
+}
+
 Patient::Patient(std::string case_id, bool export_data) : case_id(case_id)
 {
     std::string patient_folder = "./data/patients/" + case_id + "/";
@@ -73,8 +105,7 @@ Patient::Patient(std::string case_id, bool export_data) : case_id(case_id)
 
             std::cout << "\n***building interaction graph***\n";
             this->interaction_graph.build_interaction_graph(mirnas, genes);
-            this->normal_clusters = Cluster_expression_profile(this->normal_genes, this->interaction_graph);
-            this->tumor_clusters = Cluster_expression_profile(this->tumor_genes, this->interaction_graph);
+            this->generate_cluster_expression_profiles();
 
             if(!dont_use_boost_serialization_here) {
                 std::cout << "writing " << patient_file << "\n";
@@ -116,6 +147,12 @@ Patient::Patient(std::string case_id, bool export_data) : case_id(case_id)
             std::cout << "finished\n";
         }
     }
+}
+
+void Patient::generate_cluster_expression_profiles()
+{
+    this->normal_clusters = Cluster_expression_profile(this->normal_genes, this->interaction_graph);
+    this->tumor_clusters = Cluster_expression_profile(this->tumor_genes, this->interaction_graph);
 }
 
 void Patient::export_expression_profiles(std::string patient_folder)
