@@ -2,6 +2,7 @@ source("my_device.r")
 library(purrr)
 library(raster)
 library(RColorBrewer)
+library(plotrix)
 
 analyze_convergence <- function(simulation_output_path)
 {    
@@ -499,6 +500,43 @@ analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_out
     }
 }
 
+compute_pairwise_spearman_correlation <- function(simulation_output_paths)
+{
+    dataframes <- lapply(simulation_output_paths,
+                         function(x) read.table(paste(x, "predicted_downregulation/p_j_downregulated_values_999999.tsv", sep = ""), header = T, colClasses = c("numeric", "numeric")))
+    n <- length(dataframes)
+    new_maximized_device()
+    layout(matrix(1:n^2, n, n, byrow = T))
+    distance_matrix <<- matrix(rep(0, n^2), n, n, byrow = T)
+    par(mar = c(0, 0, 2, 0))    
+    for(i in 1:n) {
+        for(j in 1:n) {
+            j = n + 1 - j
+            if(i == j) {
+                plot.new()
+                next
+            }
+            df_i <- dataframes[[i]]
+            df_j <- dataframes[[j]]
+            df_i <- df_i[order(df_i$gene_id), ]
+            df_j <- df_j[order(df_j$gene_id), ]
+            x_i <- df_i$p_j_downregulated_values
+            x_j <- df_j$p_j_downregulated_values
+            correlation <- cor(x_i, x_j, method = "spearman")
+            distance_matrix[i,j] <<- sqrt(sum((x_i - x_j)^2))
+            name_i <- basename(simulation_output_paths[[i]])
+            name_j <- basename(simulation_output_paths[[j]])
+            plot(x_i, x_j, main = paste("r_s = ", round(correlation, 2), " (", name_i, " vs ", name_j, ")"), cex.main = 0.8, xlab = "", ylab = "", xaxt = "n", yaxt = "n")            
+        }
+    }    
+    print(round(distance_matrix, 1))
+    new_maximized_device()
+    m <- distance_matrix
+    print("TODO: the matrix must be reversed")
+    rgb.palette <- colorRampPalette(c("white", "black"), space = "rgb")
+    levelplot(m, main = "distance matrix", xlab = "", ylab = "", col.regions = rgb.palette(120), cuts = 100, at = seq(0, max(m), length.out = 100))
+}
+
 patient_id <- "TCGA-CJ-4642"
 ## patient_id <- "artificial0"
 ## patient_id <- "artificial1"
@@ -517,13 +555,14 @@ close_all_devices()
 simulation_output_paths <- c()
 simulation_output_paths <- c(simulation_output_paths, simulation_output_path)
 
-simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "g__50__0.1_0_", "/", sep = ""))
+simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "g__87__3_0_", "/", sep = ""))
 
-## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__100_0_", "/", sep = ""))
-## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__10_0_", "/", sep = ""))
+simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__100_0_", "/", sep = ""))
+simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__10_0_", "/", sep = ""))
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__1_0_lambda2", "/", sep = ""))
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__0.1_0_", "/", sep = ""))
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__-0.5_0_", "/", sep = ""))
-## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__-1_0_", "/", sep = ""))
-## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__-0.9_0_", "/", sep = ""))
-analyze_predictions_of_perturbed_data(patient_folder, simulation_output_paths)
+simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__-1_0_", "/", sep = ""))
+simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__-0.9_0_", "/", sep = ""))
+## analyze_predictions_of_perturbed_data(patient_folder, simulation_output_paths)
+compute_pairwise_spearman_correlation(simulation_output_paths)

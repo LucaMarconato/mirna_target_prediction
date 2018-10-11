@@ -22,13 +22,14 @@ int main(int argc, char * argv[])
     // Matchings_predictor matching_predictor(patient);
     // matching_predictor.compute();
 
+    int mirnas_count = patient.tumor_mirnas.profile.size();
     Perturbation_analyzer perturbation_analyzer(patient);
 
     perturbation_analyzer.run(Perturbation_type::Gaussian_perturbation,
                               Perturbation_type::No_perturbation,
-                              Perturbation_target(Perturbation_target::Elements_from_nth_largest(50)),
+                              Perturbation_target(Perturbation_target::Elements_from_nth_largest(mirnas_count)),
                               Perturbation_target(Perturbation_target::Empty_target()),
-                              1, double());
+                              3, double());
     
     // perturbation_analyzer.run(Perturbation_type::Point_perturbation,
     //                           Perturbation_type::No_perturbation,

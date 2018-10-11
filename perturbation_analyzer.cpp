@@ -133,8 +133,8 @@ void Perturbation_analyzer::perturb()
                 mirna_id = this->mirna_perturbation_target.specific_mirna.mirna_id;
             } else if(this->mirna_perturbation_target.nth_largest_element.is_valid) {
                 unsigned int n = this->mirna_perturbation_target.nth_largest_element.n;
-                if(n >= this->perturbed_patient.tumor_mirnas.profile.size()) {
-                    std::cerr << "error: n = " << n << "\n";
+                if(n > this->perturbed_patient.tumor_mirnas.profile.size()) {
+                    std::cerr << "error: n = " << n << ", this->perturbed_patient.tumor_mirnas.profile.size() = " << this->perturbed_patient.tumor_mirnas.profile.size() << "\n";
                     exit(1);
                 }
                 unsigned int i = 0;
@@ -159,8 +159,8 @@ void Perturbation_analyzer::perturb()
     } else if(this->mirna_perturbation_type == Perturbation_type::Gaussian_perturbation) {
         if(this->mirna_perturbation_target.elements_from_nth_largest.is_valid) {
             unsigned int n = this->mirna_perturbation_target.elements_from_nth_largest.n;
-            if(n >= this->perturbed_patient.tumor_mirnas.profile.size()) {
-                std::cerr << "error: n = " << n << "\n";
+            if(n > this->perturbed_patient.tumor_mirnas.profile.size()) {
+                std::cerr << "error: n = " << n << ", this->perturbed_patient.tumor_mirnas.profile.size() = " << this->perturbed_patient.tumor_mirnas.profile.size() << "\n";
                 exit(1);
             }
                 

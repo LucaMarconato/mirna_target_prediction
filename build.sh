@@ -13,6 +13,10 @@ CXX=/usr/local/Cellar/llvm/7.0.0/bin/clang++
 # LDFLAGS=-L/usr/local/opt/llvm/lib/
 # cmake -DCMAKE_BUILD_TYPE=Release .
 
-echo "" > omp_disabler.h
+# echo "" > omp_disabler.h
+CC=gcc-8
+CXX=g++-8
 cmake .
-make
+CC=gcc-8
+CXX=g++-8
+make -j7
