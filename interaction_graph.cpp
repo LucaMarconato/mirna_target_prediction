@@ -358,3 +358,10 @@ void Interaction_graph::free_pointers()
     // std::cout << "deleted, ";
     // Timer::stop();    
 }
+
+Interaction_graph::~Interaction_graph()
+{
+    // this destructor is called by the copy-constructor triggered by Perturbation_analyzer when deleting the copy of the patient from the variable perturbed_patient when a new patient is being copied
+    // so pointers must be freed manually or smart pointers, like std::shared_ptr, must be used
+//    this->free_pointers();
+}

@@ -398,9 +398,28 @@ void Matchings_predictor::compute()
             for(; i < loop_size;) {
                 auto & clusters = it->second;
                 for(Cluster * cluster : clusters) {
+//                    bool cluster_to_monitor = false;
+//                    for(Site * site : cluster->sites) {
+//                        if(site->gene_id == 152 && site->utr_start == 4098) {
+//                            cluster_to_monitor = true;
+//                        }
+//                    }
+                    
                     for(Site * site : cluster->sites) {
                         for(const Mirna_id & mirna_id : this->patient.interaction_graph.site_to_mirnas_arcs.at(site)) {
-                            double exchange = h * this->mirna_profile.at(mirna_id) * this->cluster_profile.at(cluster);
+                            // the computation of the following value is inefficient but I bet it does not impact the performance
+                            int number_of_sites_for_the_mirna_in_the_cluster = 0;
+                            for(Site * site : cluster->sites) {
+                                if(site->mirna_id == mirna_id) {
+                                    number_of_sites_for_the_mirna_in_the_cluster++;
+                                }
+                            }
+                            double mirna_value = this->mirna_profile.at(mirna_id);
+                            double cluster_value = this->cluster_profile.at(cluster);
+                            double exchange = h * mirna_value * cluster_value / number_of_sites_for_the_mirna_in_the_cluster;
+//                            if(cluster_to_monitor) {
+//                                std::cout << "i = " << i << "\nmirna_value = " << mirna_value << "\ncluster_value = " << cluster_value << "\nexchange = " << exchange << "\nmirna_id = " << mirna_id << ", site->utr_start = " << site->utr_start << "\n\n";
+//                            }
                             if(exchange < 0) {
                                 static bool warning_already_presented = false;
                                 if(abs(exchange) < Global_parameters::epsilon) {

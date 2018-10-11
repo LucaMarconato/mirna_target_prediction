@@ -1,5 +1,10 @@
 #include "perturbation_analyzer.hpp"
 
+#include <random>
+#include <vector>
+
+#include "timer.hpp"
+
 // // --------------------Perturbation_target--------------------
 
 std::string Perturbation_target::string_id()
@@ -95,8 +100,8 @@ void Perturbation_analyzer::integrity_check()
 void Perturbation_analyzer::perturb()
 {
     this->perturbed_patient = this->patient;
-    std::map<double, std::list<Mirna_id>> mirna_profile_sorted;
-    std::map<double, std::list<Gene_id>> gene_profile_sorted;
+    std::map<double, std::list<Mirna_id>, std::greater<double>> mirna_profile_sorted;
+    std::map<double, std::list<Gene_id>, std::greater<double>> gene_profile_sorted;
     for(auto & e : this->perturbed_patient.tumor_mirnas.profile) {
         const Mirna_id & mirna_id = e.first;
         double relative_value = e.second.to_relative_expression();
@@ -137,17 +142,68 @@ void Perturbation_analyzer::perturb()
                     auto & list_of_ids = e.second;
                     if(i + list_of_ids.size() > n) {
                         mirna_id = list_of_ids.front();
+                        break;
                     }
                     i += list_of_ids.size();
-                }    
+                }
             }
             std::cout << "mirna_id = " << mirna_id << "\n";
             double reads = this->perturbed_patient.tumor_mirnas.profile.at(mirna_id).to_reads();
+            // when studying the gaussian perturbation you may to use (1 + sigma + exp(sigma/expression_level)) instead of the formula used
             reads *= (1 + this->mirna_perturbation_amplifier);
             this->perturbed_patient.tumor_mirnas.profile[mirna_id] = Reads(reads);
+        } else {
+            std::cerr << "error: exception in this->mirna_perturbation_type == Perturbation_type::Point_perturbation\n";
+            exit(1);
         }
     } else if(this->mirna_perturbation_type == Perturbation_type::Gaussian_perturbation) {
-        std::cout << "TODO: not implemented yet\n";        
+        if(this->mirna_perturbation_target.elements_from_nth_largest.is_valid) {
+            unsigned int n = this->mirna_perturbation_target.elements_from_nth_largest.n;
+            if(n >= this->perturbed_patient.tumor_mirnas.profile.size()) {
+                std::cerr << "error: n = " << n << "\n";
+                exit(1);
+            }
+                
+            std::cout << "generating " << n << " standard normal values\n";
+            Timer::start();
+            std::default_random_engine generator;
+            std::normal_distribution<double> distribution(0.0, 1.0);
+            std::vector<double> samples;
+            samples.reserve(n);
+            for(int i = 0; i < n; i++) {
+                samples[i] = distribution(generator);
+            }
+            std::cout << "done, \n";
+            Timer::stop();
+
+            unsigned int i = 0;
+            std::vector<Mirna_id> to_process;
+            to_process.reserve(n);
+            for(auto & e : mirna_profile_sorted) {
+                auto & list_of_ids = e.second;
+                if(i < n) {
+                    for(auto & mirna_id : list_of_ids) {
+                        if(to_process.size() < n) {
+                            to_process.push_back(mirna_id);
+                        }
+                    }
+                }
+                i += list_of_ids.size();
+            }
+            if(to_process.size() != n) {
+                std::cout << "to_process.size() = " << to_process.size() << ", n = " << n << "\n";
+                exit(1);
+            }
+            for(auto & mirna_id : to_process) {
+                double reads = this->perturbed_patient.tumor_mirnas.profile.at(mirna_id).to_reads();
+                // when studying the gaussian perturbation you may to use (1 + sigma + exp(sigma/expression_level)) instead of the formula used
+                reads *= (1 + this->mirna_perturbation_amplifier);
+                this->perturbed_patient.tumor_mirnas.profile[mirna_id] = Reads(reads);   
+            }
+        } else {
+            std::cerr << "error: exception in this->mirna_perturbation_type == Perturbation_type::Gaussian_perturbation\n";
+            exit(1);
+        }
     }
 
     double total_reads_after_perturbation = 0;
@@ -159,7 +215,10 @@ void Perturbation_analyzer::perturb()
     for(auto & e : this->perturbed_patient.tumor_mirnas.profile) {
         e.second.normalize_reads(total_reads);
     }
-    // note that this is computed on the values of the reads that comprise the filtered reads
+    /*
+      Note that this is computed on the values of the reads that comprise the filtered reads.
+      You could be interested in leaving the lambda as the one it was before.
+    */
     double lambda_adjustment_due_to_mirnas = total_reads / this->patient.tumor_mirnas.profile.begin()->second.get_grand_total();
     std::cout << "lambda_adjustment_due_to_mirnas = " << lambda_adjustment_due_to_mirnas << "\n";
 

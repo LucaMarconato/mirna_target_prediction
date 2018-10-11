@@ -16,38 +16,61 @@ int main(int argc, char * argv[])
     // Gene::print_gene_dictionary(10);
 
     Patient patient("TCGA-CJ-4642", true);
-    Interaction_graph & interaction_graph = patient.interaction_graph;
-    // Patient patient("artificial0", true);
+    // Patient patient("artificial0", true);    
     // Patient patient("artificial1", true);
 
-    Matchings_predictor matching_predictor(patient);
-    matching_predictor.compute();
+    // Matchings_predictor matching_predictor(patient);
+    // matching_predictor.compute();
 
     Perturbation_analyzer perturbation_analyzer(patient);
-    
-    perturbation_analyzer.run(Perturbation_type::Point_perturbation,
-                              Perturbation_type::No_perturbation,
-                              Perturbation_target(Perturbation_target::Nth_largest_element(0)),
-                              Perturbation_target(Perturbation_target::Empty_target()),
-                              -1, double());
-    
-    perturbation_analyzer.run(Perturbation_type::Point_perturbation,
-                              Perturbation_type::No_perturbation,
-                              Perturbation_target(Perturbation_target::Nth_largest_element(0)),
-                              Perturbation_target(Perturbation_target::Empty_target()),
-                              -0.5, double());
 
-    perturbation_analyzer.run(Perturbation_type::Point_perturbation,
+    perturbation_analyzer.run(Perturbation_type::Gaussian_perturbation,
                               Perturbation_type::No_perturbation,
-                              Perturbation_target(Perturbation_target::Nth_largest_element(0)),
-                              Perturbation_target(Perturbation_target::Empty_target()),
-                              0.5, double());
-    
-    perturbation_analyzer.run(Perturbation_type::Point_perturbation,
-                              Perturbation_type::No_perturbation,
-                              Perturbation_target(Perturbation_target::Nth_largest_element(0)),
+                              Perturbation_target(Perturbation_target::Elements_from_nth_largest(50)),
                               Perturbation_target(Perturbation_target::Empty_target()),
                               1, double());
+    
+    // perturbation_analyzer.run(Perturbation_type::Point_perturbation,
+    //                           Perturbation_type::No_perturbation,
+    //                           Perturbation_target(Perturbation_target::Nth_largest_element(0)),
+    //                           Perturbation_target(Perturbation_target::Empty_target()),
+    //                           -1, double());
+    
+    // perturbation_analyzer.run(Perturbation_type::Point_perturbation,
+    //                           Perturbation_type::No_perturbation,
+    //                           Perturbation_target(Perturbation_target::Nth_largest_element(0)),
+    //                           Perturbation_target(Perturbation_target::Empty_target()),
+    //                           -0.9, double());
+
+    // perturbation_analyzer.run(Perturbation_type::Point_perturbation,
+    //                           Perturbation_type::No_perturbation,
+    //                           Perturbation_target(Perturbation_target::Nth_largest_element(0)),
+    //                           Perturbation_target(Perturbation_target::Empty_target()),
+    //                           -0.5, double());
+
+    // perturbation_analyzer.run(Perturbation_type::Point_perturbation,
+    //                           Perturbation_type::No_perturbation,
+    //                           Perturbation_target(Perturbation_target::Nth_largest_element(0)),
+    //                           Perturbation_target(Perturbation_target::Empty_target()),
+    //                           0.5, double());
+
+    // perturbation_analyzer.run(Perturbation_type::Point_perturbation,
+    //                           Perturbation_type::No_perturbation,
+    //                           Perturbation_target(Perturbation_target::Nth_largest_element(0)),
+    //                           Perturbation_target(Perturbation_target::Empty_target()),
+    //                           1, double());
+    
+    // perturbation_analyzer.run(Perturbation_type::Point_perturbation,
+    //                           Perturbation_type::No_perturbation,
+    //                           Perturbation_target(Perturbation_target::Nth_largest_element(0)),
+    //                           Perturbation_target(Perturbation_target::Empty_target()),
+    //                           10, double());
+    
+    // perturbation_analyzer.run(Perturbation_type::Point_perturbation,
+    //                           Perturbation_type::No_perturbation,
+    //                           Perturbation_target(Perturbation_target::Nth_largest_element(0)),
+    //                           Perturbation_target(Perturbation_target::Empty_target()),
+    //                           100, double());
     
     // perturbation_analyzer.run(Perturbation_type::Point_perturbation,
     //                           Perturbation_type::No_perturbation,
@@ -79,7 +102,7 @@ int main(int argc, char * argv[])
     }
 
     std::cout << "freeing pointers\n";
-    interaction_graph.free_pointers();
+    patient.interaction_graph.free_pointers();
     std::cout << "other cleaning up\n";
     return 0;
 }

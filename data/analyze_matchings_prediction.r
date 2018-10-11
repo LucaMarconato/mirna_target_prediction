@@ -426,7 +426,7 @@ analyze_probabilities <- function(patient_folder, simulation_output_path)
     y_data <- t$final_rpm[my_order]
     ## cd stands for "cumulative downregulation"
     cd <- cumsum(y_data)
-    plot(cd, main = "cumulative downregulation, genes order by ascending initial expressoin, lines at 1/4, 1/2, 3/4")
+    plot(cd, main = "cumulative downregulation, genes order by ascending initial expression, lines at 1/4, 1/2, 3/4")
     abline(v = which.min(abs(cd - tail(cd, n = 1)/2)))
     abline(v = which.min(abs(cd - tail(cd, n = 1)/4)))
     abline(v = which.min(abs(cd - tail(cd, n = 1)*3/4)))
@@ -468,7 +468,7 @@ analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_out
 
         ## we add an extra row for the title
         heights_vector <- rep(1, rows + 1)
-        heights_vector[1] <- lcm(0.5)
+        heights_vector[1] <- lcm(1)
         ## to put each image in the directory of each dataset
         ## new_path = paste(simulation_output_paths[[dataset_index]], "predicted_downregulation/p_j_downregulated_values_999999.png", sep = "")
         ## to gather all the images in out directory
@@ -476,6 +476,8 @@ analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_out
         png(filename = new_path, width = 1920, height = 1200)
         layout(matrix(seq(1, rows + 1), rows + 1, 1), heights = heights_vector)
         old_par <- par(mar = c(0,0,1,0))
+        ## old_par <- par(mar = c(0,0,0,0))
+        ## browser()
         plot.new()
         title(main = paste("predicted gene expression after downregulation", basename(simulation_output_paths[[dataset_index]])))
         par(mar = c(0,0,1.3,0), mgp = c(3, 0.3, 0))
@@ -501,8 +503,9 @@ patient_id <- "TCGA-CJ-4642"
 ## patient_id <- "artificial0"
 ## patient_id <- "artificial1"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
-simulation_id <- "original_data"
-simulation_output_path <- paste(patient_folder, "matchings_predictor_output/", simulation_id, "/", sep = "")
+
+simulation_id <- "p__0__1_0_"
+simulation_output_path <- paste(patient_folder, "matchings_predictor_output/", "original_data", "/", sep = "")
 close_all_devices()
 ## analyze_convergence(simulation_output_path)
 ## generate_readable_dynamics_log(simulation_output_path)
@@ -510,11 +513,17 @@ close_all_devices()
 ## analyze_cluster_expression_profiles(simulation_output_path)
 ## analyze_dynamics_for_small_interaction_graphs(simulation_output_path)
 ## analyze_probabilities(patient_folder, simulation_output_path)
+
 simulation_output_paths <- c()
 simulation_output_paths <- c(simulation_output_paths, simulation_output_path)
-simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__1_0_", "/", sep = ""))
-simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__0.5_0_", "/", sep = ""))
-simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__0.1_0_", "/", sep = ""))
-simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__-0.5_0_", "/", sep = ""))
-simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__-1_0_", "/", sep = ""))
+
+simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "g__50__0.1_0_", "/", sep = ""))
+
+## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__100_0_", "/", sep = ""))
+## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__10_0_", "/", sep = ""))
+## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__1_0_lambda2", "/", sep = ""))
+## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__0.1_0_", "/", sep = ""))
+## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__-0.5_0_", "/", sep = ""))
+## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__-1_0_", "/", sep = ""))
+## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__-0.9_0_", "/", sep = ""))
 analyze_predictions_of_perturbed_data(patient_folder, simulation_output_paths)

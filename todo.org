@@ -1,3 +1,5 @@
+
+
 * DONE find the distribution of the length of the clusters and prepare the clustering procedure
 * DONE fix omp
 * DONE small cases
@@ -11,6 +13,12 @@
 * TODO check the gene with id 118
 * TODO check the simulation with conserved only
 * TODO in cons and non-cons check if the simpler methods would work, if not how many rows do not make it possible
+* TODO complete the code for the gaussian perturbation
+* TODO perturb the mRNA
+* TODO find the mRNAs which are most influenced, both perturbing the base level and adding some copies to the knocked-down dataset; look both at log-ratio and at Spearman's correlation coefficient
+* TODO adjust the amplication factor with the log
+* TODO investigate the ceRNA hypothesis by perturbing few mRNAs
+* TODO use TargetScan data for comparing the prediction with miRanda
 INTERESTING BUT NOT NOW
 * TODO interesting: find the correlation between the density of the entries of the interaction matrix and the quantity of exchanged mirnas and clusters
 * TODO compute the weighted context score and compare it the one computed trivially
@@ -24,6 +32,7 @@ NOT NOW OR NOT IMPORTANT
 * TODO analyze more trivial simulations
 * TODO check if I am missing information about complementary strands on miRNAs
 * TODO replace all the _H defines in the headers into _HPP
+* TODO check that in all the loop in which the index is an unsigned int, unsigned long or unsigned long long, I am not using an "i - 1" statement (or equivalent) in the condition
 PHD APPLICATION
 * TODO find the real GDC data and build the interaction graph on the difference of expressed mRNAs (consider using average levels of tumor and normal, to study the average differences)
 TO FINISH THE THESIS
@@ -31,5 +40,5 @@ TO FINISH THE THESIS
 BONUS
 * TODO use the tool to find (with bruteforce and stepwise approach) to find a set of artificial sequences to insert in the cell colture to minimise the differences in down-regulation between normal and tumor cells
 TO PAAL
-* TODO show plot with cumulative down-regulation
-* TODO show results of the perturbation analysis
+* DONE show plot with cumulative down-regulation
+* DONE show results of the perturbation analysis

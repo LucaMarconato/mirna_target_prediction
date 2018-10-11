@@ -66,6 +66,7 @@ public:
     template<class Archive>
     void serialize(Archive & ar, const unsigned int);
     void free_pointers();
+    ~Interaction_graph();
 };
 
 #include "interaction_graph.tpp"
