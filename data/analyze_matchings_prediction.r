@@ -3,6 +3,8 @@ library(purrr)
 library(raster)
 library(RColorBrewer)
 library(plotrix)
+library(lattice)
+library(latticeExtra)
 
 analyze_convergence <- function(simulation_output_path)
 {    
@@ -500,20 +502,67 @@ analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_out
     }
 }
 
-compute_pairwise_spearman_correlation <- function(simulation_output_paths)
+compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL, choice = NULL)
 {
+    if(is.null(choice)) {
+        compute_pairwise_distances(simulation_output_paths, gene_ids, "ratio")
+        compute_pairwise_distances(simulation_output_paths, gene_ids, "spearman")
+        compute_pairwise_distances(simulation_output_paths, gene_ids, "euclidean")
+        return()
+    }
     dataframes <- lapply(simulation_output_paths,
                          function(x) read.table(paste(x, "predicted_downregulation/p_j_downregulated_values_999999.tsv", sep = ""), header = T, colClasses = c("numeric", "numeric")))
+    if(!is.null(gene_ids)) {
+        dataframes <- lapply(dataframes, function(x) x[x$gene_id %in% gene_ids, ])
+    }
     n <- length(dataframes)
     new_maximized_device()
-    layout(matrix(1:n^2, n, n, byrow = T))
-    distance_matrix <<- matrix(rep(0, n^2), n, n, byrow = T)
+    my_widths <- c(lcm(1), rep(1, n))
+    my_heights <- c(lcm(1), rep(1, n))
+    layout(matrix(1:(n+1)^2, n+1, n+1, byrow = T), widths = my_widths, heights = my_heights)
+    distance_matrix <<- matrix(rep(0, n^2), n, n)
+
+    my_distance <- function(x_i, x_j)
+    {        
+        if(choice == "ratio") {
+            par(mar = c(2, 2, 1, 0))
+            ratios <- sapply(1:length(x_i), function(k) min(x_i[k]/x_j[k], x_j[k]/x_i[k]))
+            hist(ratios, main = "")
+            return(mean(ratios))   
+        } else if(choice == "spearman") {
+            correlation <- cor(x_i, x_j, method = "spearman")
+            name_i <- basename(simulation_output_paths[[i]])
+            name_j <- basename(simulation_output_paths[[j]])
+            plot(x_i, x_j, main = paste("r_s = ", round(correlation, 2), " (", name_i, " vs ", name_j, ")"), cex.main = 0.8, xlab = "", ylab = "", xaxt = "n", yaxt = "n")
+            return(correlation)
+        } else if(choice == "euclidean") {
+            par(mar = c(2, 2, 1, 0))
+            hist((x_i - x_j)^2, main = "")
+            return(sqrt(sum((x_i - x_j)^2)))
+        }       
+    }
     par(mar = c(0, 0, 2, 0))    
-    for(i in 1:n) {
-        for(j in 1:n) {
-            j = n + 1 - j
+    for(i in 0:n) {
+        for(j in 0:n) {
             if(i == j) {
                 plot.new()
+                next
+            }
+            if(i == 0) {
+                par(mar = c(0, 0, 0, 0))
+                plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+                rect(par("usr")[1],par("usr")[3],par("usr")[2],par("usr")[4],col = rgb(0.4, 0.4, 0.4, 0.5))
+                s <- basename(simulation_output_paths[[j]])
+                text(x = 0.5, y = 0.5, s, cex = 1.5)
+                next
+            }
+            par(mar = c(0, 0, 1, 0))
+            if(j == 0) {
+                par(mar = c(0, 0, 0, 0))
+                plot(c(0, 1), c(0, 1), ann = F, bty = 'n', type = 'n', xaxt = 'n', yaxt = 'n')
+                rect(par("usr")[1],par("usr")[3],par("usr")[2],par("usr")[4],col = rgb(0.4, 0.4, 0.4, 0.5))
+                s <- basename(simulation_output_paths[[i]])
+                text(x = 0.5, y = 0.5, s, cex = 1.5, srt = 90)
                 next
             }
             df_i <- dataframes[[i]]
@@ -522,19 +571,41 @@ compute_pairwise_spearman_correlation <- function(simulation_output_paths)
             df_j <- df_j[order(df_j$gene_id), ]
             x_i <- df_i$p_j_downregulated_values
             x_j <- df_j$p_j_downregulated_values
-            correlation <- cor(x_i, x_j, method = "spearman")
-            distance_matrix[i,j] <<- sqrt(sum((x_i - x_j)^2))
-            name_i <- basename(simulation_output_paths[[i]])
-            name_j <- basename(simulation_output_paths[[j]])
-            plot(x_i, x_j, main = paste("r_s = ", round(correlation, 2), " (", name_i, " vs ", name_j, ")"), cex.main = 0.8, xlab = "", ylab = "", xaxt = "n", yaxt = "n")            
+            distance_matrix[i,j] <<- my_distance(x_i, x_j)
         }
     }    
     print(round(distance_matrix, 1))
     new_maximized_device()
-    m <- distance_matrix
-    print("TODO: the matrix must be reversed")
-    rgb.palette <- colorRampPalette(c("white", "black"), space = "rgb")
-    levelplot(m, main = "distance matrix", xlab = "", ylab = "", col.regions = rgb.palette(120), cuts = 100, at = seq(0, max(m), length.out = 100))
+    ## browser()
+    my_labels <- unlist(lapply(simulation_output_paths, function(x) basename(x)))
+    rownames(distance_matrix) <- my_labels
+    colnames(distance_matrix) <- my_labels
+    m <- distance_matrix[, n:1]
+    if(choice == "ratio") {
+        color_order <- c("black", "white")
+    } else if(choice == "spearman") {
+        color_order <- c("black", "white")
+    } else if(choice == "euclidean") {
+        color_order <- c("white", "black")
+    }
+    rgb.palette <- colorRampPalette(color_order, space = "rgb")
+    my_colors <- rgb.palette(120)
+    my_positions <- seq(min(m + diag(max(m), n)[, n:1]), max(m), length.out = 100)
+    lattice.options(axis.padding=list(factor=0.5))
+    obj <- levelplot(m, main = paste("matrix for distance \"", choice, "\"", sep = "" ),
+                   xlab = "", ylab = "", 
+                   cuts = 100,
+                   col.regions = my_colors,
+                   at = my_positions,
+                   colorkey = list(col = my_colors, at = my_positions),
+                   scales = list(y = list(rot = 0), x = list(rot = 0), cex = 0.5),
+                   ## panel = function(y, x, ...) {
+                   ##     ltext(x = x, y = y, labels = round(m, 1), cex = 1, font = 2,
+                   ##           fontfamily = "HersheySans")
+                   ## }
+                   )
+    print(obj)
+    ## axis(1, at = 1:n, labels = my_labels)
 }
 
 patient_id <- "TCGA-CJ-4642"
@@ -565,4 +636,9 @@ simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "mat
 simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__-1_0_", "/", sep = ""))
 simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__-0.9_0_", "/", sep = ""))
 ## analyze_predictions_of_perturbed_data(patient_folder, simulation_output_paths)
-compute_pairwise_spearman_correlation(simulation_output_paths)
+
+gene_ids <- readRDS("interactions/mirna_id397_interactions.rds")
+compute_pairwise_distances(simulation_output_paths, gene_ids)
+
+## compute_pairwise_distances(simulation_output_paths)
+end_browser_plot()

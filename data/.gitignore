@@ -1,5 +1,7 @@
 patients
+interactions
 *.pkl
 *.RData
 *.tsv
 *.json
+*.rds
