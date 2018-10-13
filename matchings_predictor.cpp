@@ -179,7 +179,7 @@ void Matchings_predictor::export_interaction_matrix()
 void Matchings_predictor::compute()
 {
     std::cout << "for the moment, just a trivial explicit Euler scheme\n";
-    unsigned long long max_steps = 500;
+    unsigned long long max_steps = 10;
     double mirna_lambda = 1;
     double cluster_lambda = 1;
     if(lambda > 1) {
