@@ -101,10 +101,8 @@ int main(int argc, char * argv[])
         //                           Perturbation_target(Perturbation_target_type::Elements_from_nth_largest, genes_count),
         //                           1, 1, ss.str());
     }
-
     std::cout << "freeing pointers\n";
     patient.interaction_graph.free_pointers();
     std::cout << "other cleaning up\n";
     return 0;
 }
-

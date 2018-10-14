@@ -164,7 +164,7 @@ def update_g_with_scores(file_containing_scores, conserved: bool):
 			# 	print(f'found_scores = {found_scores}')
 			a = len(g.list_of_scores_without_corresponding_interactions) - original_count_of_scores_without_corresponding_interaction
 			# if (a % 100000) == 0:
-			# 	print(f'{a} scores has not a corresponding interaction')
+			# 	print(f'{a} scores have not a corresponding interaction')
 		print(f'found_scores = {found_scores}')
 		print(f'{a} scores has not a corresponding interaction')
 
@@ -236,7 +236,7 @@ def export_g_data(g):
 		i = 0
 		to_write = 'gene_id\tgene_symbol\ttranscript_id\tutr_start\tutr_end\tseed_match_type\n'
 		for site in considered_sites:
-			to_write += f'{site.gene_id}\t{site.gene_symbol}\t{site.transcript_id}\t{site.utr_start}\t{site.utr_end}\t{site.seed_match_type}\n'
+			to_write += f'{site.gene_id}\t{site.gene_symbol}\t{site.transcript_id}\t{site.utr_start}\t{site.utr_enpd}\t{site.seed_match_type}\n'
 			i += 1
 		outfile.write(to_write)
 		print(f'{i} rows written')

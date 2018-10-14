@@ -30,7 +30,6 @@ Matchings_predictor::Matchings_predictor(Patient & patient, std::string simulati
         double relative_value = e.second.to_relative_expression();
         this->cluster_profile[cluster] = relative_value;
     }
-
     /*
       The mirnas do not sum to one because of the filtering procedure, so we normalize the expression profile.
     */
@@ -179,7 +178,7 @@ void Matchings_predictor::export_interaction_matrix()
 void Matchings_predictor::compute()
 {
     std::cout << "for the moment, just a trivial explicit Euler scheme\n";
-    unsigned long long max_steps = 10;
+    unsigned long long max_steps = 100;
     double mirna_lambda = 1;
     double cluster_lambda = 1;
     if(lambda > 1) {
@@ -191,7 +190,7 @@ void Matchings_predictor::compute()
     double h = 1;
     bool scaling = true;
     double cumulative_scaling = 1;
-    bool logging = true;
+    bool logging = false;
     bool export_mirna_expression_profile = true;
     bool export_cluster_expression_profile = true;
     bool export_interaction_matrix = false;
@@ -384,6 +383,9 @@ void Matchings_predictor::compute()
 #ifndef OMP_TEMPORARILY_DISABLED
 #pragma omp barrier
 #endif
+            // TODO: check if it is faster to copy the profile and have each rank accessing its copy or to access the shared copy among the ranks
+            // auto rank_mirna_profile = this->mirna_profile;
+            // auto rank_cluster_profile = this->cluster_profile;            
             auto rank_new_mirna_profile = std::unordered_map<Mirna_id, double>();
             auto rank_new_cluster_profile = std::unordered_map<Cluster *, double>();
             for(auto & e : this->mirna_profile) {
@@ -394,28 +396,20 @@ void Matchings_predictor::compute()
             }
             double rank_mirna_total_exchange = 0;
             double rank_cluster_total_exchange = 0;
+            auto rank_r_ic_values = std::unordered_map<std::pair<Mirna_id, Cluster *>, double>();
+            
             auto it = this->patient.interaction_graph.gene_to_clusters_arcs.begin();
-            for(auto & e : rank_new_mirna_profile) {
-                e.second = 0;
-            }
+
             unsigned long long int i;            
             for(i = 0; i < loop_size && i < rank; i++) {
                 it++;
-            }
-            
+            }            
             for(; i < loop_size;) {
                 auto & clusters = it->second;
                 for(Cluster * cluster : clusters) {
-//                    bool cluster_to_monitor = false;
-//                    for(Site * site : cluster->sites) {
-//                        if(site->gene_id == 152 && site->utr_start == 4098) {
-//                            cluster_to_monitor = true;
-//                        }
-//                    }
-                    
                     for(Site * site : cluster->sites) {
                         for(const Mirna_id & mirna_id : this->patient.interaction_graph.site_to_mirnas_arcs.at(site)) {
-                            // the computation of the following value is inefficient but I bet it does not impact the performance
+                            // the computation of the following value is inefficient but I bet it does not impact the performance since there is no cluster with an high number of sites
                             int number_of_sites_for_the_mirna_in_the_cluster = 0;
                             for(Site * site : cluster->sites) {
                                 if(site->mirna_id == mirna_id) {
@@ -425,9 +419,6 @@ void Matchings_predictor::compute()
                             double mirna_value = this->mirna_profile.at(mirna_id);
                             double cluster_value = this->cluster_profile.at(cluster);
                             double exchange = h * mirna_value * cluster_value / number_of_sites_for_the_mirna_in_the_cluster;
-//                            if(cluster_to_monitor) {
-//                                std::cout << "i = " << i << "\nmirna_value = " << mirna_value << "\ncluster_value = " << cluster_value << "\nexchange = " << exchange << "\nmirna_id = " << mirna_id << ", site->utr_start = " << site->utr_start << "\n\n";
-//                            }
                             if(exchange < 0) {
                                 static bool warning_already_presented = false;
                                 if(abs(exchange) < Global_parameters::epsilon) {
@@ -448,20 +439,17 @@ void Matchings_predictor::compute()
                             }
                             rank_mirna_total_exchange += (mirna_lambda * exchange / cumulative_scaling);
                             rank_cluster_total_exchange += (cluster_lambda * exchange / cumulative_scaling);
-                            // if(mirna_id == 397 && cluster->sites.front()->gene_id == 15242) {
-                            //     std::cout << "rank_mirna_total_exchange = " << rank_mirna_total_exchange << ", rank_cluster_total_exchange = " << rank_cluster_total_exchange << "\n";
+
+                            // if(rank > 0) {
+                            //     std::cerr << "error: I have not parallelized the part of the code accessing r_ic_value yet\n";
+                            //     exit(1);
                             // }
                             auto p = std::make_pair(mirna_id, cluster);
-                            if(this->r_ic_values.find(p) == this->r_ic_values.end()) {
-                                this->r_ic_values[p] = 0;
+                            if(rank_r_ic_values.find(p) == rank_r_ic_values.end()) {
+                                rank_r_ic_values[p] = 0;
                             }
-
-                            // TODO: modify the formula for r_ic in the document
-                            if(rank > 0) {
-                                std::cerr << "error: I have not parallelized the part of the code accessing r_ic_value yet\n";
-                                exit(1);
-                            }
-                            this->r_ic_values[p] += cluster_lambda * exchange / cumulative_scaling;
+                            
+                            rank_r_ic_values[p] += cluster_lambda * exchange / cumulative_scaling;
                         }
                     }
                 }
@@ -483,6 +471,13 @@ void Matchings_predictor::compute()
                 }
                 mirna_total_exchange += rank_mirna_total_exchange;
                 cluster_total_exchange += rank_cluster_total_exchange;
+                for(auto & e : rank_r_ic_values) {
+                    if(this->r_ic_values.find(e.first) == this->r_ic_values.end()) {
+                        this->r_ic_values[e.first] = e.second;
+                    } else {
+                        this->r_ic_values[e.first] += e.second;
+                    }
+                }
             }
             if(rank == 0) {
                 t++;

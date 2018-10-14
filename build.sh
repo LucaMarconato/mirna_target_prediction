@@ -13,12 +13,22 @@ CXX=/usr/local/Cellar/llvm/7.0.0/bin/clang++
 # LDFLAGS=-L/usr/local/opt/llvm/lib/
 # cmake -DCMAKE_BUILD_TYPE=Release .
 
-echo "// #define OMP_TEMPORARILY_DISABLED" > omp_disabler.h
-echo "#define OMP_TEMPORARILY_DISABLED" > omp_disabler.h
+if [ "$1" = "--dont_change_omp_disabler_h" ]; then
+    echo "not generating omp_disabler.h"
+else
+    if [ "$1" = "--serial" ]; then
+        new_value="#define OMP_TEMPORARILY_DISABLED"
+        echo "code compiled to avoid any openMP preprocessor directive, to comply with compiler not supporting openMP"
+    else
+        new_value="// #define OMP_TEMPORARILY_DISABLED"
+        echo "code compiled to be parallel"
+    fi
+    echo ${new_value} > omp_disabler.h
+fi
 
-CC=gcc-8
-CXX=g++-8
+# CC=gcc-8
+# CXX=g++-8
 cmake .
-CC=gcc-8
-CXX=g++-8
+# CC=gcc-8
+# CXX=g++-8
 make -j7
