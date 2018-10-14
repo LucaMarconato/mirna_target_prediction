@@ -15,6 +15,7 @@ public:
       Please do not confuse the number of target sites with the number of mRNAs copies, lambda refers to the number of mRNA copies
      */
     static double lambda;
+    static bool test_parallelization;
 
     static void load_from_json();
 };

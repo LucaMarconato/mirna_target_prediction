@@ -196,6 +196,14 @@ void Matchings_predictor::compute()
     bool export_cluster_expression_profile = true;
     bool export_interaction_matrix = false;
     bool export_partial_predicted_downregulation = false;
+    if(Global_parameters::test_parallelization) {
+        std::cout << "generating only output for testing the parallelization\n";
+        logging = true;
+        export_mirna_expression_profile = true;
+        export_cluster_expression_profile = false;
+        export_interaction_matrix = false;
+        export_partial_predicted_downregulation = false;
+    }
     // just to be sure to avoid logical errors in the future
     if(!logging && (export_mirna_expression_profile || export_cluster_expression_profile || export_interaction_matrix || export_partial_predicted_downregulation)) {
         export_mirna_expression_profile = false;
@@ -497,7 +505,11 @@ void Matchings_predictor::compute()
         out0.close();   
     }
     this->compute_probabilities();
-    this->export_probabilities();
+    if(!Global_parameters::test_parallelization) {
+        this->export_probabilities();   
+    } else {
+        this->export_p_j_downregulated();
+    }
 }
 
 void Matchings_predictor::compute_probabilities()
@@ -584,38 +596,51 @@ void Matchings_predictor::compute_probabilities()
             }
         }        
     }
-
+    
     // compute p_j_downregulated_values
-    // this code can be trivially parallelized, if needed
-    // this variable is used as a debug purpose, it slows down the program and it can be removed
-    // double cluster_limit = 20;
-    // std::cout << "computing the probabilities of down-regulation for genes with at most " << cluster_limit << " clusters\n";
-    // Timer::start();
-    // int genes_debugged = 0;
-    // int genes_not_debugged = 0;
+    /*
+      // begin debug code
+      double cluster_limit = 20;
+      std::cout << "computing the probabilities of down-regulation for genes with at most " << cluster_limit << " clusters\n";
+      Timer::start();
+      int genes_debugged = 0;
+      int genes_not_debugged = 0;
+      // end debug code
+    */
     unsigned long max_number_of_clusters_per_gene = 0;
     for(auto & e : this->patient.interaction_graph.gene_to_clusters_arcs) {
         auto & clusters = e.second;
         max_number_of_clusters_per_gene = std::max(max_number_of_clusters_per_gene, clusters.size());
     }
-    // b is just used for debug purposes and can be removed
-    bool * b = new bool [max_number_of_clusters_per_gene];
+    /*
+      // begin debug code
+      bool * b = new bool [max_number_of_clusters_per_gene];
+      // int latest_percentage = -1;
+      // end debug code
+    */
     double * p_j_downregulated_given_c_bound_values_flattened = new double [max_number_of_clusters_per_gene];
     double * p_c_bound_values_flattened = new double [max_number_of_clusters_per_gene];    
 
-    // int latest_percentage = -1;
     for(auto & e : this->patient.interaction_graph.gene_to_clusters_arcs) {
-        // int total_genes = this->patient.interaction_graph.gene_to_clusters_arcs.size();
-        // int current_percentage = (int)(100*((double)(genes_debugged + genes_not_debugged)/total_genes));
-        // if(current_percentage > latest_percentage) {
-        //     latest_percentage = current_percentage;
-            // std::cout << "genes_debugged/total_genes: " << genes_debugged + genes_not_debugged << "/" << total_genes << " = " << current_percentage << "%\n";
-        // }
+        /*
+          // begin debug code
+          int total_genes = this->patient.interaction_graph.gene_to_clusters_arcs.size();
+          int current_percentage = (int)(100*((double)(genes_debugged + genes_not_debugged)/total_genes));
+          if(current_percentage > latest_percentage) {
+          	  latest_percentage = current_percentage;
+          	  std::cout << "genes_debugged/total_genes: " << genes_debugged + genes_not_debugged << "/" << total_genes << " = " << current_percentage << "%\n";
+          }
+          // end debug code
+        */
         Gene_id gene_id = e.first;
         auto & clusters = e.second;
         int i = 0;
         for(Cluster * cluster : clusters) {
-            b[i] = false;
+            /*
+              // begin debug code
+              b[i] = false;
+              // end debug code
+            */
             p_j_downregulated_given_c_bound_values_flattened[i] = this->p_j_downregulated_given_c_bound_values.at(std::make_pair(gene_id, cluster));
             p_c_bound_values_flattened[i] = this->p_c_bound_values.at(cluster);
             i++;
@@ -623,32 +648,35 @@ void Matchings_predictor::compute_probabilities()
         double sum = this->iteratively_compute_p_j_downregulated(p_j_downregulated_given_c_bound_values_flattened, p_c_bound_values_flattened, clusters.size());
         this->p_j_downregulated_values[gene_id] = sum;
 
-        // // safety check for genes with at most "cluster_limit" clusters
-        // if(clusters.size() <= cluster_limit) {
-        //     double debug_sum = 0;
-        //     this->recusively_compute_p_j_downregulated(b, 0, clusters.size(), &debug_sum, 1, 1, p_j_downregulated_given_c_bound_values_flattened, p_c_bound_values_flattened);
-        //     if(std::abs(sum - debug_sum) > Global_parameters::epsilon) {
-        //         std::cerr << "error: sum = " << sum << ", debug_sum = " << debug_sum << ", std::abs(sum - debug_sum) = " << std::abs(sum - debug_sum) << "\n";
-        //         std::cout << "describing the instance: clusters.size() = " << clusters.size() << "\n";
-        //         std::cout << "p_j_downregulated_given_c_bound_values_flattened, p_c_bound_values_flattened\n";
-        //         for(int j = 0; j < clusters.size(); j++) {
-        //             std::cout << p_j_downregulated_given_c_bound_values_flattened[j] << ", " << p_c_bound_values_flattened[j] << "\n";
-        //         }
-        //         exit(1);
-        //     }            
-        //     genes_debugged++;
-        // } else {
-        //     genes_not_debugged++;
-        // }
+        /*
+          // begin debug code
+          // safety check for genes with at most "cluster_limit" clusters
+          if(clusters.size() <= cluster_limit) {
+              double debug_sum = 0;
+              this->recusively_compute_p_j_downregulated(b, 0, clusters.size(), &debug_sum, 1, 1, p_j_downregulated_given_c_bound_values_flattened, p_c_bound_values_flattened);
+              if(std::abs(sum - debug_sum) > Global_parameters::epsilon) {
+                  std::cerr << "error: sum = " << sum << ", debug_sum = " << debug_sum << ", std::abs(sum - debug_sum) = " << std::abs(sum - debug_sum) << "\n";
+                  std::cout << "describing the instance: clusters.size() = " << clusters.size() << "\n";
+                  std::cout << "p_j_downregulated_given_c_bound_values_flattened, p_c_bound_values_flattened\n";
+                  for(int j = 0; j < clusters.size(); j++) {
+                      std::cout << p_j_downregulated_given_c_bound_values_flattened[j] << ", " << p_c_bound_values_flattened[j] << "\n";
+                  }
+                  exit(1);
+              }            
+              genes_debugged++;
+          } else {
+              genes_not_debugged++;
+          }
+          std::cout << "genes_debugged/total_genes: " << genes_debugged << "/" << (genes_debugged + genes_not_debugged) << " = " << ((double)genes_debugged)/(genes_debugged + genes_not_debugged) << "\n";
+          std::cout << "finished, ";
+          Timer::stop();
+          delete [] b;
+          // end debug code
+        */
     }
-    delete [] b;
     delete [] p_j_downregulated_given_c_bound_values_flattened;
     delete [] p_c_bound_values_flattened;
     std::cout << "\n";
-
-    // std::cout << "genes_debugged/total_genes: " << genes_debugged << "/" << (genes_debugged + genes_not_debugged) << " = " << ((double)genes_debugged)/(genes_debugged + genes_not_debugged) << "\n";
-    // std::cout << "finished, ";
-    // Timer::stop();
 }
 
 /*
@@ -779,6 +807,7 @@ void Matchings_predictor::export_p_j_downregulated(int filename_suffix)
     std::stringstream ss;
     std::cout << "exporting p_j_downregulated_values\n";
     // Timer::start();
+
     ss << "gene_id\tp_j_downregulated_values\n";
     if(filename_suffix > 0) {
         for(auto & e: this->p_j_downregulated_values) {
@@ -792,6 +821,7 @@ void Matchings_predictor::export_p_j_downregulated(int filename_suffix)
             ss << gene_id << "\t" << 0 << "\n";
         }
     }
+
     std::stringstream filename;
     filename << this->get_output_path() << "predicted_downregulation/p_j_downregulated_values_" << std::setfill('0') << std::setw(6) << filename_suffix << ".tsv";
     std::ofstream out(filename.str());

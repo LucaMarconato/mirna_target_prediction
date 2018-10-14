@@ -1,5 +1,6 @@
 {
-    "mirna_threshold_rpm": 200.0,
-    "gene_threshold_rpm": 10.0,
-    "lambda": 1.0
+	"mirna_threshold_rpm": 200,
+	"gene_threshold_rpm": 10,
+	"lambda": 1,
+	"test_parallelization": true
 }

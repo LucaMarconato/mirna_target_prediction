@@ -12,6 +12,7 @@ double Global_parameters::gene_threshold_rpm;
 // TODO: this has to be chosen wisely looking at the relative expression profiles of mirnas, genes, sites and clusters
 double Global_parameters::epsilon = 0.00000001;
 double Global_parameters::lambda;
+bool Global_parameters::test_parallelization;
 
 void Global_parameters::load_from_json()
 {
@@ -24,4 +25,5 @@ void Global_parameters::load_from_json()
     Global_parameters::mirna_threshold_rpm = j["mirna_threshold_rpm"].get<double>();
     Global_parameters::gene_threshold_rpm = j["gene_threshold_rpm"].get<double>();
     Global_parameters::lambda = j["lambda"].get<double>();
+    Global_parameters::test_parallelization = j["test_parallelization"].get<bool>();
 }
