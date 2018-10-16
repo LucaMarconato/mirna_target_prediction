@@ -22,7 +22,7 @@ std::string Seed_match_type::format_mirna_matching(Seed_match_type::Mirna_site_m
         return "canonical_8mer";
     case canonical_7mer_m8:
         return "canonical_7mer_m8";
-    case canonical_7mer_A1:
+    case canonical_7mer_a1:
         return "canonical_7mer_A1";
     case canonical_6mer:
         return "canonical_6mer";

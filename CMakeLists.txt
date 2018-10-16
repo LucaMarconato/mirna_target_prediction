@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.6)
 project(expression_profiles)
-# add_compile_options(-std=c++14 -Ofast)
-add_definitions("-std=c++14 -Wall -Wextra -Wpedantic -g -O0")
+add_compile_options(-std=c++14 -Ofast)
+# add_definitions("-std=c++14 -Wall -Wextra -Wpedantic -g -O0")
 
 # add_definitions("-std=c++14 -Ofast")
 # add_compile_options(-std=c++14 -Wall -g -O0)

@@ -178,7 +178,7 @@ void Matchings_predictor::export_interaction_matrix()
 void Matchings_predictor::compute()
 {
     std::cout << "for the moment, just a trivial explicit Euler scheme\n";
-    unsigned long long max_steps = 100;
+    unsigned long long max_steps = 10;
     double mirna_lambda = 1;
     double cluster_lambda = 1;
     if(lambda > 1) {
@@ -190,9 +190,9 @@ void Matchings_predictor::compute()
     double h = 1;
     bool scaling = true;
     double cumulative_scaling = 1;
-    bool logging = false;
-    bool export_mirna_expression_profile = true;
-    bool export_cluster_expression_profile = true;
+    bool logging = true;
+    bool export_mirna_expression_profile = false;
+    bool export_cluster_expression_profile = false;
     bool export_interaction_matrix = false;
     bool export_partial_predicted_downregulation = false;
     if(Global_parameters::test_parallelization) {

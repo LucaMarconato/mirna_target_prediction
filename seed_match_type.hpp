@@ -11,7 +11,7 @@ public:
     enum Mirna_site_matching {
 		canonical_8mer,
 		canonical_7mer_m8,
-		canonical_7mer_A1,
+		canonical_7mer_a1,
 		canonical_6mer,
 		canonical_offset_6mer,
 		non_canonical,

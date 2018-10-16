@@ -3,6 +3,7 @@ library(purrr)
 library(raster)
 library(RColorBrewer)
 library(plotrix)
+library(gridExtra)
 library(lattice)
 library(latticeExtra)
 
@@ -435,12 +436,20 @@ analyze_probabilities <- function(patient_folder, simulation_output_path)
     abline(v = which.min(abs(cd - tail(cd, n = 1)*3/4)))
 }
 
-analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_output_paths)
+analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_output_paths, gene_ids = NULL, consider_only_specified_gene_ids = F)
 {
-    print("analyzing predictions of perturbed data")
+    print("analyzing predictions of perturbed data")    
+    if(consider_only_specified_gene_ids) {
+        if(is.null(gene_ids)) {
+            print(paste("error: is.null(gene_ids) = ", is.null(gene_ids), ", consider_only_specified_gene_ids = ", consider_only_specified_gene_ids, sep = ""))
+            stop("abort")
+        }
+    }
     filename <- paste(patient_folder, "tumor_gene_expression_profile.tsv", sep = "")
     b <- read.table(filename, header = T, colClasses = c("numeric", "numeric"))
     genes_ordered <- NULL
+
+    message_about_gene_ids_already_printed <<- F
     
     plot_dataset <- function(dataset_index) {
         predicted_downregulation_folder <- paste(simulation_output_paths[[dataset_index]], "predicted_downregulation", sep = "")
@@ -454,9 +463,14 @@ analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_out
             genes_ordered <- t$gene_id[my_order]
         }
         my_order <- match(genes_ordered, t$gene_id)
-        x_data <- 1:length(t$final_rpm)
+        x_data <- 1:length(t$final_rpm)        
         y_data <- t$final_rpm[my_order]
+        is_the_id_in_gene_ids <- (t$gene_id[my_order] %in% gene_ids)
         original_y_data <- t$rpm[my_order]
+        if(message_about_gene_ids_already_printed == F) {
+            message_about_gene_ids_already_printed <<- T
+            print(paste(length(is_the_id_in_gene_ids), " genes in the interaction graph, of which ", sum(is_the_id_in_gene_ids), " are considered in the gene_ids variable"))
+        }
 
         rows <- 10
         ## if(i > 1) {
@@ -488,11 +502,25 @@ analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_out
         for(i in seq_len(rows)){
             x_data_split <- x_data[u_split[[i]]]
             y_data_split <- y_data[u_split[[i]]]
+            is_the_id_in_gene_ids_split <- is_the_id_in_gene_ids[u_split[[i]]]
             original_y_data_split <- original_y_data[u_split[[i]]]
             y_lim_split <- c(0, max(original_y_data_split))
 
-            plot(x_data_split, y_data_split, ylim = y_lim_split, pch = 20)
-            points(x_data_split, original_y_data_split, ylim = y_lim_split, col = "red", pch = ".")
+            ## plotting points corresponding to the selected gene_ids
+            x_to_plot <- x_data_split[is_the_id_in_gene_ids_split == T]
+            y_to_plot <- y_data_split[is_the_id_in_gene_ids_split == T]
+            original_y_to_plot <- original_y_data_split[is_the_id_in_gene_ids_split == T]
+            plot(x_to_plot, y_to_plot, ylim = y_lim_split, col = "red", pch = 20)
+            points(x_to_plot, original_y_to_plot, ylim = y_lim_split, col = "red", pch = ".")
+            
+            ## plotting the remaining points (if consider_only_specified_gene_ids is FALSE)
+            if(consider_only_specified_gene_ids == F) {
+                x_to_plot <- x_data_split[is_the_id_in_gene_ids_split == F]
+                y_to_plot <- y_data_split[is_the_id_in_gene_ids_split == F]
+                original_y_to_plot <- original_y_data_split[is_the_id_in_gene_ids_split == F]
+                points(x_to_plot, y_to_plot, ylim = y_lim_split, col = "black", pch = 20)
+                points(x_to_plot, original_y_to_plot, ylim = y_lim_split, col = "black", pch = ".")
+            }
         }
         dev.off()
     }
@@ -502,46 +530,73 @@ analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_out
     }
 }
 
-compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL, choice = NULL)
+compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL, consider_only_specified_gene_ids = F, choice = NULL)
 {
     if(is.null(choice)) {
-        compute_pairwise_distances(simulation_output_paths, gene_ids, "ratio")
-        compute_pairwise_distances(simulation_output_paths, gene_ids, "spearman")
-        compute_pairwise_distances(simulation_output_paths, gene_ids, "euclidean")
+        compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, "ratio")
+        compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, "spearman")
+        compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, "euclidean")
         return()
     }
     dataframes <- lapply(simulation_output_paths,
                          function(x) read.table(paste(x, "predicted_downregulation/p_j_downregulated_values_999999.tsv", sep = ""), header = T, colClasses = c("numeric", "numeric")))
-    if(!is.null(gene_ids)) {
-        dataframes <- lapply(dataframes, function(x) x[x$gene_id %in% gene_ids, ])
-    }
+    ## if(!is.null(gene_ids)) {
+    ##     dataframes <- lapply(dataframes, function(x) x[x$gene_id %in% gene_ids, ])
+    ## }
     n <- length(dataframes)
+    if(n < 2) {
+        print(paste("error: n = ", n, sep = ""))
+        stop("abort")
+    }
     new_maximized_device()
     my_widths <- c(lcm(1), rep(1, n))
     my_heights <- c(lcm(1), rep(1, n))
     layout(matrix(1:(n+1)^2, n+1, n+1, byrow = T), widths = my_widths, heights = my_heights)
     distance_matrix <<- matrix(rep(0, n^2), n, n)
 
-    my_distance <- function(x_i, x_j)
-    {        
+    my_distance <- function(x_i, x_j, is_the_id_in_gene_ids, consider_only_specified_gene_ids)
+    {
+        x_i_gene_ids <- x_i[is_the_id_in_gene_ids]
+        x_j_gene_ids <- x_j[is_the_id_in_gene_ids]
+        x_i_not_gene_ids <- x_i[!is_the_id_in_gene_ids]
+        x_j_not_gene_ids <- x_j[!is_the_id_in_gene_ids]
+        if(consider_only_specified_gene_ids) {
+            x_i_considered <- x_i
+            x_j_considered <- x_j
+        } else {
+            x_i_considered <- x_i
+            x_j_considered <- x_j
+        }
         if(choice == "ratio") {
             par(mar = c(2, 2, 1, 0))
-            ratios <- sapply(1:length(x_i), function(k) min(x_i[k]/x_j[k], x_j[k]/x_i[k]))
+            ## both_zero <- x_i_considered < 10^(-10) & x_j_considered < 10^(-10)
+            ## x_i_considered <- x_i_considered[!both_zero]
+            ## x_j_considered <- x_j_considered[!both_zero]
+            ratios <- sapply(1:length(x_i_considered), function(k)
+            {
+                min(x_i_considered[k]/x_j_considered[k],
+                    x_j_considered[k]/x_i_considered[k])
+            })
+            ## there is a nan when for an index both x_i_considered and x_j_considered are zero
+            ratios <- ratios[!is.na(ratios)]
             hist(ratios, main = "")
             return(mean(ratios))   
         } else if(choice == "spearman") {
-            correlation <- cor(x_i, x_j, method = "spearman")
+            ## browser()
+            correlation <- cor(x_i_considered, x_j_considered, method = "spearman")
             name_i <- basename(simulation_output_paths[[i]])
             name_j <- basename(simulation_output_paths[[j]])
-            plot(x_i, x_j, main = paste("r_s = ", round(correlation, 2), " (", name_i, " vs ", name_j, ")"), cex.main = 0.8, xlab = "", ylab = "", xaxt = "n", yaxt = "n")
+            plot(x_i_gene_ids, x_j_gene_ids, col = "red", main = paste("r_s = ", round(correlation, 2), " (", name_i, " vs ", name_j, ")"), cex.main = 0.8, xlab = "", ylab = "", xaxt = "n", yaxt = "n", pch = ".")
+            points(x_i_not_gene_ids, x_j_not_gene_ids, col = "black", pch = ".")
             return(correlation)
         } else if(choice == "euclidean") {
+            ## browser()
             par(mar = c(2, 2, 1, 0))
-            hist((x_i - x_j)^2, main = "")
-            return(sqrt(sum((x_i - x_j)^2)))
+            hist((x_i_considered - x_j_considered)^2, main = "")
+            return(sqrt(sum((x_i_considered - x_j_considered)^2)))
         }       
     }
-    par(mar = c(0, 0, 2, 0))    
+    par(mar = c(0, 0, 2, 0))
     for(i in 0:n) {
         for(j in 0:n) {
             if(i == j) {
@@ -571,41 +626,78 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
             df_j <- df_j[order(df_j$gene_id), ]
             x_i <- df_i$p_j_downregulated_values
             x_j <- df_j$p_j_downregulated_values
-            distance_matrix[i,j] <<- my_distance(x_i, x_j)
+            if(is.null(gene_ids)) {
+                is_the_id_in_gene_ids <- rep(T, length(x_i))
+            } else {
+                ## browser()
+                is_the_id_in_gene_ids <- (df_i$gene_id %in% gene_ids)
+                is_the_id_in_gene_ids_test <- (df_j$gene_id %in% gene_ids)
+                s <- sum(is_the_id_in_gene_ids != is_the_id_in_gene_ids_test)
+                if(s > 0) {
+                    print(paste("error: sum(is_the_id_in_gene_ids != is_the_id_in_gene_ids_test) = ", s, " > 0", sep = ""))
+                    stop("abort")
+                }
+            }
+            distance_matrix[i,j] <<- my_distance(x_i, x_j, is_the_id_in_gene_ids, consider_only_specified_gene_ids)
         }
     }    
     print(round(distance_matrix, 1))
     new_maximized_device()
-    ## browser()
     my_labels <- unlist(lapply(simulation_output_paths, function(x) basename(x)))
     rownames(distance_matrix) <- my_labels
     colnames(distance_matrix) <- my_labels
-    m <- distance_matrix[, n:1]
+    m <- distance_matrix
     if(choice == "ratio") {
         color_order <- c("black", "white")
+        diag(m) <- rep(1, dim(m)[[1]])
     } else if(choice == "spearman") {
         color_order <- c("black", "white")
+        diag(m) <- rep(1, dim(m)[[1]])
     } else if(choice == "euclidean") {
         color_order <- c("white", "black")
     }
     rgb.palette <- colorRampPalette(color_order, space = "rgb")
     my_colors <- rgb.palette(120)
-    my_positions <- seq(min(m + diag(max(m), n)[, n:1]), max(m), length.out = 100)
-    lattice.options(axis.padding=list(factor=0.5))
-    obj <- levelplot(m, main = paste("matrix for distance \"", choice, "\"", sep = "" ),
-                   xlab = "", ylab = "", 
-                   cuts = 100,
-                   col.regions = my_colors,
-                   at = my_positions,
-                   colorkey = list(col = my_colors, at = my_positions),
-                   scales = list(y = list(rot = 0), x = list(rot = 0), cex = 0.5),
-                   ## panel = function(y, x, ...) {
-                   ##     ltext(x = x, y = y, labels = round(m, 1), cex = 1, font = 2,
-                   ##           fontfamily = "HersheySans")
-                   ## }
-                   )
-    print(obj)
-    ## axis(1, at = 1:n, labels = my_labels)
+    if(choice == "ratio") {
+        my_positions1 <- seq(0, 1, length.out = 100)
+    } else if(choice == "spearman") {
+        my_positions1 <- seq(0, 1, length.out = 100)
+    } else if(choice == "euclidean") {
+        my_positions1 <- seq(0, max(m), length.out = 100)
+    }
+
+    m_without_diag <- m
+    diag(m) <- NA
+    my_positions2 <- seq(min(m, na.rm = T), max(m, na.rm = T), length.out = 100)
+    if(length(unique(my_positions2)) == 1) {
+        if(max(m) != 0) {
+            my_positions2 <- seq(0, max(m), length.out = 100)   
+        } else {
+            ## remember that the min is equal to max(m)
+            my_positions2 <- seq(min(m + diag(max(m), n)[, n:1]), 1, length.out = 100)
+        }
+    }
+    m <- m[, n:1]
+
+    lattice.options(axis.padding=list(factor=0.5))    
+    my_levelplot <- function(my_positions) {
+        obj <- levelplot(m, main = paste("matrix for distance \"", choice, "\"", sep = "" ),
+                         xlab = "", ylab = "", 
+                         cuts = 100,
+                         col.regions = my_colors,
+                         at = my_positions,
+                         colorkey = list(col = my_colors, at = my_positions),
+                         scales = list(y = list(rot = 0), x = list(rot = 45), cex = 0.5),
+                         ## panel = function(y, x, ...) {
+                         ##     ltext(x = x, y = y, labels = round(m, 1), cex = 1, font = 2,
+                         ##           fontfamily = "HersheySans")
+                         ## }
+                         )
+        return(obj)
+    }
+    plot1 <- my_levelplot(my_positions1)
+    plot2 <- my_levelplot(my_positions2)
+    grid.arrange(plot1, plot2, ncol = 2)
 }
 
 patient_id <- "TCGA-CJ-4642"
@@ -613,8 +705,8 @@ patient_id <- "TCGA-CJ-4642"
 ## patient_id <- "artificial1"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
 
-simulation_id <- "p__0__1_0_"
-simulation_output_path <- paste(patient_folder, "matchings_predictor_output/", "original_data", "/", sep = "")
+simulation_id <- "original_data"
+simulation_output_path <- paste(patient_folder, "matchings_predictor_output/", simulation_id, "/", sep = "")
 close_all_devices()
 ## analyze_convergence(simulation_output_path)
 ## generate_readable_dynamics_log(simulation_output_path)
@@ -625,20 +717,37 @@ close_all_devices()
 
 simulation_output_paths <- c()
 simulation_output_paths <- c(simulation_output_paths, simulation_output_path)
+## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "g__87__3_0_", "/", sep = ""))
+## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__100_0_", "/", sep = ""))
+## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__10_0_", "/", sep = ""))
+## ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__1_0_lambda2", "/", sep = ""))
+## ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__0.1_0_", "/", sep = ""))
+## ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__-0.5_0_", "/", sep = ""))
+## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__-1_0_", "/", sep = ""))
+## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__-0.9_0_", "/", sep = ""))
 
-simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "g__87__3_0_", "/", sep = ""))
 
-simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__100_0_", "/", sep = ""))
-simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__10_0_", "/", sep = ""))
-## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__1_0_lambda2", "/", sep = ""))
-## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__0.1_0_", "/", sep = ""))
-## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__-0.5_0_", "/", sep = ""))
-simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__-1_0_", "/", sep = ""))
-simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__-0.9_0_", "/", sep = ""))
-## analyze_predictions_of_perturbed_data(patient_folder, simulation_output_paths)
+## bad code, it is just to get the results quickly
+first_n_mirnas_to_perturb <- 10
+if(first_n_mirnas_to_perturb > 10) {
+    print(paste("error: first_n_mirnas_to_perturb = ", first_n_mirnas_to_perturb, sep = ""))
+    stop("abort")
+}
+for(i in seq_len(first_n_mirnas_to_perturb)) {
+    simulation_id <- paste("p__", i - 1, "__-1_0_", sep = "")
+    simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", simulation_id, "/", sep = ""))
+}
+stop("TODO: GENE IDS MUST BE COMPUTED ON SINGLE OR PAIRS OF EXPERIMENTS CHANGE THAT")
+mirnas_considered <- c(397, 1092, 625, 2243, 250, 2466, 1939, 1234, 1137, 728)[1:first_n_mirnas_to_perturb]
+gene_ids <- c()
+for(mirna_id in mirnas_considered) {
+    filename <- paste("interactions/mirna_id", mirna_id, "_interactions.rds", sep = "")
+    gene_ids_for_mirna <- readRDS(filename)
+    gene_ids <- unique(c(gene_ids, gene_ids_for_mirna))
+}
 
-gene_ids <- readRDS("interactions/mirna_id397_interactions.rds")
-compute_pairwise_distances(simulation_output_paths, gene_ids)
+analyze_predictions_of_perturbed_data(patient_folder, simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F)
+compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F)
 
 ## compute_pairwise_distances(simulation_output_paths)
 end_browser_plot()
