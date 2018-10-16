@@ -25,6 +25,7 @@ INTERESTING BUT NOT NOW
 * TODO check different RPM and choose the right treshold based on different samples and of the variance
 * TODO highlight the differences in the response between normal and tumor samples
 NOT NOW OR NOT IMPORTANT
+* TODO sites_with_scored_interactions.tsv should not contain the site type
 * TODO check that "reads_per_million_miRNA_mapped" is equal to the RPM computed on "reads"
 * TODO apply the changes I have been suggested in Python code
 * TODO implicit first order approximation

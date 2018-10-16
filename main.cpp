@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <boost/filesystem.hpp>
+
 #include "global_parameters.hpp"
 #include "mirna.hpp"
 #include "gene.hpp"
@@ -9,6 +11,10 @@
 
 int main(int argc, char * argv[])
 {
+    std::cout << "argv[0] = " << argv[0] << "\n";
+    boost::filesystem::path full_path(boost::filesystem::current_path());
+    std::cout << "Current path is: " << full_path << std::endl;
+    
     Global_parameters::load_from_json();
     Mirna::initialize_mirna_dictionary();
     Gene::initialize_gene_dictionary();

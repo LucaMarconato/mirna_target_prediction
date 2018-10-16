@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <cstdio>
+#include <cstring>
 
 void valid_length(char * str0, char * str1, int length)
 {
