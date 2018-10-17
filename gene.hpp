@@ -27,8 +27,8 @@ public:
     template<class Archive>
     void serialize(Archive & ar, const unsigned int);
     static void initialize_gene_dictionary();
-    static void print_gene_dictionary(unsigned int max_rows = -1);
-    
+    static void print_gene_dictionary(unsigned int max_rows = -1);   
+
     friend bool operator<(Gene const & lhs, Gene const & rhs);
     friend std::ostream & operator<<(std::ostream & stream, const Gene & o);
     // for accessing the private default constructor
