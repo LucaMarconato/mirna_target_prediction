@@ -8,14 +8,14 @@
 * DONE check the rate of convergence independently of the magnitude of the mirna level
 * DONE plot the animation for clusters
 * DONE compute the exchange for all the pairs, both the instant one and the cumulative
+* DONE check the gene with id 118 (the gene indexing was wrong)
+* DONE complete the code for the gaussian perturbation
+* DONE find the mRNAs which are most influenced, both perturbing the base level and adding some copies to the knocked-down dataset; look both at log-ratio and at Spearman's correlation coefficient
 * TODO stability of the method, for the expression levels, the exchange and the context (do it in the log-scale to have comparable constant variance)
 * TODO find the elements which cause most of the variability in the method
-* TODO check the gene with id 118
 * TODO check the simulation with conserved only
 * TODO in cons and non-cons check if the simpler methods would work, if not how many rows do not make it possible
-* TODO complete the code for the gaussian perturbation
 * TODO perturb the mRNA
-* TODO find the mRNAs which are most influenced, both perturbing the base level and adding some copies to the knocked-down dataset; look both at log-ratio and at Spearman's correlation coefficient
 * TODO adjust the amplication factor with the log
 * TODO investigate the ceRNA hypothesis by perturbing few mRNAs
 * TODO use TargetScan data for comparing the prediction with miRanda
@@ -40,6 +40,3 @@ TO FINISH THE THESIS
 * TODO build the multiple linear regression model
 BONUS
 * TODO use the tool to find (with bruteforce and stepwise approach) to find a set of artificial sequences to insert in the cell colture to minimise the differences in down-regulation between normal and tumor cells
-TO PAAL
-* DONE show plot with cumulative down-regulation
-* DONE show results of the perturbation analysis

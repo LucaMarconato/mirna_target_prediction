@@ -232,13 +232,12 @@ plot_overlapping_sites_insights <- function(patient_folder)
     ## I should use data.table instead of the code that I wrote
     filename <- paste(patient_folder, "overlapping_sites.tsv", sep = "")
     a <- read.table(filename, header = T)
-    aggregate_values <- unlist(lapply(unique(a[[1]]), function(x) max(a[a[[1]] == x,2])))
-    ## aggregate_values <- unlist(lapply(unique(a[[1]]), function(x) length(a[a[[1]] == x,2])))
+    ## aggregate_values <- unlist(lapply(unique(a[[1]]), function(x) max(a[a[[1]] == x,2])))
+    aggregate_values <- unlist(lapply(unique(a[[1]]), function(x) length(a[a[[1]] == x,2])))
     gene_id_to_aggregate_value <- hashmap(unique(a[[1]]), aggregate_values)
     aggregate_values_columns <- gene_id_to_aggregate_value[[a[[1]]]]
     a <- cbind(a, aggregate_values_columns)
     a <- a[order(a[,4]),]
-
     new_maximized_device()
     rows <- 1
     layout(matrix(1:rows,rows,1))
@@ -439,10 +438,10 @@ patient_id <- "TCGA-CJ-4642"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
 close_all_devices()
 ## plot_adjacency_matrix_insights(patient_folder)
-plot_expression_profiles_insights(patient_folder)
-plot_overlapping_sites_insights(patient_folder)
-study_overlaps_of_specific_gene(patient_folder)
-## study_overlaps_of_specific_gene(patient_folder, gene_id = 118)
-## study_overlaps_of_specific_gene(patient_folder, gene_id = 10456)
+## plot_expression_profiles_insights(patient_folder)
+## plot_overlapping_sites_insights(patient_folder)
+## study_overlaps_of_specific_gene(patient_folder)
+study_overlaps_of_specific_gene(patient_folder, gene_id = 116)
+study_overlaps_of_specific_gene(patient_folder, gene_id = 1213)
 ## study_clusters(patient_folder)
-
+end_browser_plot()
