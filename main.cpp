@@ -77,11 +77,11 @@ int main(int argc, char * argv[])
     //                           Perturbation_target(Perturbation_target::Empty_target()),
     //                           1, double());
     
-    perturbation_analyzer.run(Perturbation_type::Point_perturbation,
-                              Perturbation_type::No_perturbation,
-                              Perturbation_target(Perturbation_target::Nth_largest_element(0)),
-                              Perturbation_target(Perturbation_target::Empty_target()),
-                              10, double());
+    // perturbation_analyzer.run(Perturbation_type::Point_perturbation,
+    //                           Perturbation_type::No_perturbation,
+    //                           Perturbation_target(Perturbation_target::Nth_largest_element(0)),
+    //                           Perturbation_target(Perturbation_target::Empty_target()),
+    //                           10, double());
     
     // perturbation_analyzer.run(Perturbation_type::Point_perturbation,
     //                           Perturbation_type::No_perturbation,
