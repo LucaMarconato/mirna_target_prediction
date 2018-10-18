@@ -1,5 +1,3 @@
-
-
 * DONE find the distribution of the length of the clusters and prepare the clustering procedure
 * DONE fix omp
 * DONE small cases
@@ -11,6 +9,8 @@
 * DONE check the gene with id 118 (the gene indexing was wrong)
 * DONE complete the code for the gaussian perturbation
 * DONE find the mRNAs which are most influenced, both perturbing the base level and adding some copies to the knocked-down dataset; look both at log-ratio and at Spearman's correlation coefficient
+* TODO systhematic perturbation by a fixed amount
+* TODO more plots on gaussian perturbation
 * TODO stability of the method, for the expression levels, the exchange and the context (do it in the log-scale to have comparable constant variance)
 * TODO find the elements which cause most of the variability in the method
 * TODO check the simulation with conserved only

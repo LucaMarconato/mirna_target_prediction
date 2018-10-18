@@ -5,7 +5,7 @@
 
 #include "timer.hpp"
 
-// // --------------------Perturbation_target--------------------
+// --------------------Perturbation_target--------------------
 
 std::string Perturbation_target::string_id()
 {
@@ -25,6 +25,20 @@ std::string Perturbation_target::string_id()
     return ss.str();
 }
 
+// --------------------Perturbation_extent--------------------
+
+std::string Perturbation_extent::string_id()
+{
+    std::stringstream ss;
+    if(this->relative_perturbation.is_valid) {
+        ss << "r" << this->relative_perturbation.value;
+    }
+    if(this->absolute_perturbation.is_valid) {
+        ss << "a" << this->absolute_perturbation.value;
+    }
+    return ss.str();
+}
+
 // --------------------Perturbation_analyzer--------------------
 
 Perturbation_analyzer::Perturbation_analyzer(Patient & patient) : patient(patient) {}
@@ -33,24 +47,24 @@ void Perturbation_analyzer::run(Perturbation_type mirna_perturbation_type,
                                 Perturbation_type gene_perturbation_type,
                                 Perturbation_target mirna_perturbation_target,
                                 Perturbation_target gene_perturbation_target,
-                                double mirna_perturbation_amplifier,
-                                double gene_perturbation_amplifier,
+                                Perturbation_extent mirna_perturbation_extent,
+                                Perturbation_extent gene_perturbation_extent,
                                 std::string output_name_suffix)
 {
     this->mirna_perturbation_type = mirna_perturbation_type;
     this->gene_perturbation_type = gene_perturbation_type;
     this->mirna_perturbation_target = mirna_perturbation_target;
     this->gene_perturbation_target = gene_perturbation_target;
-    this->mirna_perturbation_amplifier = mirna_perturbation_amplifier;
-    this->gene_perturbation_amplifier = gene_perturbation_amplifier;
+    this->mirna_perturbation_extent = mirna_perturbation_extent;
+    this->gene_perturbation_extent = gene_perturbation_extent;
     this->integrity_check();
     simulation_id.str("");
     simulation_id << (mirna_perturbation_type == Perturbation_type::Point_perturbation ? "p" : (mirna_perturbation_type == Perturbation_type::Gaussian_perturbation) ? "g" : "") << "_"
                   << (gene_perturbation_type == Perturbation_type::Point_perturbation ? "p" : (gene_perturbation_type == Perturbation_type::Gaussian_perturbation) ? "g" : "") << "_"
                   << mirna_perturbation_target.string_id() << "_"
                   << gene_perturbation_target.string_id() << "_"
-                  << mirna_perturbation_amplifier << "_"
-                  << gene_perturbation_amplifier << "_"
+                  << mirna_perturbation_extent.string_id() << "_"
+                  << gene_perturbation_extent.string_id() << "_"
                   << output_name_suffix;
     this->perturb();
     this->matchings_predictor->compute();    
@@ -89,7 +103,14 @@ void Perturbation_analyzer::integrity_check()
     if(gene_perturbation_type == Perturbation_type::Gaussian_perturbation &&
        !gene_perturbation_target.elements_from_nth_largest.is_valid) {
         error = true;
-    }    
+    }
+
+    if(mirna_perturbation_extent.relative_perturbation.is_valid + mirna_perturbation_extent.absolute_perturbation.is_valid + mirna_perturbation_extent.no_perturbation.is_valid != 1) {
+        error = true;
+    }
+    if(gene_perturbation_extent.relative_perturbation.is_valid + gene_perturbation_extent.absolute_perturbation.is_valid + gene_perturbation_extent.no_perturbation.is_valid != 1) {
+        error = true;
+    }
 
     if(error) {
         std::cerr << "error: integrity check failed\n";
@@ -150,7 +171,13 @@ void Perturbation_analyzer::perturb()
             std::cout << "mirna_id = " << mirna_id << "\n";
             double reads = this->perturbed_patient.tumor_mirnas.profile.at(mirna_id).to_reads();
             // when studying the gaussian perturbation you may to use (1 + sigma + exp(sigma/expression_level)) instead of the formula used
-            reads *= (1 + this->mirna_perturbation_amplifier);
+            if(this->mirna_perturbation_extent.relative_perturbation.is_valid) {
+                reads *= (1 + this->mirna_perturbation_extent.relative_perturbation.value);
+            } else if(this->mirna_perturbation_extent.absolute_perturbation.is_valid) {
+                double rpm_to_add = this->mirna_perturbation_extent.absolute_perturbation.value;
+                double reads_to_add = rpm_to_add/1000000*this->perturbed_patient.tumor_mirnas.profile.at(mirna_id).get_grand_total();
+                reads += reads_to_add;
+            }
             this->perturbed_patient.tumor_mirnas.profile[mirna_id] = Reads(reads);
         } else {
             std::cerr << "error: exception in this->mirna_perturbation_type == Perturbation_type::Point_perturbation\n";
@@ -197,7 +224,13 @@ void Perturbation_analyzer::perturb()
             for(auto & mirna_id : to_process) {
                 double reads = this->perturbed_patient.tumor_mirnas.profile.at(mirna_id).to_reads();
                 // when studying the gaussian perturbation you may to use (1 + sigma + exp(sigma/expression_level)) instead of the formula used
-                reads *= (1 + this->mirna_perturbation_amplifier);
+                if(this->mirna_perturbation_extent.relative_perturbation.is_valid) {
+                    reads *= (1 + this->mirna_perturbation_extent.relative_perturbation.value);
+                } else if(this->mirna_perturbation_extent.absolute_perturbation.is_valid) {
+                    double rpm_to_add = this->mirna_perturbation_extent.absolute_perturbation.value;
+                    double reads_to_add = rpm_to_add/1000000*this->perturbed_patient.tumor_mirnas.profile.at(mirna_id).get_grand_total();
+                    reads += reads_to_add;
+                }
                 this->perturbed_patient.tumor_mirnas.profile[mirna_id] = Reads(reads);   
             }
         } else {
