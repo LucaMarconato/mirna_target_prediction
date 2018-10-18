@@ -539,12 +539,13 @@ analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_out
 compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL, consider_only_specified_gene_ids = F, consider_relative_changes, choice = NULL)
 {
     if(is.null(choice)) {
+        scores <- list()
         ## compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, "ratio")
-        compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, "spearman")
-        compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, "average")
-        compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, "euclidean")
-        compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, "norm1")
-        return()
+        scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, "spearman")
+        scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, "average")
+        scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, "euclidean")
+        scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, "norm1")       
+        return(scores)
     }
     dataframes <- lapply(simulation_output_paths,
                          function(x) read.table(paste(x, "predicted_downregulation/p_j_downregulated_values_999999.tsv", sep = ""), header = T, colClasses = c("numeric", "numeric")))
@@ -556,11 +557,12 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
         print(paste("error: n = ", n, sep = ""))
         stop("abort")
     }
-    plot_only_the_levelplot <- F
+    ## to speed up the function
+    plot_only_essentials <- F
     if(n > 15) {
-        plot_only_the_levelplot <- T
+        plot_only_essentials <- T
     }
-    if(!plot_only_the_levelplot) {
+    if(!plot_only_essentials) {
         new_maximized_device()
         my_widths <- c(lcm(1), rep(1, n))
         my_heights <- c(lcm(1), rep(1, n))
@@ -606,7 +608,7 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
             })
             ## there is a nan when for an index both x_i_considered and x_j_considered are zero
             ratios <- ratios[!is.na(ratios)]
-            if(!plot_only_the_levelplot) {
+            if(!plot_only_essentials) {
                 par(mar = c(2, 2, 1, 0))
                 hist(ratios, main = "")
             }
@@ -616,7 +618,7 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
             correlation <- cor(x_i_considered, x_j_considered, method = "spearman")
             name_i <- basename(simulation_output_paths[[i]])
             name_j <- basename(simulation_output_paths[[j]])
-            if(!plot_only_the_levelplot) {
+            if(!plot_only_essentials) {
                 par(mar = c(0, 0, 2, 0))
                 ## red_color <- rgb(1, 0, 0, 0.01)
                 red_color <- "red"
@@ -632,7 +634,7 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
             }            
             return(correlation)
         } else if(choice == "average") {
-            if(!plot_only_the_levelplot) {
+            if(!plot_only_essentials) {
                 par(mar = c(2, 2, 1, 0))
                 ## hist((x_i_considered - x_j_considered)/length(x_i_considered), main = "")
                 plot(density((x_i_considered - x_j_considered)/length(x_i_considered)), main = "")
@@ -642,13 +644,13 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
             return(mean(x_i_considered - x_j_considered))
         } else if(choice == "euclidean") {
             ## browser()
-            if(!plot_only_the_levelplot) {
+            if(!plot_only_essentials) {
                 par(mar = c(2, 2, 1, 0))
                 hist((x_i_considered - x_j_considered)^2, main = "")
             }
             return(sqrt(sum((x_i_considered - x_j_considered)^2)))
         } else if(choice == "norm1") {
-            if(!plot_only_the_levelplot) {
+            if(!plot_only_essentials) {
                 par(mar = c(2, 2, 1, 0))
                 hist(abs(x_i_considered - x_j_considered), main = "")
             }
@@ -658,14 +660,14 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
     for(i in 0:n) {
         for(j in 0:n) {
             if(i == j) {
-                if(!plot_only_the_levelplot) {
+                if(!plot_only_essentials) {
                     par(mar = c(0, 0, 2, 0))
                     plot.new()
                 }
                 next
             }
             if(i == 0) {
-                if(!plot_only_the_levelplot) {
+                if(!plot_only_essentials) {
                     par(mar = c(0, 0, 0, 0))
                     plot(c(0, 1), c(0, 1), ann = F, bty = "n", type = "n", xaxt = "n", yaxt = "n")
                     rect(par("usr")[1],par("usr")[3],par("usr")[2],par("usr")[4],col = rgb(0.4, 0.4, 0.4, 0.5))
@@ -676,7 +678,7 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
             }
             ## par(mar = c(0, 0, 1, 0))
             if(j == 0) {
-                if(!plot_only_the_levelplot) {
+                if(!plot_only_essentials) {
                     par(mar = c(0, 0, 0, 0))
                     plot(c(0, 1), c(0, 1), ann = F, bty = "n", type = "n", xaxt = "n", yaxt = "n")
                     rect(par("usr")[1],par("usr")[3],par("usr")[2],par("usr")[4],col = rgb(0.4, 0.4, 0.4, 0.5))
@@ -684,6 +686,11 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
                     text(x = 0.5, y = 0.5, s, cex = 1.5, srt = 90)   
                 }
                 next
+            }
+            if(plot_only_essentials) {
+                if(j > 1) {
+                    next
+                }
             }
             df_i <- dataframes[[i]]
             df_j <- dataframes[[j]]
@@ -707,7 +714,6 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
                 df_j$final_rpm <- df_j$rpm - df_j$rpm_downregulated
                 x_j <- df_j$final_rpm
             }
-
             if(is.null(gene_ids) ||
                is.null(gene_ids[[i]]) && is.null(gene_ids[[j]])) {
                 is_the_id_in_gene_ids <- rep(T, length(x_i))
@@ -724,7 +730,7 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
             distance_matrix[i,j] <<- my_distance(x_i, x_j, is_the_id_in_gene_ids, consider_only_specified_gene_ids)
         }
     }    
-    print(round(distance_matrix, 2))
+    ## print(round(distance_matrix, 2))
     new_maximized_device()
     my_labels <- unlist(lapply(simulation_output_paths, function(x) basename(x)))
     rownames(distance_matrix) <- my_labels
@@ -794,10 +800,49 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
     plot1 <- my_levelplot(my_positions1)
     plot2 <- my_levelplot(my_positions2)
     grid.arrange(plot1, plot2, ncol = 2)
-    ## if(choice == "average") {
-        ## browser()
-        ## browser()
-    ## }
+
+    ## we adjust the scores so that sorting them ascendignly we get the mirnas contributing the most
+    unadjusted_scores <- m[2:n,n]
+    if(choice == "ratio") {
+        adjusted_scores <- unadjusted_scores
+    } else if(choice == "spearman") {
+        adjusted_scores <- abs(unadjusted_scores)
+    } else if(choice == "average") {
+        adjusted_scores <- 0 - abs(unadjusted_scores)
+    } else if(choice == "euclidean") {
+        adjusted_scores <- 0 - abs(unadjusted_scores)
+    } else if(choice == "norm1") {
+        adjusted_scores <- 0 - abs(unadjusted_scores)
+    }
+    return(adjusted_scores)
+}
+
+plot_rankings <- function(list_of_rankings)
+{
+    first_n_mirnas_to_consider <- 10
+    rankings_count <- length(list_of_rankings)
+    rankings_size <- length(list_of_rankings[[1]])
+    new_maximized_device()
+    layout(matrix(1:(rankings_count*rankings_size), rankings_count, rankings_size, byrow = T))
+    for(i in 1:rankings_count) {
+        rankings <- list_of_rankings[[i]]
+        for(j in 1:rankings_size) {
+            scores <- rankings[[j]]
+            ## note the "- 1", in C++ these values are 0-based
+            o <- order(scores)[1:first_n_mirnas_to_consider] - 1
+            s <- sort(scores)[1:first_n_mirnas_to_consider]
+            ## par(mfrow = c(2,1))
+            ranking_string <- paste(o, collapse = ", ")
+            plot(o, s, xaxt = "n", xlab = "n-th strongest miRNA perturbed", ylab = "score", main = ranking_string)
+            lines(o, s)
+            abline(v = o, col = "gray", lty = "dashed")
+            axis(1, at = o, labels = str(o))
+            ## plot(s, xaxt = "n", main = "ordered scores", xlab = "miRNA perturbed", ylab = "score")
+            ## lines(1:first_n_mirnas_to_consider, s)
+            ## axis(1, at = 1:first_n_mirnas_to_consider, labels = paste(o))
+            ## par(mfrow = c(1,1))            
+        }
+    }
 }
 
 patient_id <- "TCGA-CJ-4642"
@@ -869,11 +914,13 @@ for(mirna_id in mirnas_considered) {
 
 ## analyze_predictions_of_perturbed_data(patient_folder, simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F)
 
-compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = T)
-compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = T)
+rankings0 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = T)
+rankings1 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = T)
 
-compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = F)
-compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = F)
+rankings2 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = F)
+rankings3 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = F)
+
+plot_rankings(list(rankings0, rankings1, rankings2, rankings3))
 
 ## compute_pairwise_distances(simulation_output_paths)
 end_browser_plot()
