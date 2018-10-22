@@ -29,18 +29,18 @@ int main(int argc, char * argv[])
     // Matchings_predictor matching_predictor(patient);
     // matching_predictor.compute();
 
-    Perturbation_analyzer perturbation_analyzer(patient);
-    int mirnas_count = patient.tumor_mirnas.profile.size();
-    int first_n_mirnas_to_perturb = mirnas_count;
-    for(int i = 0; i < first_n_mirnas_to_perturb; i++) {
-        perturbation_analyzer.run(Perturbation_type::Point_perturbation,
-                                  Perturbation_type::No_perturbation,
-                                  Perturbation_target(Perturbation_target::Nth_largest_element(i)),
-                                  Perturbation_target(Perturbation_target::Empty_target()),
-                                  // Perturbation_extent(Perturbation_extent::Relative_perturbation(1)),
-                                  Perturbation_extent(Perturbation_extent::Absolute_perturbation(500000)),
-                                  Perturbation_extent(Perturbation_extent::No_perturbation()));
-    }
+    // Perturbation_analyzer perturbation_analyzer(patient);
+    // int mirnas_count = patient.tumor_mirnas.profile.size();
+    // int first_n_mirnas_to_perturb = mirnas_count;
+    // for(int i = 0; i < first_n_mirnas_to_perturb; i++) {
+    //     perturbation_analyzer.run(Perturbation_type::Point_perturbation,
+    //                               Perturbation_type::No_perturbation,
+    //                               Perturbation_target(Perturbation_target::Nth_largest_element(i)),
+    //                               Perturbation_target(Perturbation_target::Empty_target()),
+    //                               // Perturbation_extent(Perturbation_extent::Relative_perturbation(1)),
+    //                               Perturbation_extent(Perturbation_extent::Absolute_perturbation(500000)),
+    //                               Perturbation_extent(Perturbation_extent::No_perturbation()));
+    // }
 
     // perturbation_analyzer.run(Perturbation_type::Gaussian_perturbation,
     //                           Perturbation_type::No_perturbation,
