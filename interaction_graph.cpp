@@ -17,6 +17,7 @@
 
 #include "seed_match_type.hpp"
 #include "timer.hpp"
+#include "global_parameters.hpp"
 
 #define Ig Interaction_graph
 

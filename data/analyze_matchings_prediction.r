@@ -530,7 +530,6 @@ analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_out
         }
         dev.off()
     }
-    
     for(i in seq_along(simulation_output_paths)) {
         plot_dataset(i)
     }
@@ -874,7 +873,7 @@ simulation_output_paths <- c(simulation_output_paths, simulation_output_path)
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r10__", "/", sep = ""))
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r1__", "/", sep = ""))
 
-## ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r1_0_lambda2", "/", sep = ""))
+simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "______", "/", sep = ""))
 ## ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r0.1__", "/", sep = ""))
 ## ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r-0.5__", "/", sep = ""))
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r-1__", "/", sep = ""))
@@ -883,41 +882,41 @@ simulation_output_paths <- c(simulation_output_paths, simulation_output_path)
 
 ## first_n_mirnas_to_perturb <- 10
 ## delta <- 22
-delta <- 0
-first_n_mirnas_to_perturb <- 87
-for(i in seq(0 + delta, first_n_mirnas_to_perturb - 1 + delta)) {
-    simulation_id <- paste("p__", i, "__a500000__", sep = "")
-    simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", simulation_id, "/", sep = ""))
-}
-
-## for(path in simulation_output_paths) {
-##     analyze_convergence(path)
+## delta <- 0
+## first_n_mirnas_to_perturb <- 87
+## for(i in seq(0 + delta, first_n_mirnas_to_perturb - 1 + delta)) {
+##     simulation_id <- paste("p__", i, "__a500000__", sep = "")
+##     simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", simulation_id, "/", sep = ""))
 ## }
 
-mirna_expression_profile_filename <- paste(patient_folder, "tumor_mirna_expression_profile.tsv", sep = "")
-mirnas <- read.table(mirna_expression_profile_filename, header = T, colClasses = c("numeric", "numeric"))
-mirnas_considered <- mirnas[order(-mirnas$rpm),][1:first_n_mirnas_to_perturb, "mirna_id"]
+## ## for(path in simulation_output_paths) {
+## ##     analyze_convergence(path)
+## ## }
+
+## mirna_expression_profile_filename <- paste(patient_folder, "tumor_mirna_expression_profile.tsv", sep = "")
+## mirnas <- read.table(mirna_expression_profile_filename, header = T, colClasses = c("numeric", "numeric"))
+## mirnas_considered <- mirnas[order(-mirnas$rpm),][1:first_n_mirnas_to_perturb, "mirna_id"]
 gene_ids <- list()
 ## no mirna is perturbed for original data and gaussian data
-gene_ids[[1]] <- c()
-## gene_ids[[2]] <- c()
-## gene_ids[[3]] <- c()
-## gene_ids[[4]] <- c()
-i <- 2
-for(mirna_id in mirnas_considered) {
-    filename <- paste("interactions/mirna_id", mirna_id, "_interactions.rds", sep = "")
-    if(!file.exists(filename)) {
-        ## I should have used a SQL database here...
-        print(paste("generating target file for mirna_id =", mirna_id))
-        source("analyze_expression_profiles.r")
-        get_targets_for_mirna(mirna_id)
-        print("generated")
-    }
-    gene_ids_for_mirna <- readRDS(filename)
-    gene_ids[[i]] <- gene_ids_for_mirna
-    ## gene_ids <- unique(c(gene_ids, gene_ids_for_mirna))
-    i <- i + 1
-}
+gene_ids[[1]] <- list()
+gene_ids[[2]] <- list()
+## gene_ids[[3]] <- list()
+## gene_ids[[4]] <- list()
+## i <- 2
+## for(mirna_id in mirnas_considered) {
+##     filename <- paste("interactions/mirna_id", mirna_id, "_interactions.rds", sep = "")
+##     if(!file.exists(filename)) {
+##         ## I should have used a SQL database here...
+##         print(paste("generating target file for mirna_id =", mirna_id))
+##         source("analyze_expression_profiles.r")
+##         get_targets_for_mirna(mirna_id)
+##         print("generated")
+##     }
+##     gene_ids_for_mirna <- readRDS(filename)
+##     gene_ids[[i]] <- gene_ids_for_mirna
+##     ## gene_ids <- unique(c(gene_ids, gene_ids_for_mirna))
+##     i <- i + 1
+## }
 ## gene_ids[[2]] <- gene_ids[[5]]
 ## gene_ids[[3]] <- gene_ids[[5]]
 ## gene_ids[[4]] <- gene_ids[[5]]
@@ -926,13 +925,13 @@ for(mirna_id in mirnas_considered) {
 
 analyze_predictions_of_perturbed_data(patient_folder, simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F)
 
-rankings0 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = T)
-rankings1 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = T)
+## rankings0 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = T)
+## rankings1 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = T)
 
-rankings2 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = F)
-rankings3 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = F)
+## rankings2 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = F)
+## rankings3 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = F)
 
-plot_rankings(list(rankings0, rankings1, rankings2, rankings3))
+## plot_rankings(list(rankings0, rankings1, rankings2, rankings3))
 ## plot_rankings(list(rankings1, rankings3))
 
 ## compute_pairwise_distances(simulation_output_paths)

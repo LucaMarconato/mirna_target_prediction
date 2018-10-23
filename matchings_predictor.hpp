@@ -6,6 +6,7 @@
 #include "patient.hpp"
 
 class Perturbation_analyzer;
+struct Binding_flattened;
 
 class Matchings_predictor {
     Patient & patient;
@@ -35,7 +36,8 @@ class Matchings_predictor {
                                                                     double * sum, double p_j_downregulated_given_b, double p_b,
                                                                     Binding_flattened * bindings_flattened,
                                                                     double ** distance_based_enhance_matrix,
-                                                                    unsigned long latest_utr_start);
+                                                                    unsigned long latest_bound_level,
+                                                                    bool the_current_cluster_is_free_to_bind);
 public:
     double lambda;
     

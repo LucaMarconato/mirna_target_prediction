@@ -595,8 +595,6 @@ void Matchings_predictor::compute_probabilities()
     }
     
     // compute p_j_downregulated_values
-    bool consider_distance = false;
-
     /*
     // begin debug code
     double cluster_limit = 20;
@@ -632,6 +630,9 @@ void Matchings_predictor::compute_probabilities()
         // end debug code
         */
         Gene_id gene_id = e.first;
+        if(gene_id != 12484) {
+            continue;
+        }
         auto & clusters = e.second;
         int i = 0;
         for(Cluster * cluster : clusters) {
@@ -642,6 +643,13 @@ void Matchings_predictor::compute_probabilities()
             */
             p_j_downregulated_given_c_bound_values_flattened[i] = this->p_j_downregulated_given_c_bound_values.at(std::make_pair(gene_id, cluster));
             p_c_bound_values_flattened[i] = this->p_c_bound_values.at(cluster);
+            std::cout << "utr_start values for the sites in the current cluster:\n";
+            for(Site * site : cluster->sites) {
+                std::cout << site->utr_start << " ";
+            }
+            std::cout << "\n";
+            std::cout << "p_j_downregulated_given_c_bound_values_flattened[" << i << "], p_c_bound_values_flattened[" << i << "]\n";
+            std::cout << p_j_downregulated_given_c_bound_values_flattened[i] << " " << p_c_bound_values_flattened[i] << "\n\n";
             i++;
         }
         double sum = this->iteratively_compute_p_j_downregulated(p_j_downregulated_given_c_bound_values_flattened, p_c_bound_values_flattened, clusters.size());
@@ -681,7 +689,7 @@ void Matchings_predictor::compute_probabilities()
       For those values, the user will be notified that the value has not beed computed considering a distance-based prediction
      */
     this->genes_skipped_by_the_distance_based_predictor.clear();
-    if(consider_distance) {
+    if(Global_parameters::consider_distance_for_predictions) {
         this->compute_distance_based_predictions();
     }
     std::cout << "\n";
@@ -696,11 +704,11 @@ void Matchings_predictor::recusively_compute_p_j_downregulated(bool * b, int lev
     if(level == max_level) {
         p_j_downregulated_given_b = 1 - p_j_downregulated_given_b;
         *sum += p_j_downregulated_given_b * p_b;
-        // std::cout << "b:\n";
+        // std::cout << "b: ";
         // for(int i = 0; i < max_level; i++) {
         //     std::cout << b[i] << " ";
         // }
-        // std::cout << p_j_downregulated_given_b * p_b << "\n\n";
+        // std::cout << "| " << p_j_downregulated_given_b * p_b << "\n\n";
     } else {
         double p_j_downregulated_given_c_bound = p_j_downregulated_given_c_bound_values_flattened[level];
         double p_c_bound = p_c_bound_values_flattened[level];
