@@ -20,6 +20,7 @@ class Matchings_predictor {
     std::unordered_map<std::pair<Gene_id, Cluster *>, double> p_j_downregulated_given_c_bound_values;
     std::unordered_map<Gene_id, double> p_j_downregulated_values;
     std::string simulation_id;
+    std::list<Gene_id> genes_skipped_by_the_distance_based_predictor;
 
     std::string get_output_path();
     void export_interaction_matrix();
@@ -29,6 +30,12 @@ class Matchings_predictor {
     inline void recusively_compute_p_j_downregulated(bool * b, int level, int max_level, double * sum, double p_j_downregulated_given_b, double p_b, double * p_j_downregulated_given_c_bound_values_flattened, double * p_c_bound_values_flattened);
     inline double iteratively_compute_p_j_downregulated(double * p_j_downregulated_given_c_bound_values_flattened, double * p_c_bound_values_flattened, int clusters_count);
     void compute_distance_based_predictions();
+    inline double distance_based_enchange(unsigned long distance);
+    inline void recusively_compute_p_j_downregulated_distance_based(bool * b, int level, int max_level,
+                                                                    double * sum, double p_j_downregulated_given_b, double p_b,
+                                                                    Binding_flattened * bindings_flattened,
+                                                                    double ** distance_based_enhance_matrix,
+                                                                    unsigned long latest_utr_start);
 public:
     double lambda;
     

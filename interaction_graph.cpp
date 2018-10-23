@@ -137,7 +137,7 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
             for(auto & site1 : sites) {
                 if(site0 != site1) {
                     // WARNING: you may be interested in using utr_start and utr_end instead of the following condition
-                    if(std::abs((((long long)site0->utr_start) - ((long long)site1->utr_start))) <= 8) {
+                    if(std::abs((((long long)site0->utr_start) - ((long long)site1->utr_start))) <= Global_parameters::threshold_for_overlapping_sites) {
                         this->site_to_overlapping_sites[site0].push_back(site1);
                     }                    
                 }

@@ -16,6 +16,11 @@ public:
      */
     static double lambda;
     static bool test_parallelization;
+    /*
+     Sites that whose utr_start values are at a distance which is less or equal to this threshold are considered overlapping.
+     WARNING: this does not distinuguish between the length of the actual site, due to the type of binding. You may want to modify the code to get that behaviour.
+     */
+    static unsigned int threshold_for_overlapping_sites;
 
     static void load_from_json();
 };
