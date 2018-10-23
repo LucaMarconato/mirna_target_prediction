@@ -595,7 +595,8 @@ void Matchings_predictor::compute_probabilities()
     }
     
     // compute p_j_downregulated_values
-    /*
+#define TEST_THE_ITERATIVE_ALGORITHM
+#ifdef TEST_THE_ITERATIVE_ALGORITHM
     // begin debug code
     double cluster_limit = 20;
     std::cout << "computing the probabilities of down-regulation for genes with at most " << cluster_limit << " clusters\n";
@@ -603,23 +604,23 @@ void Matchings_predictor::compute_probabilities()
     int genes_debugged = 0;
     int genes_not_debugged = 0;
     // end debug code
-    */
+#endif
     unsigned long max_number_of_clusters_per_gene = 0;
     for(auto & e : this->patient.interaction_graph.gene_to_clusters_arcs) {
         auto & clusters = e.second;
         max_number_of_clusters_per_gene = std::max(max_number_of_clusters_per_gene, clusters.size());
     }
-    /*
+#ifdef TEST_THE_ITERATIVE_ALGORITHM
     // begin debug code
     bool * b = new bool [max_number_of_clusters_per_gene];
-    // int latest_percentage = -1;
+    int latest_percentage = -1;
     // end debug code
-    */
+#endif
     double * p_j_downregulated_given_c_bound_values_flattened = new double [max_number_of_clusters_per_gene];
     double * p_c_bound_values_flattened = new double [max_number_of_clusters_per_gene];
 
     for(auto & e : this->patient.interaction_graph.gene_to_clusters_arcs) {
-        /*
+#ifdef TEST_THE_ITERATIVE_ALGORITHM
         // begin debug code
         int total_genes = this->patient.interaction_graph.gene_to_clusters_arcs.size();
         int current_percentage = (int)(100*((double)(genes_debugged + genes_not_debugged)/total_genes));
@@ -628,7 +629,7 @@ void Matchings_predictor::compute_probabilities()
         std::cout << "genes_debugged/total_genes: " << genes_debugged + genes_not_debugged << "/" << total_genes << " = " << current_percentage << "%\n";
         }
         // end debug code
-        */
+#endif
         Gene_id gene_id = e.first;
         if(gene_id != 12484) {
             continue;
@@ -636,11 +637,11 @@ void Matchings_predictor::compute_probabilities()
         auto & clusters = e.second;
         int i = 0;
         for(Cluster * cluster : clusters) {
-            /*
+#ifdef TEST_THE_ITERATIVE_ALGORITHM
             // begin debug code
             b[i] = false;
             // end debug code
-            */
+#endif
             p_j_downregulated_given_c_bound_values_flattened[i] = this->p_j_downregulated_given_c_bound_values.at(std::make_pair(gene_id, cluster));
             p_c_bound_values_flattened[i] = this->p_c_bound_values.at(cluster);
             std::cout << "utr_start values for the sites in the current cluster:\n";
@@ -655,7 +656,7 @@ void Matchings_predictor::compute_probabilities()
         double sum = this->iteratively_compute_p_j_downregulated(p_j_downregulated_given_c_bound_values_flattened, p_c_bound_values_flattened, clusters.size());
         this->p_j_downregulated_values[gene_id] = sum;
 
-        /*
+#ifdef TEST_THE_ITERATIVE_ALGORITHM
         // begin debug code
         // safety check for genes with at most "cluster_limit" clusters
         if(clusters.size() <= cluster_limit) {
@@ -679,7 +680,7 @@ void Matchings_predictor::compute_probabilities()
         Timer::stop();
         delete [] b;
         // end debug code
-        */
+#endif
     }
     delete [] p_j_downregulated_given_c_bound_values_flattened;
     delete [] p_c_bound_values_flattened;
@@ -704,11 +705,11 @@ void Matchings_predictor::recusively_compute_p_j_downregulated(bool * b, int lev
     if(level == max_level) {
         p_j_downregulated_given_b = 1 - p_j_downregulated_given_b;
         *sum += p_j_downregulated_given_b * p_b;
-        // std::cout << "b: ";
-        // for(int i = 0; i < max_level; i++) {
-        //     std::cout << b[i] << " ";
-        // }
-        // std::cout << "| " << p_j_downregulated_given_b * p_b << "\n\n";
+        std::cout << "b: ";
+        for(int i = 0; i < max_level; i++) {
+            std::cout << b[i] << " ";
+        }
+        std::cout << "| " << p_j_downregulated_given_b * p_b << "\n";
     } else {
         double p_j_downregulated_given_c_bound = p_j_downregulated_given_c_bound_values_flattened[level];
         double p_c_bound = p_c_bound_values_flattened[level];
@@ -736,8 +737,8 @@ double Matchings_predictor::iteratively_compute_p_j_downregulated(double * p_j_d
 {
     double ratio_j_not_downregulated = 1.0;
     for(int i = 0; i < clusters_count; i++) {
-        double newly_downregualated = ratio_j_not_downregulated * p_c_bound_values_flattened[i] * p_j_downregulated_given_c_bound_values_flattened[i];
-        ratio_j_not_downregulated -= newly_downregualated;
+        double newly_downregulated = ratio_j_not_downregulated * p_c_bound_values_flattened[i] * p_j_downregulated_given_c_bound_values_flattened[i];
+        ratio_j_not_downregulated -= newly_downregulated;
     }
     return 1 - ratio_j_not_downregulated;
 }    

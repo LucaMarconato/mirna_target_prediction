@@ -1,0 +1,156 @@
+current_distance_based_cluster.size() = 1
+starting the recursion, current_distance_based_cluster.size() = 1
+b: 0 | 0
+b: 1 | 0.0045522
+current_distance_based_cluster:
+k = 0
+utr_start = 296
+p_ijk_bound = 0.0045522
+p_j_downregulated_given_ijk_bound = 0.314133
+
+distance_based_enhancement_matrix
+0 
+
+current_distance_based_cluster.size() = 1
+starting the recursion, current_distance_based_cluster.size() = 1
+b: 0 | 0
+b: 1 | 0.00476896
+current_distance_based_cluster:
+k = 0
+utr_start = 668
+p_ijk_bound = 0.00476896
+p_j_downregulated_given_ijk_bound = 0.146774
+
+distance_based_enhancement_matrix
+0 
+
+current_distance_based_cluster.size() = 3
+starting the recursion, current_distance_based_cluster.size() = 3
+b: 0 0 0 | 0
+b: 0 0 1 | 0.00937188
+b: 0 1 -1 | 0.0111287
+b: 1 -1 -1 | 0.00772052
+
+(+ 0.00937188 0.0111287 0.00772052)0.0282211
+(/ 0.0282211 3)0.009407033333333334
+
+current_distance_based_cluster:
+k = 0
+utr_start = 796
+p_ijk_bound = 0.00772052
+p_j_downregulated_given_ijk_bound = 0.119131
+
+k = 0
+utr_start = 796
+p_ijk_bound = 0.0112153
+p_j_downregulated_given_ijk_bound = 0.119131
+
+k = 0
+utr_start = 800
+p_ijk_bound = 0.00955193
+p_j_downregulated_given_ijk_bound = 0.0433918
+
+(/ (+ (* 0.00772052 0.119131) (* 0.0112153 0.119131) (* 0.00955193 0.0433918)) (+ 0.00772052 0.0112153 0.00955193))0.0937356796726312
+
+distance_based_enhancement_matrix
+0 0 0 
+0 0 0 
+0 0 0 
+
+current_distance_based_cluster.size() = 2
+starting the recursion, current_distance_based_cluster.size() = 2
+b: 0 0 | 0
+b: 0 1 | 0.0412142
+b: 1 -1 | 0.199753
+(setq b1 0.0412142)
+(setq b2 0.199753)
+
+(+ 0.0412142 0.199753)0.2409672
+(/ 0.2409672 2)0.1204836    
+(+ (* b1 (/ a1 (+ a1 a2))) (* b2 (/ a2 (+ a1 a2))))0.07371122521042384
+
+current_distance_based_cluster:
+k = 0
+utr_start = 907
+p_ijk_bound = 0.199753
+(setq a1 0.199753)
+p_j_downregulated_given_ijk_bound = 0.094366
+
+k = 0
+utr_start = 907
+p_ijk_bound = 0.0515018
+(setq a2 0.0515018)
+p_j_downregulated_given_ijk_bound = 0.094366
+
+distance_based_enhancement_matrix
+0 0 
+0 0 
+
+current_distance_based_cluster.size() = 1
+starting the recursion, current_distance_based_cluster.size() = 1
+b: 0 | 0
+b: 1 | 0.00363142
+current_distance_based_cluster:
+k = 0
+utr_start = 1208
+p_ijk_bound = 0.00363142
+p_j_downregulated_given_ijk_bound = 0.0137673
+
+distance_based_enhancement_matrix
+0 
+
+current_distance_based_cluster.size() = 1
+starting the recursion, current_distance_based_cluster.size() = 1
+b: 0 | 0
+b: 1 | 0.0159427
+current_distance_based_cluster:
+k = 0
+utr_start = 1438
+p_ijk_bound = 0.0159427
+p_j_downregulated_given_ijk_bound = 0.0643765
+
+distance_based_enhancement_matrix
+0 
+
+current_distance_based_cluster.size() = 1
+starting the recursion, current_distance_based_cluster.size() = 1
+b: 0 | 0
+b: 1 | 0.310793
+current_distance_based_cluster:
+k = 0
+utr_start = 1466
+p_ijk_bound = 0.310793
+p_j_downregulated_given_ijk_bound = 0.0656727
+
+distance_based_enhancement_matrix
+0 
+
+current_distance_based_cluster.size() = 1
+starting the recursion, current_distance_based_cluster.size() = 1
+b: 0 | 0
+b: 1 | 0.00476896
+current_distance_based_cluster:
+k = 0
+utr_start = 1602
+p_ijk_bound = 0.00476896
+p_j_downregulated_given_ijk_bound = 0.0899612
+
+distance_based_enhancement_matrix
+0 
+
+current_distance_based_cluster.size() = 1
+starting the recursion, current_distance_based_cluster.size() = 1
+b: 0 | 0
+b: 1 | 0.0121906
+current_distance_based_cluster:
+k = 0
+utr_start = 1626
+p_ijk_bound = 0.0121906
+p_j_downregulated_given_ijk_bound = 0.0753367
+
+distance_based_enhancement_matrix
+0 
+
+abs(this->p_j_downregulated_values.at(gene_id) - total_p_j_downregulated) = 0.588555
+genes_processed = 0 (0 skipped)
+distance_based_clusters.size() = 9

@@ -32,7 +32,7 @@ class Matchings_predictor {
     inline double iteratively_compute_p_j_downregulated(double * p_j_downregulated_given_c_bound_values_flattened, double * p_c_bound_values_flattened, int clusters_count);
     void compute_distance_based_predictions();
     inline double distance_based_enchange(unsigned long distance);
-    inline void recusively_compute_p_j_downregulated_distance_based(bool * b, int level, int max_level,
+    inline void recusively_compute_p_j_downregulated_distance_based(short * b, int level, int max_level,
                                                                     double * sum, double p_j_downregulated_given_b, double p_b,
                                                                     Binding_flattened * bindings_flattened,
                                                                     double ** distance_based_enhance_matrix,
