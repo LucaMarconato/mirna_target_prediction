@@ -33,7 +33,7 @@ void Matchings_predictor::compute_distance_based_predictions()
     Binding_flattened * bindings_in_j = new Binding_flattened [total_possible_bindings_in_a_gene_max_value];
     Binding_flattened * bindings_in_the_current_distance_based_cluster = new Binding_flattened [total_possible_bindings_in_a_gene_max_value];
     // debug purpose, to print the current call of the recursive procedure
-    short * b = new short [total_possible_bindings_in_a_gene_max_value];
+    char * b = new char [total_possible_bindings_in_a_gene_max_value];
     const unsigned long threshold_for_exponential_algorithm = 20;
     double ** distance_based_enhancement_matrix = new double * [threshold_for_exponential_algorithm];
     for(int k = 0; k < threshold_for_exponential_algorithm; k++) {
@@ -88,7 +88,7 @@ void Matchings_predictor::compute_distance_based_predictions()
         unsigned long latest_utr_start = bindings_in_j[0].utr_start;
         for(int k = 0; k < i; k++) {
             Binding_flattened * binding = bindings_in_j + k;
-            if(binding->utr_start - latest_utr_start > Global_parameters::threshold_for_overlapping_sites) {
+            if(binding->utr_start - latest_utr_start > Global_parameters::threshold_for_distance_based_predictions) {
                 if(distance_based_cluster.size() == 0) {
                     std::cerr << "error: distance_based_cluster.size() = " << distance_based_cluster.size() << "\n";
                     exit(1);
@@ -139,9 +139,8 @@ void Matchings_predictor::compute_distance_based_predictions()
                                                                           &p_j_downregulated_given_current_distance_based_cluster, 1, 1,
                                                                           bindings_in_the_current_distance_based_cluster,
                                                                           distance_based_enhancement_matrix,
-                                                                          // WARNING: is the comparison of an unsigned long against -1 guaranteed by the standard? TODO: check
-                                                                          -1,
-                                                                          true);
+                                                                          // TODO: check if the standard guarantees that the comparison agains -1 in an unsigned long gives consistent results
+                                                                          -1);
                 std::cout << "current_distance_based_cluster:\n";
                 for(int k = 0; k < current_distance_based_cluster.size(); k++) {
                     std::cout << "k = 0\n";
@@ -189,15 +188,15 @@ void Matchings_predictor::compute_distance_based_predictions()
     // TODO: TEST THE DISTANCE BASED PREDICTIONS IN THE CASE IN WHICH THE RESULT SHOULD COINCIDE TO THE USUAL PREDICITONS!!!!!
 }
 
-void Matchings_predictor::recusively_compute_p_j_downregulated_distance_based(short * b, int level, int max_level,
+void Matchings_predictor::recusively_compute_p_j_downregulated_distance_based(char * b, int level, int max_level,
                                                                               double * sum, double p_j_downregulated_given_b, double p_b,
                                                                               Binding_flattened * bindings_flattened,
                                                                               double ** distance_based_enhancement_matrix,
-                                                                              unsigned long latest_bound_level,
-                                                                              bool the_current_cluster_is_free_to_bind)
+                                                                              unsigned long latest_bound_level)
 {
     if(level == max_level) {
         p_j_downregulated_given_b = 1 - p_j_downregulated_given_b;
+        std::cout << "p_j_downregulated_given_b = " << p_j_downregulated_given_b << ", p_b = " << p_b << "\n";
         *sum += p_j_downregulated_given_b * p_b;
         std::cout << "b: ";
         for(int i = 0; i < max_level; i++) {
@@ -205,63 +204,71 @@ void Matchings_predictor::recusively_compute_p_j_downregulated_distance_based(sh
         }        
         std::cout << "| " << p_j_downregulated_given_b * p_b << "\n";
     } else {
-        double p_j_downregulated_given_ijk_bound = bindings_flattened[level].p_j_downregulated_given_ijk_bound;
-        double p_ijk_bound = bindings_flattened[level].p_ijk_bound;
-        unsigned long utr_start = bindings_flattened[level].utr_start;
-        
-        bool overlapping;
-        // TODO: BUG HERE!!!!!!!!!!! TO FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! THE VALUE OF DISTANE_BASED_ENHANCEMENT IS NOT CORRECT RIGHT NOW
-        double distance_based_enhancement_factor = 0;
-        if(latest_bound_level != -1) {
-            unsigned long latest_utr_start = bindings_flattened[latest_bound_level].utr_start;
-            overlapping = utr_start - latest_utr_start > Global_parameters::threshold_for_overlapping_sites;
-            distance_based_enhancement_factor = 1 - distance_based_enhancement_matrix[latest_bound_level][level];
-        } else {
-            overlapping = false;
-        }
-
-        if(level > 0) {
-            if(utr_start - bindings_flattened[level - 1].utr_start > Global_parameters::threshold_for_overlapping_sites) {
-                the_current_cluster_is_free_to_bind = true;
+        unsigned long first_element_of_cluster = level;            
+        unsigned long last_element_of_cluster;
+        bool stop = false;
+        unsigned long latest_utr_start = bindings_flattened[level].utr_start;
+        unsigned long i = level + 1;            
+        for(; i < max_level; i++) {
+            if(bindings_flattened[i].utr_start - latest_utr_start > Global_parameters::threshold_for_overlapping_sites) {
+                break;
             }
+            latest_utr_start = bindings_flattened[i].utr_start;
         }
-        // TODO: BUG HERE!!!!!!!!!!!!!!!! WE NEED TO LOOP IN THE CLUSTER (CLUSTER, NOT DISTANCE BASED CLUSTER) TO FIND ALL THE INCOMPATIBLE EVENT AND SPAWN A NEW RECURSIVE CALL FOR EACH OF THEM (ALSO THE EVENT IN WHICH NONE OF THEM HAPPENS MUST BE CONSIDERED)
-        if(!overlapping && the_current_cluster_is_free_to_bind) {
-            double new_p_j_downregulated_given_b;
-            double new_p_b;
-            unsigned long new_bound_level;
+        last_element_of_cluster = i - 1;
 
-            // b is just used for debug purposes and can be removed
-            b[level] = 0;
-            new_bound_level = latest_bound_level;
-            new_p_j_downregulated_given_b = p_j_downregulated_given_b;
-            new_p_b = p_b * (1 - p_ijk_bound);
-            recusively_compute_p_j_downregulated_distance_based(b, level + 1, max_level,
-                                                                sum, new_p_j_downregulated_given_b, new_p_b,
-                                                                bindings_flattened,
-                                                                distance_based_enhancement_matrix,
-                                                                new_bound_level,
-                                                                the_current_cluster_is_free_to_bind);
-            b[level] = 1;
-            new_bound_level = level;
+        double p_j_downregulated_given_ijk_bound;
+        double p_ijk_bound;
+        unsigned long utr_start;
+        double p_none_of_ijk_binds = 1;
+        double new_p_j_downregulated_given_b;
+        double new_p_b;
+
+        for(i = first_element_of_cluster; i <= last_element_of_cluster; i++) {
+            b[i] = '1';
+            for(unsigned long j = first_element_of_cluster; j <= last_element_of_cluster; j++) {
+                if(j != i) {
+                    b[j]= 'X';
+                }
+            }
+
+            p_j_downregulated_given_ijk_bound = bindings_flattened[i].p_j_downregulated_given_ijk_bound;
+            p_ijk_bound = bindings_flattened[i].p_ijk_bound / (last_element_of_cluster - first_element_of_cluster + 1);
+            p_none_of_ijk_binds *= 1 - p_ijk_bound;
+            utr_start = bindings_flattened[i].utr_start;
+            // // TODO: BUG HERE!!!!!!!!!!! TO FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! THE VALUE OF DISTANE_BASED_ENHANCEMENT IS NOT CORRECT RIGHT NOW
+            double distance_based_enhancement_factor = 1;
+            if(latest_bound_level != -1) {
+                unsigned long latest_utr_start = bindings_flattened[latest_bound_level].utr_start;
+                if(utr_start - latest_utr_start > Global_parameters::threshold_for_overlapping_sites) {
+                    std::cerr << "error: utr_start - latest_utr_start = " << utr_start - latest_utr_start << "\n";
+                    exit(1);
+                }
+                distance_based_enhancement_factor = 1 - distance_based_enhancement_matrix[latest_bound_level][i];
+            }
+
             // not that the indexes of the matrix must be [latest_bound_level][bound_level] and not the opposite because the matrix is upper triangular
             new_p_j_downregulated_given_b = p_j_downregulated_given_b * (1 - p_j_downregulated_given_ijk_bound) * distance_based_enhancement_factor;
             new_p_b = p_b * p_ijk_bound;
-            recusively_compute_p_j_downregulated_distance_based(b, level + 1, max_level,
+            std::cout << "p_j_downregulated_given_b = " << p_j_downregulated_given_b << ", 1 - p_j_downregulated_given_ijk_bound = " << 1 - p_j_downregulated_given_ijk_bound << ", distance_based_enhancement_factor = " << distance_based_enhancement_factor << "\n";
+            recusively_compute_p_j_downregulated_distance_based(b, last_element_of_cluster + 1, max_level,
                                                                 sum, new_p_j_downregulated_given_b, new_p_b,
                                                                 bindings_flattened,
                                                                 distance_based_enhancement_matrix,
-                                                                new_bound_level,
-                                                                false);
-        } else {
-            b[level] = -1;
-            recusively_compute_p_j_downregulated_distance_based(b, level + 1, max_level,
-                                                                sum, p_j_downregulated_given_b, p_b,
-                                                                bindings_flattened,
-                                                                distance_based_enhancement_matrix,
-                                                                latest_bound_level,
-                                                                the_current_cluster_is_free_to_bind);
+                                                                i);
         }
+
+        for(i = first_element_of_cluster; i <= last_element_of_cluster; i++) {
+            b[i] = '0';
+        }
+
+        new_p_j_downregulated_given_b = p_j_downregulated_given_b;
+        new_p_b = p_b * p_none_of_ijk_binds;
+        recusively_compute_p_j_downregulated_distance_based(b, last_element_of_cluster + 1, max_level,
+                                                            sum, new_p_j_downregulated_given_b, new_p_b,
+                                                            bindings_flattened,
+                                                            distance_based_enhancement_matrix,
+                                                            latest_bound_level);
     }
 }
 

@@ -14,6 +14,7 @@ double Global_parameters::epsilon = 0.00000001;
 double Global_parameters::lambda;
 bool Global_parameters::test_parallelization;
 unsigned int Global_parameters::threshold_for_overlapping_sites = 8;
+unsigned int Global_parameters::threshold_for_distance_based_predictions = 8; // TODO: set to 50
 bool Global_parameters::consider_distance_for_predictions = false;
 
 void Global_parameters::load_from_json()

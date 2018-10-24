@@ -541,8 +541,8 @@ void Matchings_predictor::compute_probabilities()
             std::cerr << "error: just_added.size() = " << just_added.size() << "\n";
             exit(1);
         }
-        for(auto & p : just_added) {            
-            this->r_ijk_values[p] = this->r_ijk_values.at(p) / just_added.size();            
+        for(auto & p : just_added) {
+            this->r_ijk_values[p] = this->r_ijk_values.at(p) / just_added.size();
         }
 
         // update p_c_bound_values, note that the values of a cluster are not definitive since we need to excecute the following code once per miRNA and the miRNA is given by the outer loop
@@ -595,7 +595,7 @@ void Matchings_predictor::compute_probabilities()
     }
     
     // compute p_j_downregulated_values
-#define TEST_THE_ITERATIVE_ALGORITHM
+// #define TEST_THE_ITERATIVE_ALGORITHM
 #ifdef TEST_THE_ITERATIVE_ALGORITHM
     // begin debug code
     double cluster_limit = 20;

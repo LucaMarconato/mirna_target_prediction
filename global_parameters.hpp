@@ -21,6 +21,7 @@ public:
      WARNING: this does not distinuguish between the length of the actual site, due to the type of binding. You may want to modify the code to get that behaviour.
      */
     static unsigned int threshold_for_overlapping_sites;
+    static unsigned int threshold_for_distance_based_predictions;
     static bool consider_distance_for_predictions;
 
     static void load_from_json();
