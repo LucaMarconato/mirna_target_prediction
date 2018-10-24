@@ -65,7 +65,7 @@ analyze_mirna_expression_profiles <- function(simulation_output_path)
         new_path <- paste(new_path, ".png", sep = "")
         png(filename = new_path, width = 1920, height = 1080)
         layout(matrix(1:3, 3, 1))
-        print("TODO: check if the timestep has been split correctly")
+        ## print("TODO: check if the timestep has been split correctly")
         timestep <- strsplit(file, "mirna_expression_profile_")[[1]][2]
         timestep <- strsplit(timestep, ".tsv")[[1]][1]
         my_order <- match(mirna_ids_ordered, t$mirna_id)
@@ -139,7 +139,7 @@ analyze_cluster_expression_profiles <- function(simulation_output_path)
             my_order <- order(t$relative_expression)
             cluster_addresses_ordered <- t$cluster_address[my_order]
         }
-        print("TODO: check if the timestep has been split correctly")
+        ## print("TODO: check if the timestep has been split correctly")
         timestep <- strsplit(file, "cluster_expression_profile_")[[1]][2]
         timestep <- strsplit(timestep, ".tsv")[[1]][1]
         my_order <- match(cluster_addresses_ordered, t$cluster_address)
@@ -216,7 +216,7 @@ generate_readable_dynamics_log <- function(simulation_output_path)
                 my_order <- order(t$relative_expression)
                 element_addresses_ordered <- t[[1]][my_order]
             }
-            print("TODO: check if the timestep has been split correctly")
+            ## print("TODO: check if the timestep has been split correctly")
             timestep <- strsplit(file, paste(element, "_expression_profile_", sep = ""))[[1]][2]
             timestep <- strsplit(timestep, ".tsv")[[1]][1]
             my_order <- match(element_addresses_ordered, t[[1]])
@@ -357,10 +357,10 @@ analyze_probabilities <- function(patient_folder, simulation_output_path)
     file_count <- length(files)
     max_timesteps <- 100
     for(i in seq_len(file_count)) {
-        if(i > 1) {
-            print("not generating the animation")
-            break
-        }
+        ## if(i > 1) {
+        ##     print("not generating the animation")
+        ##     break
+        ## }
         print(paste(round(i/min(file_count, max_timesteps)*100), "%", sep = ""))
         file <- files[i]
         t <- read.table(file, header = T, colClasses = c("numeric", "numeric"))
@@ -371,7 +371,7 @@ analyze_probabilities <- function(patient_folder, simulation_output_path)
             my_order <- order(t$rpm)
             genes_ordered <- t$gene_id[my_order]
         }
-        print("TODO: check if the timestep has been split correctly")
+        ## print("TODO: check if the timestep has been split correctly")
         timestep <- strsplit(file, "predicted_downregulation_")[[1]][2]
         timestep <- strsplit(timestep, ".tsv")[[1]][1]
         my_order <- match(genes_ordered, t$gene_id)
@@ -398,7 +398,7 @@ analyze_probabilities <- function(patient_folder, simulation_output_path)
         heights_vector[1] <- lcm(2)
         layout(matrix(seq(1, rows + 1), rows + 1, 1), heights = heights_vector)
         plot.new()
-        print("TODO: check if the timestep has been split correctly")
+        ## print("TODO: check if the timestep has been split correctly")
         title(main = paste(timestep, "predicted gene expression after downregulation"))
         par(mar = c(2,4,2,0))
 
@@ -856,18 +856,17 @@ patient_id <- "TCGA-CJ-4642"
 ## patient_id <- "artificial1"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
 
-## simulation_id <- "original_data"
-simulation_id <- "______distance"
+simulation_id <- "original_data"
+## simulation_id <- "______distance"
 simulation_output_path <- paste(patient_folder, "matchings_predictor_output/", simulation_id, "/", sep = "")
 close_all_devices()
-analyze_convergence(simulation_output_path)
-generate_readable_dynamics_log(simulation_output_path)
-analyze_mirna_expression_profiles(simulation_output_path)
-analyze_cluster_expression_profiles(simulation_output_path)
+## analyze_convergence(simulation_output_path)
+## generate_readable_dynamics_log(simulation_output_path)
+## analyze_mirna_expression_profiles(simulation_output_path)
+## analyze_cluster_expression_profiles(simulation_output_path)
 ## analyze_dynamics_for_small_interaction_graphs(simulation_output_path)
-analyze_probabilities(patient_folder, simulation_output_path)
+## analyze_probabilities(patient_folder, simulation_output_path)
 
-stop("stoooop")
 simulation_output_paths <- c()
 simulation_output_paths <- c(simulation_output_paths, simulation_output_path)
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "g__87__r3__", "/", sep = ""))
@@ -876,7 +875,7 @@ simulation_output_paths <- c(simulation_output_paths, simulation_output_path)
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r1__", "/", sep = ""))
 
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "______", "/", sep = ""))
-simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "______distance", "/", sep = ""))
+## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "______distance", "/", sep = ""))
 ## ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r0.1__", "/", sep = ""))
 ## ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r-0.5__", "/", sep = ""))
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r-1__", "/", sep = ""))
@@ -885,41 +884,41 @@ simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "mat
 
 ## first_n_mirnas_to_perturb <- 10
 ## delta <- 22
-## delta <- 0
-## first_n_mirnas_to_perturb <- 87
-## for(i in seq(0 + delta, first_n_mirnas_to_perturb - 1 + delta)) {
-##     simulation_id <- paste("p__", i, "__a500000__", sep = "")
-##     simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", simulation_id, "/", sep = ""))
+delta <- 0
+first_n_mirnas_to_perturb <- 87
+for(i in seq(0 + delta, first_n_mirnas_to_perturb - 1 + delta)) {
+    simulation_id <- paste("p__", i, "__a500000__", sep = "")
+    simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", simulation_id, "/", sep = ""))
+}
+
+## for(path in simulation_output_paths) {
+##     analyze_convergence(path)
 ## }
 
-## ## for(path in simulation_output_paths) {
-## ##     analyze_convergence(path)
-## ## }
-
-## mirna_expression_profile_filename <- paste(patient_folder, "tumor_mirna_expression_profile.tsv", sep = "")
-## mirnas <- read.table(mirna_expression_profile_filename, header = T, colClasses = c("numeric", "numeric"))
-## mirnas_considered <- mirnas[order(-mirnas$rpm),][1:first_n_mirnas_to_perturb, "mirna_id"]
+mirna_expression_profile_filename <- paste(patient_folder, "tumor_mirna_expression_profile.tsv", sep = "")
+mirnas <- read.table(mirna_expression_profile_filename, header = T, colClasses = c("numeric", "numeric"))
+mirnas_considered <- mirnas[order(-mirnas$rpm),][1:first_n_mirnas_to_perturb, "mirna_id"]
 gene_ids <- list()
 ## no mirna is perturbed for original data and gaussian data
 gene_ids[[1]] <- list()
-gene_ids[[2]] <- list()
+## gene_ids[[2]] <- list()
 ## gene_ids[[3]] <- list()
 ## gene_ids[[4]] <- list()
-## i <- 2
-## for(mirna_id in mirnas_considered) {
-##     filename <- paste("interactions/mirna_id", mirna_id, "_interactions.rds", sep = "")
-##     if(!file.exists(filename)) {
-##         ## I should have used a SQL database here...
-##         print(paste("generating target file for mirna_id =", mirna_id))
-##         source("analyze_expression_profiles.r")
-##         get_targets_for_mirna(mirna_id)
-##         print("generated")
-##     }
-##     gene_ids_for_mirna <- readRDS(filename)
-##     gene_ids[[i]] <- gene_ids_for_mirna
-##     ## gene_ids <- unique(c(gene_ids, gene_ids_for_mirna))
-##     i <- i + 1
-## }
+i <- 2
+for(mirna_id in mirnas_considered) {
+    filename <- paste("interactions/mirna_id", mirna_id, "_interactions.rds", sep = "")
+    if(!file.exists(filename)) {
+        ## I should have used a SQL database here...
+        print(paste("generating target file for mirna_id =", mirna_id))
+        source("analyze_expression_profiles.r")
+        get_targets_for_mirna(mirna_id)
+        print("generated")
+    }
+    gene_ids_for_mirna <- readRDS(filename)
+    gene_ids[[i]] <- gene_ids_for_mirna
+    ## gene_ids <- unique(c(gene_ids, gene_ids_for_mirna))
+    i <- i + 1
+}
 ## gene_ids[[2]] <- gene_ids[[5]]
 ## gene_ids[[3]] <- gene_ids[[5]]
 ## gene_ids[[4]] <- gene_ids[[5]]
@@ -928,13 +927,13 @@ gene_ids[[2]] <- list()
 
 analyze_predictions_of_perturbed_data(patient_folder, simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F)
 
-## rankings0 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = T)
-## rankings1 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = T)
+rankings0 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = T)
+rankings1 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = T)
 
-## rankings2 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = F)
-## rankings3 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = F)
-
-## plot_rankings(list(rankings0, rankings1, rankings2, rankings3))
+rankings2 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = F)
+rankings3 <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = F
+)
+plot_rankings(list(rankings0, rankings1, rankings2, rankings3))
 ## plot_rankings(list(rankings1, rankings3))
 
 ## compute_pairwise_distances(simulation_output_paths)

@@ -180,7 +180,7 @@ void Matchings_predictor::export_interaction_matrix()
 void Matchings_predictor::compute()
 {
     std::cout << "for the moment, just a trivial explicit Euler scheme\n";
-    unsigned long long max_steps = 1000;
+    unsigned long long max_steps = 10;
     double mirna_lambda = 1;
     double cluster_lambda = 1;
     if(lambda > 1) {
@@ -193,10 +193,10 @@ void Matchings_predictor::compute()
     bool scaling = true;
     double cumulative_scaling = 1;
     bool logging = true;
-    bool export_mirna_expression_profile = true;
-    bool export_cluster_expression_profile = true;
+    bool export_mirna_expression_profile = false;
+    bool export_cluster_expression_profile = false;
     bool export_interaction_matrix = false;
-    bool export_partial_predicted_downregulation = true;
+    bool export_partial_predicted_downregulation = false;
     if(Global_parameters::test_parallelization) {
         std::cout << "generating only output for testing the parallelization\n";
         logging = true;
@@ -610,7 +610,11 @@ void Matchings_predictor::compute_probabilities()
                 } else {
                     double to_add = r_ijk * probability_of_downregulation / sum_of_r_ijk_for_cluster.at(cluster);
                         // double to_add = r_ijk * probability_of_downregulation / p_c_bound_values.at(cluster);
-                    this->p_j_downregulated_given_c_bound_values[key0] = this->p_j_downregulated_given_c_bound_values.at(key0) + to_add;   
+                    this->p_j_downregulated_given_c_bound_values[key0] = this->p_j_downregulated_given_c_bound_values.at(key0) + to_add;
+                    if(p.second->utr_start == 23) {
+                        std::cout << "to_add = " << to_add << ", r_ijk = " << r_ijk << ", probability_of_downregulation = " << probability_of_downregulation << ", sum_of_r_ijk_for_cluster.at(cluster) = " << sum_of_r_ijk_for_cluster.at(cluster) << ", key0.first = " << key0.first << ", this->p_j_downregulated_given_c_bound_values[key0] = " << this->p_j_downregulated_given_c_bound_values[key0] << "\n";
+                        exit(1);
+                    }
                 }
             }
         }        
@@ -653,9 +657,9 @@ void Matchings_predictor::compute_probabilities()
         // end debug code
 #endif
         Gene_id gene_id = e.first;
-        // if(gene_id != 12484) {
-        //     continue;
-        // }
+        if(gene_id != 7494) {
+            continue;
+        }
         auto & clusters = e.second;
         int i = 0;
         for(Cluster * cluster : clusters) {
@@ -666,13 +670,13 @@ void Matchings_predictor::compute_probabilities()
 #endif
             p_j_downregulated_given_c_bound_values_flattened[i] = this->p_j_downregulated_given_c_bound_values.at(std::make_pair(gene_id, cluster));
             p_c_bound_values_flattened[i] = this->p_c_bound_values.at(cluster);
-            // std::cout << "utr_start values for the sites in the current cluster:\n";
-            // for(Site * site : cluster->sites) {
-            //     std::cout << site->utr_start << " ";
-            // }
-            // std::cout << "\n";
-            // std::cout << "p_j_downregulated_given_c_bound_values_flattened[" << i << "], p_c_bound_values_flattened[" << i << "]\n";
-            // std::cout << p_j_downregulated_given_c_bound_values_flattened[i] << " " << p_c_bound_values_flattened[i] << "\n\n";
+            std::cout << "utr_start values for the sites in the current cluster:\n";
+            for(Site * site : cluster->sites) {
+                std::cout << site->utr_start << " ";
+            }
+            std::cout << "\n";
+            std::cout << "p_j_downregulated_given_c_bound_values_flattened[" << i << "], p_c_bound_values_flattened[" << i << "]\n";
+            std::cout << p_j_downregulated_given_c_bound_values_flattened[i] << " " << p_c_bound_values_flattened[i] << "\n\n";
             i++;
         }
         double sum = this->iteratively_compute_p_j_downregulated(p_j_downregulated_given_c_bound_values_flattened, p_c_bound_values_flattened, clusters.size());

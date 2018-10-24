@@ -52,9 +52,9 @@ void Matchings_predictor::compute_distance_based_predictions()
     unsigned long genes_processed = 0;
     for(auto & e : this->patient.interaction_graph.gene_to_clusters_arcs) {
         Gene_id gene_id = e.first;
-        if(gene_id != 12484) {
+        if(gene_id != 7494) {
             continue;            
-        }        
+        }
         std::cout << "gene_id = " << gene_id << "\n";
         auto & clusters = e.second;
 
@@ -209,18 +209,7 @@ void Matchings_predictor::recusively_compute_p_j_downregulated_distance_based(ch
         exit(1);
     }
     if(level == max_level) {
-        if(second_latest_bound_level == -1) {
-            int matchings_found = 0;
-            for(int i = 0; i < max_level; i++) {
-                if(b[i] == '1') {
-                    matchings_found++;
-                }
-            }
-            if(matchings_found != 1) {
-                std::cerr << "error: matchings_found = " << matchings_found << "\n";
-                exit(1);
-            }            
-        } else {
+        if(second_latest_bound_level != -1) {
             if(latest_bound_level == -1) {
                 std::cerr << "error: latest_bound_level = " << latest_bound_level << "\n";
                 exit(1);
