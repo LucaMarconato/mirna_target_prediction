@@ -29,6 +29,7 @@ int main(int argc, char * argv[])
     // Matchings_predictor matching_predictor(patient);
     // matching_predictor.compute();
 
+    return 0;
     Perturbation_analyzer perturbation_analyzer(patient);
 
     // perturbation_analyzer.run(Perturbation_type::No_perturbation,

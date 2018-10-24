@@ -603,18 +603,19 @@ void Matchings_predictor::compute_probabilities()
                 if(std::abs(sum_of_r_ijk_for_cluster.at(cluster)) < Global_parameters::epsilon) {
                 // if(std::abs(p_c_bound_values.at(cluster)) < Global_parameters::epsilon) {
                     static bool silence_warning = false;
+                    // if(p.second->utr_start == 23 && gene_id == 7494) {
+                    //     std::cerr << "error: we should never get here!\n";
+                    //     exit(1);
+                    // }
                     if(!silence_warning) {
                         silence_warning = true;
-                        std::cerr << "warning: skipping a division by zero. This warning is fine and will be silenced. This warning is triggered when a cluster has not binded by miRNAs. You may want to desilence this warning when debugging, if you think that an error could be hidden by skipping this division.\n";
+                        std::cerr << "error: division by zero. Do you really need to multiply by r_ijk and divide by sum_of_r_ijk_for_clusters? Probably not! Review the code by printing those values and act accordingly. If the cluster has only one site in and the site bings to only one mirna, then those values will be identical!\n";
+                        exit(1);
                     }
                 } else {
                     double to_add = r_ijk * probability_of_downregulation / sum_of_r_ijk_for_cluster.at(cluster);
                         // double to_add = r_ijk * probability_of_downregulation / p_c_bound_values.at(cluster);
                     this->p_j_downregulated_given_c_bound_values[key0] = this->p_j_downregulated_given_c_bound_values.at(key0) + to_add;
-                    if(p.second->utr_start == 23) {
-                        std::cout << "to_add = " << to_add << ", r_ijk = " << r_ijk << ", probability_of_downregulation = " << probability_of_downregulation << ", sum_of_r_ijk_for_cluster.at(cluster) = " << sum_of_r_ijk_for_cluster.at(cluster) << ", key0.first = " << key0.first << ", this->p_j_downregulated_given_c_bound_values[key0] = " << this->p_j_downregulated_given_c_bound_values[key0] << "\n";
-                        exit(1);
-                    }
                 }
             }
         }        
@@ -657,9 +658,9 @@ void Matchings_predictor::compute_probabilities()
         // end debug code
 #endif
         Gene_id gene_id = e.first;
-        if(gene_id != 7494) {
-            continue;
-        }
+        // if(gene_id != 7494) {
+        //     continue;
+        // }
         auto & clusters = e.second;
         int i = 0;
         for(Cluster * cluster : clusters) {
@@ -670,13 +671,13 @@ void Matchings_predictor::compute_probabilities()
 #endif
             p_j_downregulated_given_c_bound_values_flattened[i] = this->p_j_downregulated_given_c_bound_values.at(std::make_pair(gene_id, cluster));
             p_c_bound_values_flattened[i] = this->p_c_bound_values.at(cluster);
-            std::cout << "utr_start values for the sites in the current cluster:\n";
-            for(Site * site : cluster->sites) {
-                std::cout << site->utr_start << " ";
-            }
-            std::cout << "\n";
-            std::cout << "p_j_downregulated_given_c_bound_values_flattened[" << i << "], p_c_bound_values_flattened[" << i << "]\n";
-            std::cout << p_j_downregulated_given_c_bound_values_flattened[i] << " " << p_c_bound_values_flattened[i] << "\n\n";
+            // std::cout << "utr_start values for the sites in the current cluster:\n";
+            // for(Site * site : cluster->sites) {
+            //     std::cout << site->utr_start << " ";
+            // }
+            // std::cout << "\n";
+            // std::cout << "p_j_downregulated_given_c_bound_values_flattened[" << i << "], p_c_bound_values_flattened[" << i << "]\n";
+            // std::cout << p_j_downregulated_given_c_bound_values_flattened[i] << " " << p_c_bound_values_flattened[i] << "\n\n";
             i++;
         }
         double sum = this->iteratively_compute_p_j_downregulated(p_j_downregulated_given_c_bound_values_flattened, p_c_bound_values_flattened, clusters.size());

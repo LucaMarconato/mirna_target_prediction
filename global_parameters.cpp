@@ -10,11 +10,11 @@ using json = nlohmann::json;
 double Global_parameters::mirna_threshold_rpm;
 double Global_parameters::gene_threshold_rpm;
 // TODO: this has to be chosen wisely looking at the relative expression profiles of mirnas, genes, sites and clusters
-double Global_parameters::epsilon = 0.00000001;
+double Global_parameters::epsilon = 0.00000000001;
 double Global_parameters::lambda;
 bool Global_parameters::test_parallelization;
-unsigned int Global_parameters::threshold_for_overlapping_sites = 8;
-unsigned int Global_parameters::threshold_for_distance_based_predictions = 8; // TODO: set to 50
+unsigned int Global_parameters::threshold_for_overlapping_sites = 50; // TODO: set to 8
+unsigned int Global_parameters::threshold_for_distance_based_predictions = 50;
 bool Global_parameters::consider_distance_for_predictions = false;
 
 void Global_parameters::load_from_json()
