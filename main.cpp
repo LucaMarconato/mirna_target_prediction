@@ -38,7 +38,7 @@ int main(int argc, char * argv[])
     //                           Perturbation_extent(Perturbation_extent::No_perturbation()),
     //                           Perturbation_extent(Perturbation_extent::No_perturbation()));
 
-    Global_parameters::consider_distance_for_predictions = true;
+    // Global_parameters::consider_distance_for_predictions = true;
     
     perturbation_analyzer.run(Perturbation_type::No_perturbation,
                               Perturbation_type::No_perturbation,

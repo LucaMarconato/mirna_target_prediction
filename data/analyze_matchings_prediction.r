@@ -856,16 +856,18 @@ patient_id <- "TCGA-CJ-4642"
 ## patient_id <- "artificial1"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
 
-simulation_id <- "original_data"
+## simulation_id <- "original_data"
+simulation_id <- "______distance"
 simulation_output_path <- paste(patient_folder, "matchings_predictor_output/", simulation_id, "/", sep = "")
 close_all_devices()
-## analyze_convergence(simulation_output_path)
-## generate_readable_dynamics_log(simulation_output_path)
-## analyze_mirna_expression_profiles(simulation_output_path)
-## analyze_cluster_expression_profiles(simulation_output_path)
+analyze_convergence(simulation_output_path)
+generate_readable_dynamics_log(simulation_output_path)
+analyze_mirna_expression_profiles(simulation_output_path)
+analyze_cluster_expression_profiles(simulation_output_path)
 ## analyze_dynamics_for_small_interaction_graphs(simulation_output_path)
-## analyze_probabilities(patient_folder, simulation_output_path)
+analyze_probabilities(patient_folder, simulation_output_path)
 
+stop("stoooop")
 simulation_output_paths <- c()
 simulation_output_paths <- c(simulation_output_paths, simulation_output_path)
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "g__87__r3__", "/", sep = ""))
@@ -873,7 +875,8 @@ simulation_output_paths <- c(simulation_output_paths, simulation_output_path)
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r10__", "/", sep = ""))
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r1__", "/", sep = ""))
 
-simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "______", "/", sep = ""))
+## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "______", "/", sep = ""))
+simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "______distance", "/", sep = ""))
 ## ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r0.1__", "/", sep = ""))
 ## ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r-0.5__", "/", sep = ""))
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r-1__", "/", sep = ""))

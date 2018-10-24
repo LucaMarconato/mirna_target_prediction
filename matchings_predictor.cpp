@@ -180,7 +180,7 @@ void Matchings_predictor::export_interaction_matrix()
 void Matchings_predictor::compute()
 {
     std::cout << "for the moment, just a trivial explicit Euler scheme\n";
-    unsigned long long max_steps = 10;
+    unsigned long long max_steps = 1000;
     double mirna_lambda = 1;
     double cluster_lambda = 1;
     if(lambda > 1) {
@@ -193,10 +193,10 @@ void Matchings_predictor::compute()
     bool scaling = true;
     double cumulative_scaling = 1;
     bool logging = true;
-    bool export_mirna_expression_profile = false;
-    bool export_cluster_expression_profile = false;
+    bool export_mirna_expression_profile = true;
+    bool export_cluster_expression_profile = true;
     bool export_interaction_matrix = false;
-    bool export_partial_predicted_downregulation = false;
+    bool export_partial_predicted_downregulation = true;
     if(Global_parameters::test_parallelization) {
         std::cout << "generating only output for testing the parallelization\n";
         logging = true;
@@ -399,6 +399,7 @@ void Matchings_predictor::compute()
             double rank_mirna_total_exchange = 0;
             double rank_cluster_total_exchange = 0;
             auto rank_r_ic_values = std::unordered_map<std::pair<Mirna_id, Cluster *>, double>();
+            auto rank_r_ijk_values = std::unordered_map<std::pair<Mirna_id, Site *>, double>();
             
             auto it = this->patient.interaction_graph.gene_to_clusters_arcs.begin();
 
@@ -421,6 +422,7 @@ void Matchings_predictor::compute()
                             double mirna_value = this->mirna_profile.at(mirna_id);
                             double cluster_value = this->cluster_profile.at(cluster);
                             double exchange = h * mirna_value * cluster_value / number_of_sites_for_the_mirna_in_the_cluster;
+                            
                             if(exchange < 0) {
                                 static bool warning_already_presented = false;
                                 if(abs(exchange) < Global_parameters::epsilon) {
@@ -452,6 +454,12 @@ void Matchings_predictor::compute()
                             }
                             
                             rank_r_ic_values[p] += cluster_lambda * exchange / cumulative_scaling;
+
+                            auto ijk = std::make_pair(mirna_id, site);
+                            if(rank_r_ijk_values.find(ijk) == rank_r_ijk_values.end()) {
+                                rank_r_ijk_values[ijk] = 0;
+                            }
+                            rank_r_ijk_values[ijk] += cluster_lambda * exchange / cumulative_scaling;
                         }
                     }
                 }
@@ -478,6 +486,13 @@ void Matchings_predictor::compute()
                         this->r_ic_values[e.first] = e.second;
                     } else {
                         this->r_ic_values[e.first] += e.second;
+                    }
+                }
+                for(auto & e : rank_r_ijk_values) {
+                    if(this->r_ijk_values.find(e.first) == this->r_ijk_values.end()) {
+                        this->r_ijk_values[e.first] = e.second;
+                    } else {
+                        this->r_ijk_values[e.first] += e.second;
                     }
                 }
             }
@@ -512,14 +527,13 @@ void Matchings_predictor::compute()
 void Matchings_predictor::compute_probabilities()
 {
     // the function compute_probabilities is called many times if export_partial_predicted_downregulation is true, so we need to reset the probabilities before proceeding
-    r_ijk_values.clear();
+    // r_ijk_values.clear();
     p_c_bound_values.clear();
     sum_of_r_ijk_for_cluster.clear();
     p_j_downregulated_given_c_bound_values.clear();
     p_j_downregulated_values.clear();
     
     for(auto & e : this->r_ic_values) {
-        // compute r_ijk_values for the sites in the current cluster and binding to the current miRNA
         auto & mirna_id = e.first.first;
         Cluster * cluster = e.first.second;
         double value = e.second;
@@ -528,11 +542,16 @@ void Matchings_predictor::compute_probabilities()
             this->sum_of_r_ijk_for_cluster[cluster] = 0;
         }
         this->sum_of_r_ijk_for_cluster[cluster] = this->sum_of_r_ijk_for_cluster.at(cluster) + value;
+        /*
+        // old code, not used any more since now the values r_ijk are computed within the matching prediction procedure
+        // compute r_ijk_values for the sites in the current cluster and binding to the current miRNA
         std::list<std::pair<Mirna_id, Site *>> just_added;
+
         for(auto & site : cluster->sites) {
             auto & m = this->patient.interaction_graph.mirna_site_arcs;
             auto p = std::make_pair(mirna_id, site);
             if(m.find(p) != m.end()) {
+                // important: this->r_ijk_values[p] will soon be divided by just_added.size()
                 this->r_ijk_values[p] = value;
                 just_added.push_back(p);
             }
@@ -544,12 +563,13 @@ void Matchings_predictor::compute_probabilities()
         for(auto & p : just_added) {
             this->r_ijk_values[p] = this->r_ijk_values.at(p) / just_added.size();
         }
+        */
 
         // update p_c_bound_values, note that the values of a cluster are not definitive since we need to excecute the following code once per miRNA and the miRNA is given by the outer loop
         if(this->p_c_bound_values.find(cluster) == this->p_c_bound_values.end()) {
             this->p_c_bound_values[cluster] = 0;
-        }        
-        this->p_c_bound_values[cluster] = this->p_c_bound_values.at(cluster) + value / (this->original_cluster_profile.at(cluster) * cluster->sites.size());
+        }
+        this->p_c_bound_values[cluster] = this->p_c_bound_values.at(cluster) + value / (this->original_cluster_profile.at(cluster));
     }
 
     // compute p_j_downregulated_given_c_bound_values for the current cluster
@@ -581,6 +601,7 @@ void Matchings_predictor::compute_probabilities()
                 double context_score = mirna_site_arc.context_score;
                 double probability_of_downregulation = 1 - std::pow(2, context_score);
                 if(std::abs(sum_of_r_ijk_for_cluster.at(cluster)) < Global_parameters::epsilon) {
+                // if(std::abs(p_c_bound_values.at(cluster)) < Global_parameters::epsilon) {
                     static bool silence_warning = false;
                     if(!silence_warning) {
                         silence_warning = true;
@@ -588,6 +609,7 @@ void Matchings_predictor::compute_probabilities()
                     }
                 } else {
                     double to_add = r_ijk * probability_of_downregulation / sum_of_r_ijk_for_cluster.at(cluster);
+                        // double to_add = r_ijk * probability_of_downregulation / p_c_bound_values.at(cluster);
                     this->p_j_downregulated_given_c_bound_values[key0] = this->p_j_downregulated_given_c_bound_values.at(key0) + to_add;   
                 }
             }
@@ -625,15 +647,15 @@ void Matchings_predictor::compute_probabilities()
         int total_genes = this->patient.interaction_graph.gene_to_clusters_arcs.size();
         int current_percentage = (int)(100*((double)(genes_debugged + genes_not_debugged)/total_genes));
         if(current_percentage > latest_percentage) {
-        latest_percentage = current_percentage;
-        std::cout << "genes_debugged/total_genes: " << genes_debugged + genes_not_debugged << "/" << total_genes << " = " << current_percentage << "%\n";
+            latest_percentage = current_percentage;
+            std::cout << "genes_debugged/total_genes: " << genes_debugged + genes_not_debugged << "/" << total_genes << " = " << current_percentage << "%\n";
         }
         // end debug code
 #endif
         Gene_id gene_id = e.first;
-        if(gene_id != 12484) {
-            continue;
-        }
+        // if(gene_id != 12484) {
+        //     continue;
+        // }
         auto & clusters = e.second;
         int i = 0;
         for(Cluster * cluster : clusters) {
@@ -644,13 +666,13 @@ void Matchings_predictor::compute_probabilities()
 #endif
             p_j_downregulated_given_c_bound_values_flattened[i] = this->p_j_downregulated_given_c_bound_values.at(std::make_pair(gene_id, cluster));
             p_c_bound_values_flattened[i] = this->p_c_bound_values.at(cluster);
-            std::cout << "utr_start values for the sites in the current cluster:\n";
-            for(Site * site : cluster->sites) {
-                std::cout << site->utr_start << " ";
-            }
-            std::cout << "\n";
-            std::cout << "p_j_downregulated_given_c_bound_values_flattened[" << i << "], p_c_bound_values_flattened[" << i << "]\n";
-            std::cout << p_j_downregulated_given_c_bound_values_flattened[i] << " " << p_c_bound_values_flattened[i] << "\n\n";
+            // std::cout << "utr_start values for the sites in the current cluster:\n";
+            // for(Site * site : cluster->sites) {
+            //     std::cout << site->utr_start << " ";
+            // }
+            // std::cout << "\n";
+            // std::cout << "p_j_downregulated_given_c_bound_values_flattened[" << i << "], p_c_bound_values_flattened[" << i << "]\n";
+            // std::cout << p_j_downregulated_given_c_bound_values_flattened[i] << " " << p_c_bound_values_flattened[i] << "\n\n";
             i++;
         }
         double sum = this->iteratively_compute_p_j_downregulated(p_j_downregulated_given_c_bound_values_flattened, p_c_bound_values_flattened, clusters.size());
@@ -660,28 +682,31 @@ void Matchings_predictor::compute_probabilities()
         // begin debug code
         // safety check for genes with at most "cluster_limit" clusters
         if(clusters.size() <= cluster_limit) {
-        double debug_sum = 0;
-        this->recusively_compute_p_j_downregulated(b, 0, clusters.size(), &debug_sum, 1, 1, p_j_downregulated_given_c_bound_values_flattened, p_c_bound_values_flattened);
-        if(std::abs(sum - debug_sum) > Global_parameters::epsilon) {
-        std::cerr << "error: sum = " << sum << ", debug_sum = " << debug_sum << ", std::abs(sum - debug_sum) = " << std::abs(sum - debug_sum) << "\n";
-        std::cout << "describing the instance: clusters.size() = " << clusters.size() << "\n";
-        std::cout << "p_j_downregulated_given_c_bound_values_flattened, p_c_bound_values_flattened\n";
-        for(int j = 0; j < clusters.size(); j++) {
-        std::cout << p_j_downregulated_given_c_bound_values_flattened[j] << ", " << p_c_bound_values_flattened[j] << "\n";
-        }
-        exit(1);
-        }            
-        genes_debugged++;
+            double debug_sum = 0;
+            this->recusively_compute_p_j_downregulated(b, 0, clusters.size(), &debug_sum, 1, 1, p_j_downregulated_given_c_bound_values_flattened, p_c_bound_values_flattened);
+            if(std::abs(sum - debug_sum) > Global_parameters::epsilon) {
+                std::cerr << "error: sum = " << sum << ", debug_sum = " << debug_sum << ", std::abs(sum - debug_sum) = " << std::abs(sum - debug_sum) << "\n";
+                std::cout << "describing the instance: clusters.size() = " << clusters.size() << "\n";
+                std::cout << "p_j_downregulated_given_c_bound_values_flattened, p_c_bound_values_flattened\n";
+                for(int j = 0; j < clusters.size(); j++) {
+                    std::cout << p_j_downregulated_given_c_bound_values_flattened[j] << ", " << p_c_bound_values_flattened[j] << "\n";
+                }
+                exit(1);
+            }            
+            genes_debugged++;
         } else {
-        genes_not_debugged++;
+            genes_not_debugged++;
         }
-        std::cout << "genes_debugged/total_genes: " << genes_debugged << "/" << (genes_debugged + genes_not_debugged) << " = " << ((double)genes_debugged)/(genes_debugged + genes_not_debugged) << "\n";
-        std::cout << "finished, ";
-        Timer::stop();
-        delete [] b;
-        // end debug code
 #endif
     }
+
+#ifdef TEST_THE_ITERATIVE_ALGORITHM
+    std::cout << "genes_debugged/total_genes: " << genes_debugged << "/" << (genes_debugged + genes_not_debugged) << " = " << ((double)genes_debugged)/(genes_debugged + genes_not_debugged) << "\n";
+    std::cout << "finished, ";
+    Timer::stop();
+    delete [] b;
+    // end debug code
+#endif
     delete [] p_j_downregulated_given_c_bound_values_flattened;
     delete [] p_c_bound_values_flattened;
 
@@ -705,11 +730,11 @@ void Matchings_predictor::recusively_compute_p_j_downregulated(bool * b, int lev
     if(level == max_level) {
         p_j_downregulated_given_b = 1 - p_j_downregulated_given_b;
         *sum += p_j_downregulated_given_b * p_b;
-        std::cout << "b: ";
-        for(int i = 0; i < max_level; i++) {
-            std::cout << b[i] << " ";
-        }
-        std::cout << "| " << p_j_downregulated_given_b * p_b << "\n";
+        // std::cout << "b: ";
+        // for(int i = 0; i < max_level; i++) {
+        //     std::cout << b[i] << " ";
+        // }
+        // std::cout << "| " << p_j_downregulated_given_b * p_b << "\n";
     } else {
         double p_j_downregulated_given_c_bound = p_j_downregulated_given_c_bound_values_flattened[level];
         double p_c_bound = p_c_bound_values_flattened[level];

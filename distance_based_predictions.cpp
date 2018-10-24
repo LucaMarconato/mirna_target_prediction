@@ -140,7 +140,7 @@ void Matchings_predictor::compute_distance_based_predictions()
                                                                           bindings_in_the_current_distance_based_cluster,
                                                                           distance_based_enhancement_matrix,
                                                                           // TODO: check if the standard guarantees that the comparison agains -1 in an unsigned long gives consistent results
-                                                                          -1);
+                                                                          -1, -1);
                 std::cout << "current_distance_based_cluster:\n";
                 for(int k = 0; k < current_distance_based_cluster.size(); k++) {
                     std::cout << "k = 0\n";
@@ -192,9 +192,43 @@ void Matchings_predictor::recusively_compute_p_j_downregulated_distance_based(ch
                                                                               double * sum, double p_j_downregulated_given_b, double p_b,
                                                                               Binding_flattened * bindings_flattened,
                                                                               double ** distance_based_enhancement_matrix,
-                                                                              unsigned long latest_bound_level)
+                                                                              unsigned long latest_bound_level, unsigned long second_latest_bound_level)
 {
+    if(latest_bound_level != -1 || second_latest_bound_level != -1) {
+        if(latest_bound_level == second_latest_bound_level ||
+           latest_bound_level == level ||
+           second_latest_bound_level == level ||
+           // the part before the and is superfluos, but makes the code more robust and clearer
+           (second_latest_bound_level != -1 && latest_bound_level == -1)) {
+            std::cerr << "error: level = " << level << ", latest_bound_level = " << latest_bound_level << ", second_latest_bound_level = " << second_latest_bound_level << "\n";
+            exit(1);
+        }
+    }
+    if(max_level == 0) {
+        std::cerr << "error: max_level = " << max_level << "\n";
+        exit(1);
+    }
     if(level == max_level) {
+        if(second_latest_bound_level == -1) {
+            int matchings_found = 0;
+            for(int i = 0; i < max_level; i++) {
+                if(b[i] == '1') {
+                    matchings_found++;
+                }
+            }
+            if(matchings_found != 1) {
+                std::cerr << "error: matchings_found = " << matchings_found << "\n";
+                exit(1);
+            }            
+        } else {
+            if(latest_bound_level == -1) {
+                std::cerr << "error: latest_bound_level = " << latest_bound_level << "\n";
+                exit(1);
+            }
+            double distance_based_enhancement_factor = std::sqrt(1 - distance_based_enhancement_matrix[second_latest_bound_level][latest_bound_level]);
+            p_j_downregulated_given_b *= distance_based_enhancement_factor;
+        }
+        
         p_j_downregulated_given_b = 1 - p_j_downregulated_given_b;
         std::cout << "p_j_downregulated_given_b = " << p_j_downregulated_given_b << ", p_b = " << p_b << "\n";
         *sum += p_j_downregulated_given_b * p_b;
@@ -233,18 +267,23 @@ void Matchings_predictor::recusively_compute_p_j_downregulated_distance_based(ch
             }
 
             p_j_downregulated_given_ijk_bound = bindings_flattened[i].p_j_downregulated_given_ijk_bound;
-            p_ijk_bound = bindings_flattened[i].p_ijk_bound / (last_element_of_cluster - first_element_of_cluster + 1);
-            p_none_of_ijk_binds *= 1 - p_ijk_bound;
+            p_ijk_bound = bindings_flattened[i].p_ijk_bound;
+            p_none_of_ijk_binds -= p_ijk_bound;
             utr_start = bindings_flattened[i].utr_start;
-            // // TODO: BUG HERE!!!!!!!!!!! TO FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! THE VALUE OF DISTANE_BASED_ENHANCEMENT IS NOT CORRECT RIGHT NOW
+
+            // the distance_based_enhancement_factor is used to amplity the downregulation of the previous matched site, the downregulation of the currently matched site will be done in the next recursive call
             double distance_based_enhancement_factor = 1;
-            if(latest_bound_level != -1) {
-                unsigned long latest_utr_start = bindings_flattened[latest_bound_level].utr_start;
-                if(utr_start - latest_utr_start > Global_parameters::threshold_for_overlapping_sites) {
-                    std::cerr << "error: utr_start - latest_utr_start = " << utr_start - latest_utr_start << "\n";
+            if(latest_bound_level != -1 || second_latest_bound_level != -1) {
+                if(latest_bound_level != -1 && second_latest_bound_level == -1) {
+                    distance_based_enhancement_factor = std::sqrt(1 - distance_based_enhancement_matrix[latest_bound_level][i]);
+                }
+                if(latest_bound_level != -1 && second_latest_bound_level != -1) {
+                    double other_distance_based_enhancement_factor = std::sqrt(1 - distance_based_enhancement_matrix[second_latest_bound_level][latest_bound_level]);
+                    distance_based_enhancement_factor = std::max(distance_based_enhancement_factor, other_distance_based_enhancement_factor);
+                } else {
+                    std::cerr << "error: latest_bound_level = -1 && second_latest_bound_level = -1\n";
                     exit(1);
                 }
-                distance_based_enhancement_factor = 1 - distance_based_enhancement_matrix[latest_bound_level][i];
             }
 
             // not that the indexes of the matrix must be [latest_bound_level][bound_level] and not the opposite because the matrix is upper triangular
@@ -255,7 +294,7 @@ void Matchings_predictor::recusively_compute_p_j_downregulated_distance_based(ch
                                                                 sum, new_p_j_downregulated_given_b, new_p_b,
                                                                 bindings_flattened,
                                                                 distance_based_enhancement_matrix,
-                                                                i);
+                                                                i, latest_bound_level);
         }
 
         for(i = first_element_of_cluster; i <= last_element_of_cluster; i++) {
@@ -268,7 +307,7 @@ void Matchings_predictor::recusively_compute_p_j_downregulated_distance_based(ch
                                                             sum, new_p_j_downregulated_given_b, new_p_b,
                                                             bindings_flattened,
                                                             distance_based_enhancement_matrix,
-                                                            latest_bound_level);
+                                                            latest_bound_level, second_latest_bound_level);
     }
 }
 

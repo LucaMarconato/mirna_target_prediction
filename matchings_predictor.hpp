@@ -36,10 +36,10 @@ class Matchings_predictor {
                                                                     double * sum, double p_j_downregulated_given_b, double p_b,
                                                                     Binding_flattened * bindings_flattened,
                                                                     double ** distance_based_enhance_matrix,
-                                                                    unsigned long latest_bound_level);
+                                                                    unsigned long latest_bound_level, unsigned long second_latest_bound_level);
 public:
     double lambda;
-    
+
     Matchings_predictor(Patient & patient, std::string simulation_id = "original_data");
     Matchings_predictor(const Matchings_predictor & obj);
     friend void swap(Matchings_predictor & obj1, Matchings_predictor & obj2);
