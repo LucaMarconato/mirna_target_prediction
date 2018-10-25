@@ -177,6 +177,30 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
         }
     }
     
+    /*
+      WARNING: the model has a limitation (which can be addressed if needed): it underestimate the effect of a miRNA in the case in which it has more than one site available withing the same cluster. This scenario happens in approximately 0.5% of the cases, has it can be deduced running the following command 
+      cut -f 6 -d " " | uniq | sort | uniq | wc
+      to the output of the code commented below
+      // for(auto & e : this->gene_to_clusters_arcs) {
+      //     for(Cluster * cluster : e.second) {
+      //         std::unordered_map<Mirna_id, int> count;
+      //         for(Site * site : cluster->sites) {
+      //             for(auto & mirna : this->site_to_mirnas_arcs.at(site)) {
+      //                 if(count.find(mirna) == count.end()) {
+      //                     count[mirna] = 0;
+      //                 }
+      //                 count[mirna] = count.at(mirna) + 1;
+      //             }
+      //         }
+      //         for(auto e : count) {
+      //             if(e.second > 1) {
+      //                 std::cout << "e.first = " << e.first << ", cluster = " << cluster << "\n";
+      //             }
+      //         }
+      //     }
+      // }
+     */
+    
     std::cout << "built, ";
     Timer::stop();
 }

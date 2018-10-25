@@ -29,15 +29,14 @@ int main(int argc, char * argv[])
     // Matchings_predictor matching_predictor(patient);
     // matching_predictor.compute();
 
-    return 0;
     Perturbation_analyzer perturbation_analyzer(patient);
 
-    // perturbation_analyzer.run(Perturbation_type::No_perturbation,
-    //                           Perturbation_type::No_perturbation,
-    //                           Perturbation_target(Perturbation_target::Empty_target()),
-    //                           Perturbation_target(Perturbation_target::Empty_target()),
-    //                           Perturbation_extent(Perturbation_extent::No_perturbation()),
-    //                           Perturbation_extent(Perturbation_extent::No_perturbation()));
+    perturbation_analyzer.run(Perturbation_type::No_perturbation,
+                              Perturbation_type::No_perturbation,
+                              Perturbation_target(Perturbation_target::Empty_target()),
+                              Perturbation_target(Perturbation_target::Empty_target()),
+                              Perturbation_extent(Perturbation_extent::No_perturbation()),
+                              Perturbation_extent(Perturbation_extent::No_perturbation()));
 
     Global_parameters::consider_distance_for_predictions = true;
     

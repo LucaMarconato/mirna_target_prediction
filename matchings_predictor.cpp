@@ -444,10 +444,6 @@ void Matchings_predictor::compute()
                             rank_mirna_total_exchange += (mirna_lambda * exchange / cumulative_scaling);
                             rank_cluster_total_exchange += (cluster_lambda * exchange / cumulative_scaling);
 
-                            // if(rank > 0) {
-                            //     std::cerr << "error: I have not parallelized the part of the code accessing r_ic_value yet\n";
-                            //     exit(1);
-                            // }
                             auto p = std::make_pair(mirna_id, cluster);
                             if(rank_r_ic_values.find(p) == rank_r_ic_values.end()) {
                                 rank_r_ic_values[p] = 0;
@@ -542,28 +538,6 @@ void Matchings_predictor::compute_probabilities()
             this->sum_of_r_ijk_for_cluster[cluster] = 0;
         }
         this->sum_of_r_ijk_for_cluster[cluster] = this->sum_of_r_ijk_for_cluster.at(cluster) + value;
-        /*
-        // old code, not used any more since now the values r_ijk are computed within the matching prediction procedure
-        // compute r_ijk_values for the sites in the current cluster and binding to the current miRNA
-        std::list<std::pair<Mirna_id, Site *>> just_added;
-
-        for(auto & site : cluster->sites) {
-            auto & m = this->patient.interaction_graph.mirna_site_arcs;
-            auto p = std::make_pair(mirna_id, site);
-            if(m.find(p) != m.end()) {
-                // important: this->r_ijk_values[p] will soon be divided by just_added.size()
-                this->r_ijk_values[p] = value;
-                just_added.push_back(p);
-            }
-        }
-        if(just_added.size() == 0) {
-            std::cerr << "error: just_added.size() = " << just_added.size() << "\n";
-            exit(1);
-        }
-        for(auto & p : just_added) {
-            this->r_ijk_values[p] = this->r_ijk_values.at(p) / just_added.size();
-        }
-        */
 
         // update p_c_bound_values, note that the values of a cluster are not definitive since we need to excecute the following code once per miRNA and the miRNA is given by the outer loop
         if(this->p_c_bound_values.find(cluster) == this->p_c_bound_values.end()) {
@@ -658,9 +632,6 @@ void Matchings_predictor::compute_probabilities()
         // end debug code
 #endif
         Gene_id gene_id = e.first;
-        // if(gene_id != 7494) {
-        //     continue;
-        // }
         auto & clusters = e.second;
         int i = 0;
         for(Cluster * cluster : clusters) {
@@ -780,7 +751,6 @@ void Matchings_predictor::export_probabilities()
     std::string filename;
     
     std::cout << "exporting r_ic_values\n";
-    // Timer::start();
     ss.str("");
     ss << "mirna_id\tcluster_address\tr_ic\n";
     for(auto & e : this->r_ic_values) {
@@ -793,11 +763,8 @@ void Matchings_predictor::export_probabilities()
     out.open(filename);
     out << ss.str();
     out.close();
-    // std::cout << "finished, ";
-    // Timer::stop();
 
     std::cout << "exporting r_ijk_values\n";
-    // Timer::start();
     ss.str("");
     ss << "mirna_id\tsite_address\tr_ijk\n";
     for(auto & e : this->r_ijk_values) {
@@ -810,11 +777,8 @@ void Matchings_predictor::export_probabilities()
     out.open(filename);
     out << ss.str();
     out.close();
-    // std::cout << "finished, ";
-    // Timer::stop();
 
     std::cout << "exporting p_c_bound_values\n";
-    // Timer::start();
     ss.str("");
     ss << "cluster_address\tp_c_bound\n";
     for(auto & e : this->p_c_bound_values) {
@@ -826,11 +790,8 @@ void Matchings_predictor::export_probabilities()
     out.open(filename);
     out << ss.str();
     out.close();
-    // std::cout << "finished, ";
-    // Timer::stop();
 
     std::cout << "exporting p_j_downregulated_given_c_bound_values\n";
-    // Timer::start();
     ss.str("");
     ss << "gene_id\tcluster_address\tp_j_downregulated_given_c_bound_values\n";
     for(auto & e : this->p_j_downregulated_given_c_bound_values) {
@@ -843,8 +804,6 @@ void Matchings_predictor::export_probabilities()
     out.open(filename);
     out << ss.str();
     out.close();
-    // std::cout << "finished, ";
-    // Timer::stop();
 
     this->export_p_j_downregulated();
 }
@@ -853,7 +812,6 @@ void Matchings_predictor::export_p_j_downregulated(int filename_suffix)
 {
     std::stringstream ss;
     std::cout << "exporting p_j_downregulated_values\n";
-    // Timer::start();
 
     ss << "gene_id\tp_j_downregulated_values\n";
     if(filename_suffix > 0) {
@@ -874,5 +832,4 @@ void Matchings_predictor::export_p_j_downregulated(int filename_suffix)
     std::ofstream out(filename.str());
     out << ss.str();
     out.close();
-    // Timer::stop();
 }

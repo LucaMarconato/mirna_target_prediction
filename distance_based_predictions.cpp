@@ -1,6 +1,7 @@
 #include "matchings_predictor.hpp"
 
 #include <iomanip>
+#include <fstream>
 
 #include "global_parameters.hpp"
 
@@ -34,7 +35,7 @@ void Matchings_predictor::compute_distance_based_predictions()
     Binding_flattened * bindings_in_the_current_distance_based_cluster = new Binding_flattened [total_possible_bindings_in_a_gene_max_value];
     // debug purpose, to print the current call of the recursive procedure
     char * b = new char [total_possible_bindings_in_a_gene_max_value];
-    const unsigned long threshold_for_exponential_algorithm = 20;
+    const unsigned long threshold_for_exponential_algorithm = 40;
     double ** distance_based_enhancement_matrix = new double * [threshold_for_exponential_algorithm];
     for(int k = 0; k < threshold_for_exponential_algorithm; k++) {
         distance_based_enhancement_matrix[k] = new double [threshold_for_exponential_algorithm];
@@ -52,10 +53,6 @@ void Matchings_predictor::compute_distance_based_predictions()
     unsigned long genes_processed = 0;
     for(auto & e : this->patient.interaction_graph.gene_to_clusters_arcs) {
         Gene_id gene_id = e.first;
-        // if(gene_id != 7494) {
-        //     continue;            
-        // }
-        // std::cout << "gene_id = " << gene_id << "\n";
         auto & clusters = e.second;
 
         // find all possible interactions with the gene and store them in a flattened form
@@ -75,7 +72,7 @@ void Matchings_predictor::compute_distance_based_predictions()
                 }    
             }
         }
-
+        
         // create all distance based clusters
         std::sort(bindings_in_j, bindings_in_j + i,
                   [](const Binding_flattened & a, const Binding_flattened & b)
@@ -135,12 +132,10 @@ void Matchings_predictor::compute_distance_based_predictions()
                     }
                 }
 
-                // std::cout << "starting the recursion, current_distance_based_cluster.size() = " << current_distance_based_cluster.size() << "\n";
                 this->recusively_compute_p_j_downregulated_distance_based(b, 0, current_distance_based_cluster.size(),
                                                                           &p_j_downregulated_given_current_distance_based_cluster, 1, 1,
                                                                           bindings_in_the_current_distance_based_cluster,
                                                                           distance_based_enhancement_matrix,
-                                                                          // TODO: check if the standard guarantees that the comparison agains -1 in an unsigned long gives consistent results
                                                                           -1, -1);
                 // std::cout << "current_distance_based_cluster:\n";
                 // for(int k = 0; k < current_distance_based_cluster.size(); k++) {
@@ -163,19 +158,28 @@ void Matchings_predictor::compute_distance_based_predictions()
             }
             double p_j_downregulated = 1 - ratio_j_not_downregulated;
             // test to check if the predictions made without considering the distance fit the one when the distance is considered but the distance contribution is set to zero
-            if(std::abs(this->p_j_downregulated_values.at(gene_id) - p_j_downregulated) > Global_parameters::epsilon) {
-                std::cout << "abs(this->p_j_downregulated_values.at(gene_id) - p_j_downregulated) = " << abs(this->p_j_downregulated_values.at(gene_id) - p_j_downregulated) << "\n";
-                std::cout << "genes_processed = " << genes_processed << " (" << this->genes_skipped_by_the_distance_based_predictor.size() << " skipped)\n";
-                std::cout << "distance_based_clusters.size() = " << distance_based_clusters.size() << "\n";
-                exit(1);
-            }
+            // if(std::abs(this->p_j_downregulated_values.at(gene_id) - p_j_downregulated) > Global_parameters::epsilon) {
+            //     std::cout << "abs(this->p_j_downregulated_values.at(gene_id) - p_j_downregulated) = " << abs(this->p_j_downregulated_values.at(gene_id) - p_j_downregulated) << "\n";
+            //     std::cout << "genes_processed = " << genes_processed << " (" << this->genes_skipped_by_the_distance_based_predictor.size() << " skipped)\n";
+            //     std::cout << "distance_based_clusters.size() = " << distance_based_clusters.size() << "\n";
+            //     exit(1);
+            // }
             this->p_j_downregulated_values[gene_id] = p_j_downregulated;
             genes_processed++;
             // std::cout << "genes_processed = " << genes_processed << " (" << this->genes_skipped_by_the_distance_based_predictor.size() << " skipped)\n";
         }
     }
     std::cout << "genes_processed = " << genes_processed << " (" << this->genes_skipped_by_the_distance_based_predictor.size() << " skipped)\n";
-
+    std::string path = this->get_output_path() + "genes_skipped_in_distance_based_prediction.tsv";
+    std::stringstream ss;
+    ss << "gene_id\n";
+    for(const Gene_id & gene_id : this->genes_skipped_by_the_distance_based_predictor) {
+        ss << gene_id << "\n";
+    }
+    std::ofstream out(path);
+    out << ss.str();
+    out.close();
+    
     delete [] bindings_in_j;
     delete [] bindings_in_the_current_distance_based_cluster;
     delete [] b;
@@ -183,11 +187,6 @@ void Matchings_predictor::compute_distance_based_predictions()
         delete [] distance_based_enhancement_matrix[k];
     }
     delete [] distance_based_enhancement_matrix;
-    // recursively make the precictions using the array
-    // store the prediction on the p_j_downregulated
-
-
-    // TODO: TEST THE DISTANCE BASED PREDICTIONS IN THE CASE IN WHICH THE RESULT SHOULD COINCIDE TO THE USUAL PREDICITONS!!!!!
 }
 
 void Matchings_predictor::recusively_compute_p_j_downregulated_distance_based(char * b, int level, int max_level,
@@ -270,7 +269,7 @@ void Matchings_predictor::recusively_compute_p_j_downregulated_distance_based(ch
                 }
                 if(latest_bound_level != -1 && second_latest_bound_level != -1) {
                     double other_distance_based_enhancement_factor = std::sqrt(1 - distance_based_enhancement_matrix[second_latest_bound_level][latest_bound_level]);
-                    distance_based_enhancement_factor = std::max(distance_based_enhancement_factor, other_distance_based_enhancement_factor);
+                    distance_based_enhancement_factor = std::min(distance_based_enhancement_factor, other_distance_based_enhancement_factor);
                 }
                 if(latest_bound_level == -1 && second_latest_bound_level != -1){
                     std::cerr << "error: latest_bound_level = " << latest_bound_level << ", second_latest_bound_level = " << second_latest_bound_level << ", -1 = " << (unsigned long)-1 << "\n";
@@ -313,44 +312,18 @@ double Matchings_predictor::distance_based_enchange(unsigned long distance)
 {    
     // TODO: fill with real values, these are just very very rough approximations
     double additional_log_fold_change;
-    // if(distance < 15) {
-    //     additional_log_fold_change = -1;
-    // } else if(distance < 30) {
-    //     additional_log_fold_change = -2;
-    // } else if(distance < 50) {
-    //     additional_log_fold_change = -1;
-    // } else {
-    //     additional_log_fold_change = 0;
-    // }
+    if(distance < 15) {
+        additional_log_fold_change = 0;
+    } else if(distance < 22) {
+        additional_log_fold_change = 0;
+    } else if(distance < 50) {
+        additional_log_fold_change = -1;
+    } else {
+        additional_log_fold_change = 0;
+    }
     // to test if the distance based predictions give the same result of the usual method when distance does not influence predicitons
-    additional_log_fold_change = 0;
-    
+    // additional_log_fold_change = 0;
 
     double additional_probability_of_downregulation = 1 - std::pow(2, additional_log_fold_change);
     return additional_probability_of_downregulation;
 }
-
-// double compute_distance_based_cluster_contribution(std::unordered_map<Cluster *, double> )
-
-// double Matchings_predictor::compute_p_j_downregulated_considering_distance(double * p_j_downregulated_given_c_bound_values_flattened, double * p_c_bound_values_flattened, Cluster ** clusters_in_j_flattened, int clusters_count)
-// {
-    // std::unordered_map<Cluster *, double> cluster_contribution;
-
-    // for(auto & e : this->patient.interaction_graph.gene_to_clusters_arcs) {
-    //     Gene_id loop_gene_id = e.first;
-    //     if(gene_id != loop_gene_id) {
-    //         continue;
-    //     }
-    //     auto & clusters = e.second;
-    //     for(Cluster * cluster : clusters) {
-            
-    //     }
-    //     double sum = this->iteratively_compute_p_j_downregulated(p_j_downregulated_given_c_bound_values_flattened, p_c_bound_values_flattened, clusters.size());
-    //     this->p_j_downregulated_values[gene_id] = sum;
-    // }
-    // for(Cluster * cluster : this->p_c_bound_values) {
-        
-    // }
-    // compute_distance_based_cluster_contribution(cluster_contribution, gene_id, p_j_downregulated_given_c_bound_values, p_c_bound_values;
-    // return -1;
-// }

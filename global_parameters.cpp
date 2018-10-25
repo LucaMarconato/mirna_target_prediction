@@ -13,7 +13,7 @@ double Global_parameters::gene_threshold_rpm;
 double Global_parameters::epsilon = 0.00000000001;
 double Global_parameters::lambda;
 bool Global_parameters::test_parallelization;
-unsigned int Global_parameters::threshold_for_overlapping_sites = 50; // TODO: set to 8
+unsigned int Global_parameters::threshold_for_overlapping_sites = 8;
 unsigned int Global_parameters::threshold_for_distance_based_predictions = 50;
 bool Global_parameters::consider_distance_for_predictions = false;
 
