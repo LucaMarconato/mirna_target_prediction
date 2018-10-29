@@ -191,13 +191,13 @@ void Perturbation_analyzer::perturb()
                 exit(1);
             }
                 
-            std::cout << "generating " << n << " standard normal values\n";
+            std::cout << "generating " << n + 1 << " standard normal values\n";
             Timer::start();
             std::default_random_engine generator;
             std::normal_distribution<double> distribution(0.0, 1.0);
             std::vector<double> samples;
-            samples.reserve(n);
-            for(int i = 0; i < n; i++) {
+            samples.reserve(n + 1);
+            for(int i = 0; i < n + 1; i++) {
                 samples[i] = distribution(generator);
             }
             std::cout << "done, \n";
@@ -205,33 +205,40 @@ void Perturbation_analyzer::perturb()
 
             unsigned int i = 0;
             std::vector<Mirna_id> to_process;
-            to_process.reserve(n);
+            to_process.reserve(n + 1);
             for(auto & e : mirna_profile_sorted) {
                 auto & list_of_ids = e.second;
-                if(i < n) {
+                if(i < n + 1) {
                     for(auto & mirna_id : list_of_ids) {
-                        if(to_process.size() < n) {
+                        if(to_process.size() < n + 1) {
                             to_process.push_back(mirna_id);
                         }
                     }
                 }
                 i += list_of_ids.size();
             }
-            if(to_process.size() != n) {
+            if(to_process.size() != n + 1) {
                 std::cout << "to_process.size() = " << to_process.size() << ", n = " << n << "\n";
                 exit(1);
             }
+            i = 0;
             for(auto & mirna_id : to_process) {
                 double reads = this->perturbed_patient.tumor_mirnas.profile.at(mirna_id).to_reads();
                 // when studying the gaussian perturbation you may to use (1 + sigma + exp(sigma/expression_level)) instead of the formula used
                 if(this->mirna_perturbation_extent.relative_perturbation.is_valid) {
-                    reads *= (1 + this->mirna_perturbation_extent.relative_perturbation.value);
+                    reads *= (samples[i]*this->mirna_perturbation_extent.relative_perturbation.value);
+                    if(reads < 0) {
+                        reads = 0;
+                    }
                 } else if(this->mirna_perturbation_extent.absolute_perturbation.is_valid) {
-                    double rpm_to_add = this->mirna_perturbation_extent.absolute_perturbation.value;
-                    double reads_to_add = rpm_to_add/1000000*this->perturbed_patient.tumor_mirnas.profile.at(mirna_id).get_grand_total();
-                    reads += reads_to_add;
+                    std::cerr << "error: not implemented; it easy to do but you would get a lot of miRNAs would result being shut down\n";
+                    exit(1);
+                    // double rpm_to_add = this->mirna_perturbation_extent.absolute_perturbation.value;
+                    // double reads_to_add = rpm_to_add/1000000*this->perturbed_patient.tumor_mirnas.profile.at(mirna_id).get_grand_total();
+                    // reads += reads_to_add;
                 }
-                this->perturbed_patient.tumor_mirnas.profile[mirna_id] = Reads(reads);   
+                this->perturbed_patient.tumor_mirnas.profile[mirna_id] = Reads(reads);
+                i++;
             }
         } else {
             std::cerr << "error: exception in this->mirna_perturbation_type == Perturbation_type::Gaussian_perturbation\n";
@@ -239,6 +246,19 @@ void Perturbation_analyzer::perturb()
         }
     }
 
+    // /*
+    //   We remove the mirnas with no reads; TODO: you may be interested in doing the same but for mirnas with rpm below the threshold used in global_parameters.json
+    //   Also, you should use an epsilon to check if a mirna has zero reads, here it works because the data about the mirnas are the effective reads, but with a different data format it may not work.
+    // */
+    // for(auto it = this->perturbed_patient.tumor_mirnas.profile.begin(); it != this->perturbed_patient.tumor_mirnas.profile.end(); ) {            
+    //     double reads = it->second.to_reads();
+    //     if(reads == 0) {
+    //         this->perturbed_patient.tumor_mirnas.profile.erase(it++);
+    //     } else {
+    //         ++it;
+    //     }
+    // }
+    
     double total_reads_after_perturbation = 0;
     for(auto & e : this->perturbed_patient.tumor_mirnas.profile) {
         double reads = e.second.to_reads();

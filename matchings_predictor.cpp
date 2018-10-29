@@ -193,7 +193,7 @@ void Matchings_predictor::compute()
     bool scaling = true;
     double cumulative_scaling = 1;
     bool logging = true;
-    bool export_mirna_expression_profile = false;
+    bool export_mirna_expression_profile = true;
     bool export_cluster_expression_profile = false;
     bool export_interaction_matrix = false;
     bool export_partial_predicted_downregulation = false;
@@ -581,8 +581,12 @@ void Matchings_predictor::compute_probabilities()
                     //     std::cerr << "error: we should never get here!\n";
                     //     exit(1);
                     // }
-                    if(!silence_warning) {
-                        silence_warning = true;
+                    if(std::abs(sum_of_r_ijk_for_cluster.at(cluster)) < std::pow(2, -50)) {
+                        if(!silence_warning) {
+                            silence_warning = true;
+                            std::cerr << "error: division by zero. If this arises in the context of a perturbation analysis in which some mirnas are knocked out then this warning is fine\n This warning will be silenced.";
+                        }
+                    } else {
                         std::cerr << "error: division by zero. Do you really need to multiply by r_ijk and divide by sum_of_r_ijk_for_clusters? Probably not! Review the code by printing those values and act accordingly. If the cluster has only one site in and the site bings to only one mirna, then those values will be identical!\n";
                         exit(1);
                     }

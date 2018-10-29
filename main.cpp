@@ -31,24 +31,24 @@ int main(int argc, char * argv[])
 
     Perturbation_analyzer perturbation_analyzer(patient);
 
-    perturbation_analyzer.run(Perturbation_type::No_perturbation,
-                              Perturbation_type::No_perturbation,
-                              Perturbation_target(Perturbation_target::Empty_target()),
-                              Perturbation_target(Perturbation_target::Empty_target()),
-                              Perturbation_extent(Perturbation_extent::No_perturbation()),
-                              Perturbation_extent(Perturbation_extent::No_perturbation()));
+    // perturbation_analyzer.run(Perturbation_type::No_perturbation,
+    //                           Perturbation_type::No_perturbation,
+    //                           Perturbation_target(Perturbation_target::Empty_target()),
+    //                           Perturbation_target(Perturbation_target::Empty_target()),
+    //                           Perturbation_extent(Perturbation_extent::No_perturbation()),
+    //                           Perturbation_extent(Perturbation_extent::No_perturbation()));
 
-    Global_parameters::consider_distance_for_predictions = true;
+    // Global_parameters::consider_distance_for_predictions = true;
     
-    perturbation_analyzer.run(Perturbation_type::No_perturbation,
-                              Perturbation_type::No_perturbation,
-                              Perturbation_target(Perturbation_target::Empty_target()),
-                              Perturbation_target(Perturbation_target::Empty_target()),
-                              Perturbation_extent(Perturbation_extent::No_perturbation()),
-                              Perturbation_extent(Perturbation_extent::No_perturbation()),
-                              "distance");
+    // perturbation_analyzer.run(Perturbation_type::No_perturbation,
+    //                           Perturbation_type::No_perturbation,
+    //                           Perturbation_target(Perturbation_target::Empty_target()),
+    //                           Perturbation_target(Perturbation_target::Empty_target()),
+    //                           Perturbation_extent(Perturbation_extent::No_perturbation()),
+    //                           Perturbation_extent(Perturbation_extent::No_perturbation()),
+    //                           "distance");
 
-    // int mirnas_count = patient.tumor_mirnas.profile.size();
+    int mirnas_count = patient.tumor_mirnas.profile.size();
     // int first_n_mirnas_to_perturb = mirnas_count;
     // for(int i = 0; i < first_n_mirnas_to_perturb; i++) {
     //     perturbation_analyzer.run(Perturbation_type::Point_perturbation,
@@ -74,17 +74,21 @@ int main(int argc, char * argv[])
     //                           Perturbation_extent(Perturbation_extent::Relative_perturbation(-1)),
     //                           Perturbation_extent(Perturbation_extent::No_perturbation()));
 
-    // int experiments_count = 5;
-    // for(int i = 0; i < experiments_count; i++) {
-    //     std::stringstream ss;
-    //     ss << i;
-    //     perturbation_analyzer.run(Perturbation_type::Gaussian_perturbation,
-    //                               Perturbation_type::No_perturbation,
-    //                               Perturbation_target(Perturbation_target::Elements_from_nth_largest(mirnas_count)),
-    //                               Perturbation_target(Perturbation_target::Empty_target()),
-    //                               Perturbation_extent(Perturbation_extent::Relative_perturbation(1)),
-    //                               Perturbation_extent(Perturbation_extent::No_perturbation()));
-    // }
+    int max_perturbation_extent = 10;
+    int replicates = 3;
+    for(int i = 0; i < max_perturbation_extent; i++) {
+        for(int j = 0; j < replicates; j++) {
+            std::stringstream ss;
+            ss << j;
+            perturbation_analyzer.run(Perturbation_type::Gaussian_perturbation,
+                                      Perturbation_type::No_perturbation,
+                                      Perturbation_target(Perturbation_target::Elements_from_nth_largest(mirnas_count - 1)),
+                                      Perturbation_target(Perturbation_target::Empty_target()),
+                                      Perturbation_extent(Perturbation_extent::Relative_perturbation(i+1)),
+                                      Perturbation_extent(Perturbation_extent::No_perturbation()),
+                                      ss.str());
+        }
+    }
     std::cout << "freeing pointers\n";
     patient.interaction_graph.free_pointers();
     std::cout << "other cleaning up\n";

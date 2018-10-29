@@ -9,8 +9,7 @@
 * DONE check the gene with id 118 (the gene indexing was wrong)
 * DONE complete the code for the gaussian perturbation
 * DONE find the mRNAs which are most influenced, both perturbing the base level and adding some copies to the knocked-down dataset; look both at log-ratio and at Spearman's correlation coefficient
-* TODO compare the ranking obtained by knockdown and the one obtained by a hugely increasing the expression of a specific mirna
-* TODO systhematic perturbation by a fixed amount
+* DONE systhematic perturbation by a fixed amount
 * TODO more plots on gaussian perturbation
 * TODO stability of the method, for the expression levels, the exchange and the context (do it in the log-scale to have comparable constant variance)
 * TODO find the elements which cause most of the variability in the method
@@ -41,3 +40,4 @@ TO FINISH THE THESIS
 * TODO build the multiple linear regression model
 BONUS
 * TODO use the tool to find (with bruteforce and stepwise approach) to find a set of artificial sequences to insert in the cell colture to minimise the differences in down-regulation between normal and tumor cells
+* TODO in generating the data use the mirbase-id instead of the miRNA family

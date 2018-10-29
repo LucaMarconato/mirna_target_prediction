@@ -57,7 +57,9 @@ public:
     Perturbation_target() {}
     Perturbation_target(Specific_mirna specific_mirna) : specific_mirna(specific_mirna.mirna_id) {this->specific_mirna.is_valid = true;}
     Perturbation_target(Specific_gene specific_gene) : specific_gene(specific_gene.gene_id) {this->specific_gene.is_valid = true;}
+    // WARNING: the n corresponding for the largest element is 0
     Perturbation_target(Nth_largest_element nth_largest_element) : nth_largest_element(nth_largest_element.n) {this->nth_largest_element.is_valid = true;}
+    // WARNING: the n corresponding for the largest element is 0
     Perturbation_target(Elements_from_nth_largest elements_from_nth_largest) : elements_from_nth_largest(elements_from_nth_largest.n) {this->elements_from_nth_largest.is_valid = true;}
     Perturbation_target(Empty_target empty_target) {this->empty_target.is_valid = empty_target.is_valid = true; /* just to avoid an unused parameter warning */}
     std::string string_id();
