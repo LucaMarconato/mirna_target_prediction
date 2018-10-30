@@ -2,6 +2,7 @@
 
 #include <random>
 #include <vector>
+#include <chrono>
 
 #include "timer.hpp"
 
@@ -194,6 +195,7 @@ void Perturbation_analyzer::perturb()
             std::cout << "generating " << n + 1 << " standard normal values\n";
             Timer::start();
             std::default_random_engine generator;
+            generator.seed(std::chrono::system_clock::now().time_since_epoch().count());
             std::normal_distribution<double> distribution(0.0, 1.0);
             std::vector<double> samples;
             samples.reserve(n + 1);

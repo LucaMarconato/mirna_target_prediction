@@ -913,15 +913,20 @@ for(i in seq_len(perturbed_datasets_count)) {
     }
 }
 
-## first_n_mirnas_to_perturb <- 10
-## delta <- 22
-## delta <- 0
-## first_n_mirnas_to_perturb <- 87
-## for(i in seq(0 + delta, first_n_mirnas_to_perturb - 1 + delta)) {
-##     simulation_id <- paste("p__", i, "__a500000__", sep = "")
-##     ## simulation_id <- paste("p__", i, "__r-1__", sep = "")
-##     simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", simulation_id, "/", sep = ""))
-## }
+first_n_mirnas_to_perturb <- 3
+delta <- 22
+delta <- 0
+first_n_mirnas_to_perturb <- 87
+for(i in seq(0 + delta, first_n_mirnas_to_perturb - 1 + delta)) {
+    for(j in c(0, 1)) {
+        if(j == 0) {
+            simulation_id <- paste("p__", i, "__a500000__", sep = "")       
+        } else {
+            simulation_id <- paste("p__", i, "__r-1__", sep = "")       
+        }
+    }
+    simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", simulation_id, "/", sep = ""))
+}
 
 ## for(path in simulation_output_paths) {
 ##     analyze_convergence(path)
@@ -940,21 +945,22 @@ gene_ids[[length(gene_ids) + 1]] <- list()
 ## gene_ids[[2]] <- list()
 ## gene_ids[[3]] <- list()
 ## gene_ids[[4]] <- list()
-## i <- 2
-## for(mirna_id in mirnas_considered) {
-##     filename <- paste("interactions/mirna_id", mirna_id, "_interactions.rds", sep = "")
-##     if(!file.exists(filename)) {
-##         ## I should have used a SQL database here...
-##         print(paste("generating target file for mirna_id =", mirna_id))
-##         source("analyze_expression_profiles.r")
-##         get_targets_for_mirna(mirna_id)
-##         print("generated")
-##     }
-##     gene_ids_for_mirna <- readRDS(filename)
-##     gene_ids[[i]] <- gene_ids_for_mirna
-##     ## gene_ids <- unique(c(gene_ids, gene_ids_for_mirna))
-##     i <- i + 1
-## }
+i <- length(gene_ids) + 1
+for(mirna_id in mirnas_considered) {
+    filename <- paste("interactions/mirna_id", mirna_id, "_interactions.rds", sep = "")
+    if(!file.exists(filename)) {
+        ## I should have used a SQL database here...
+        print(paste("generating target file for mirna_id =", mirna_id))
+        source("analyze_expression_profiles.r")
+        get_targets_for_mirna(mirna_id)
+        print("generated")
+    }
+    gene_ids_for_mirna <- readRDS(filename)
+    gene_ids[[i]] <- gene_ids_for_mirna
+    gene_ids[[i + 1]] <- gene_ids_for_mirna
+    ## gene_ids <- unique(c(gene_ids, gene_ids_for_mirna))
+    i <- i + 2
+}
 ## gene_ids[[2]] <- gene_ids[[5]]
 ## gene_ids[[3]] <- gene_ids[[5]]
 ## gene_ids[[4]] <- gene_ids[[5]]

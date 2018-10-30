@@ -587,8 +587,9 @@ void Matchings_predictor::compute_probabilities()
                             std::cerr << "error: division by zero. If this arises in the context of a perturbation analysis in which some mirnas are knocked out then this warning is fine\n This warning will be silenced.";
                         }
                     } else {
-                        std::cerr << "error: division by zero. Do you really need to multiply by r_ijk and divide by sum_of_r_ijk_for_clusters? Probably not! Review the code by printing those values and act accordingly. If the cluster has only one site in and the site bings to only one mirna, then those values will be identical!\n";
-                        exit(1);
+                        std::cerr << "error: division by zero. Do you really need to multiply by r_ijk and divide by sum_of_r_ijk_for_clusters? Probably not! Review the code by printing those values and act accordingly. If the cluster has only one site in and the site bings to only one mirna, then those values will be identical! To reproduce this use some gaussian perturbations and you will eventually get this error\n";
+						// TODO: fix this. When considering gaussian perturbations we end here
+                        //exit(1);
                     }
                 } else {
                     double to_add = r_ijk * probability_of_downregulation / sum_of_r_ijk_for_cluster.at(cluster);
