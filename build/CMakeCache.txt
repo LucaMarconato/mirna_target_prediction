@@ -179,6 +179,15 @@ CMAKE_STRIP:FILEPATH=/Applications/Xcode.app/Contents/Developer/Toolchains/Xcode
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
+//C++ compiler flags for OpenMP parallization
+OpenMP_CXX_FLAGS:STRING=
+
+//C compiler flags for OpenMP parallization
+OpenMP_C_FLAGS:STRING=
+
+//Use OpenMP to enamble <omp.h>
+USE_OpenMP:BOOL=ON
+
 //Value Computed by CMake
 expression_profiles_BINARY_DIR:STATIC=/Users/macbook/bioinformatics/github/mirna_target_prediction/build
 

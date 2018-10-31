@@ -252,7 +252,7 @@ void Perturbation_analyzer::perturb()
     //   We remove the mirnas with no reads; TODO: you may be interested in doing the same but for mirnas with rpm below the threshold used in global_parameters.json
     //   Also, you should use an epsilon to check if a mirna has zero reads, here it works because the data about the mirnas are the effective reads, but with a different data format it may not work.
     // */
-    // for(auto it = this->perturbed_patient.tumor_mirnas.profile.begin(); it != this->perturbed_patient.tumor_mirnas.profile.end(); ) {            
+    // for(auto it = this->perturbed_patient.tumor_mirnas.profile.begin(); it != this->perturbed_patient.tumor_mirnas.profile.end(); ) {
     //     double reads = it->second.to_reads();
     //     if(reads == 0) {
     //         this->perturbed_patient.tumor_mirnas.profile.erase(it++);
@@ -260,7 +260,7 @@ void Perturbation_analyzer::perturb()
     //         ++it;
     //     }
     // }
-    
+
     double total_reads_after_perturbation = 0;
     for(auto & e : this->perturbed_patient.tumor_mirnas.profile) {
         double reads = e.second.to_reads();
@@ -274,13 +274,14 @@ void Perturbation_analyzer::perturb()
       Note that this is computed on the values of the reads that comprise the filtered reads.
       You could be interested in leaving the lambda as the one it was before.
     */
-    double lambda_adjustment_due_to_mirnas = total_reads / this->patient.tumor_mirnas.profile.begin()->second.get_grand_total();
-    std::cout << "lambda_adjustment_due_to_mirnas = " << lambda_adjustment_due_to_mirnas << "\n";
+    double lambda_adjustment_due_to_mirna_perturbation = total_reads / this->patient.tumor_mirnas.profile.begin()->second.get_grand_total();
+    this->matchings_predictor->lambda_adjustment_due_to_mirna_perturbation = lambda_adjustment_due_to_mirna_perturbation;
+    std::cout << "lambda_adjustment_due_to_mirna_perturbation = " << lambda_adjustment_due_to_mirna_perturbation << "\n";
 
     // perturb genes
     std::cout << "TODO: do the same for genes, better to insert all the code in a lambda function and call first for mirnas and then for genes\n";
-    
+
     this->matchings_predictor = std::unique_ptr<Matchings_predictor>(new Matchings_predictor(this->perturbed_patient, simulation_id.str()));
     // it is very important to adjust the value of lambda stored inside the Matchings_predictor object
-    this->matchings_predictor->lambda *= lambda_adjustment_due_to_mirnas;
+    this->matchings_predictor->lambda *= this->matchings_predictor->lambda_adjustment_due_to_mirna_perturbation;
 }

@@ -875,6 +875,106 @@ plot_rankings <- function(list_of_rankings)
     }
 }
 
+analyze_mirna_expression_profiles_of_perturbed_data <- function(simulation_output_paths)
+{
+    print("analyzing mirna expression profiles of perturbed data")
+    mirna_ids_ordered <- NULL
+    first_reference_y_data <- NULL
+    last_reference_y_data <- NULL
+    compare_mirna_expression_profile_to_reference <- function(simulation_output_path)
+    {
+        expression_profile_folder <- paste(simulation_output_path, "mirna_expression_profiles", sep = "")
+        files <- list.files(path = expression_profile_folder, pattern = "*.tsv", full.names = T, recursive = F)
+
+        first_file <- files[[1]]
+        last_file <- files[[length(files)]]        
+        first_df <- read.table(first_file, header = T, colClasses = c("numeric", "numeric"))
+        last_df <- read.table(last_file, header = T, colClasses = c("numeric", "numeric"))
+        ## browser()
+        if(is.null(first_reference_y_data)) {
+            my_order <- order(first_df$relative_expression)
+            assign("mirna_ids_ordered", value = first_df$mirna_id[my_order], envir = parent.frame())
+            assign("first_reference_y_data", value = first_df$relative_expression[my_order], envir = parent.frame())
+            
+            my_order <- match(mirna_ids_ordered, last_df$mirna_id)
+            assign("last_reference_y_data", value = last_df$relative_expression[my_order], envir = parent.frame())
+            ## browser()
+            ## browser()
+        } else {
+            my_order <- match(mirna_ids_ordered, first_df$mirna_id)
+            first_y_data <- first_df$relative_expression[my_order]
+            my_order <- match(mirna_ids_ordered, last_df$mirna_id)
+            last_y_data <- last_df$relative_expression[my_order]
+
+            new_maximized_device()
+            x_data <- 1:length(first_reference_y_data)
+            y_lim <- c(0, max(first_reference_y_data))
+            simulation_id <- basename(simulation_output_path)
+
+            plot(x_data, first_reference_y_data, main = paste(simulation_id, "miRNA expression"), ylim = y_lim, col = "black", pch = 20)
+            points(x_data, last_reference_y_data, ylim = y_lim, col = "blue", pch = 20)
+            points(x_data, first_y_data, ylim = y_lim, col = "red", pch = ".")
+            points(x_data, last_y_data, ylim = y_lim, col = "green", pch = ".")
+        }
+
+        ##     new_path <- tools::file_path_sans_ext(file)
+        ##     new_path <- paste(new_path, ".png", sep = "")
+        ##     png(filename = new_path, width = 1920, height = 1080)
+        ##     layout(matrix(1:3, 3, 1))
+        ##     ## print("TODO: check if the timestep has been split correctly")
+        ##     timestep <- strsplit(file, "mirna_expression_profile_")[[1]][2]
+        ##     timestep <- strsplit(timestep, ".tsv")[[1]][1]
+        ##     my_order <- match(mirna_ids_ordered, t$mirna_id)
+        ##     x_data <- 1:length(t$relative_expression)
+        ##     y_data <- t$relative_expression[my_order]
+        ##     mirna_dynamics[[length(mirna_dynamics) + 1]] <- y_data
+        ##     if(is.null(original_y_data)) {
+        ##         original_y_data <- y_data
+        ##     }
+        ##     plot(x_data, y_data, main = paste(timestep, "miRNA expression"), ylim = c(0, max(original_y_data)))
+        ##     points(x_data, original_y_data, ylim = c(0, max(original_y_data)), col = "red", pch = "-")
+            
+        ##     plot(x_data, log10(y_data), main = paste(timestep, "miRNA expression (log10)"), ylim = c(-20, 0))
+        ##     points(x_data, log10(original_y_data), ylim = c(-20, 0), col = "red", pch = "-")
+
+        ##     if(i > 0) {
+        ##         previous_file <- files[i]
+        ##         previous_t <- read.table(previous_file, header = T, colClasses = c("numeric", "numeric"))
+        ##         previous_my_order <- match(mirna_ids_ordered, previous_t$mirna_id)
+        ##         previous_y_data <- previous_t$relative_expression[previous_my_order]
+        ##         difference <- previous_y_data - y_data
+        ##         log_difference <- log10(difference)
+        ##         ## log_difference[log_difference == -Inf] = 0
+        ##         if(sum(is.nan(log_difference)) > 0) {
+        ##             print("warning: found a NaN, probably this is due by having reached the machine precision during the simulation")
+        ##             log_difference[is.nan(log_difference)] = 0
+        ##             ## browser()
+        ##         }
+        ##         if(is.null(original_log_difference)) {
+        ##             original_log_difference <- log_difference
+        ##         }
+        ##         plot(x_data, log_difference, main = paste(timestep, "exchanged"), ylim = c(-20, 0))
+        ##         points(x_data, original_log_difference, ylim = c(-20, 0), col = "red", pch = "-")
+        ##     }
+        ##     dev.off()
+        ##     i <- i + 1
+        ## }
+        ## filename <- paste(expression_profile_copy_folder, "/animation.gif", sep = "")
+        ## print(paste("generating", filename))
+        ## system(paste("convert -delay 10 -loop 0 ", expression_profile_copy_folder, "/*.png ", filename, sep = ""))
+        ## system(paste("open ", expression_profile_copy_folder, "/animation.gif", sep = ""))
+        ## return(mirna_dynamics)
+    }
+    
+    if(length(simulation_output_paths) < 2) {
+        stop(paste("length(simulation_output_paths) =", length(simulation_output_paths)))
+    }
+    for(simulation_output_path in simulation_output_paths) {
+        ## print(simulation_output_path)
+        compare_mirna_expression_profile_to_reference(simulation_output_path)
+    }
+}
+
 patient_id <- "TCGA-CJ-4642"
 ## patient_id <- "artificial0"
 ## patient_id <- "artificial1"
@@ -913,10 +1013,10 @@ for(i in seq_len(perturbed_datasets_count)) {
     }
 }
 
+## first_n_mirnas_to_perturb <- 87
 first_n_mirnas_to_perturb <- 3
-delta <- 22
+## delta <- 22
 delta <- 0
-first_n_mirnas_to_perturb <- 87
 for(i in seq(0 + delta, first_n_mirnas_to_perturb - 1 + delta)) {
     for(j in c(0, 1)) {
         if(j == 0) {
@@ -967,11 +1067,13 @@ for(mirna_id in mirnas_considered) {
 ## gene_ids[[4]] <- gene_ids[[6]]
 ## gene_ids[[5]] <- gene_ids[[6]]
 
-analyze_predictions_of_perturbed_data(patient_folder, simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F)
+## analyze_predictions_of_perturbed_data(patient_folder, simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F)
 
 rankings <- list()
 ## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = T)
-rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = T, allow_linear_correction = F)
+## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = T, allow_linear_correction = F)
+
+analyze_mirna_expression_profiles_of_perturbed_data(simulation_output_paths)
 ## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = F)
 ## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = F, allow_linear_correction = F)
 

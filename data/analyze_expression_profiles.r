@@ -28,7 +28,7 @@ analyze_specific_expression_profile <- function()
         print(paste("target relative fraction = ", round(target_reads/total_reads*100,2), "%", sep = ""))
     }
 
-    ## the output of this code is consistent with the results of the simulation: mirnas with more available sites (considering expression profiles) get binded more   
+    ## the output of this code is consistent with the results of the simulation: mirnas with more available sites (considering expression profiles) get binded more
 }
 
 get_targets_for_mirna <- function(mirna_id)

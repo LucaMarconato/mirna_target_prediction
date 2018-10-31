@@ -38,7 +38,7 @@ class Matchings_graph:
 	mirna_gene_arcs_left: Dict[int, List[int]] = dict()
 	# mirna_gene_arcs_right: gene_id -> List[mirna_id]
 	mirna_gene_arcs_right: Dict[int, List[int]] = dict()
-	
+
 	@classmethod
 	def add_arc(cls, mirna_id, site_id, gene_id, mirna_site_arc):
 		if (mirna_id, site_id) in cls.mirna_site_arcs:
@@ -132,7 +132,7 @@ def build_site_id_dictionaries():
 					os._exit(1)
 				site_id_gene_id_arcs[site_id] = gene_id
 		with open('site_id_dictionaries.pkl', 'wb') as f:
-			print('saving site_id_dictionaries.pkl... ', end = '', flush = True)			
+			print('saving site_id_dictionaries.pkl... ', end = '', flush = True)
 			pickle.dump([site_id_dictionary_left, site_id_dictionary_right, gene_id_dictionary_left, gene_id_dictionary_right, gene_id_site_id_arcs, site_id_gene_id_arcs], f)
 			print('DONE')
 
@@ -179,12 +179,12 @@ def build_graph():
 			print('saving graph.pkl... ', end = '', flush = True)
 			pickle.dump([mirna_site_arcs, mirna_site_arcs_left, mirna_site_arcs_right, mirna_gene_arcs, mirna_gene_arcs_left, mirna_gene_arcs_right, site_id_dictionary_left], f)
 			print('DONE')
-			
+
 if __name__ == '__main__':
 	print('building mirna dictionaries... ', end = '', flush = True)
 	build_mirna_id_dictionaries()
 	print('DONE')
-	
+
 	print('building site dictionaries... ', end = '', flush = True)
 	build_site_id_dictionaries()
 	print('DONE')

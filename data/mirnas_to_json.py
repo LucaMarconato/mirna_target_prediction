@@ -1,4 +1,3 @@
-#!/usr/bin/env python3.7
 import csv
 import json
 from collections import OrderedDict # to dump the json file respecting the order
@@ -16,8 +15,8 @@ with open('raw/miR_Family_Info.txt', 'r') as infile:
 		e['s'] = row[4]
 		l.append(e)
 
-j = dict()		
-j['list'] = l		
+j = dict()
+j['list'] = l
 with open('processed/human_mirnas.json', 'w') as outfile:
 	s = json.dumps(j, indent=4, sort_keys=False)
 	outfile.write(s)

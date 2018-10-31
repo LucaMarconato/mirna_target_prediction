@@ -13,6 +13,7 @@
 * TODO more plots on gaussian perturbation
 ** TODO for the already generated data try plotting the mirna expression
 ** TODO try absolute perturbations
+* TODO consider isoforms
 * TODO stability of the method, for the expression levels, the exchange and the context (do it in the log-scale to have comparable constant variance)
 * TODO find the elements which cause most of the variability in the method
 * TODO check the simulation with conserved only
@@ -44,4 +45,3 @@ BONUS
 * TODO use the tool to find (with bruteforce and stepwise approach) to find a set of artificial sequences to insert in the cell colture to minimise the differences in down-regulation between normal and tumor cells
 * TODO in generating the data use the mirbase-id instead of the miRNA family
 * TODO why is the 3' UTR of ~/particular_case not available in ensembl?
-

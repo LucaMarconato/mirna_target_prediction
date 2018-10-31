@@ -39,6 +39,8 @@ class Matchings_predictor {
                                                                     unsigned long latest_bound_level, unsigned long second_latest_bound_level);
 public:
     double lambda;
+    double lambda_adjustment_due_to_mirna_perturbation;
+    double lambda_adjustment_due_to_gene_perturbation;
 
     Matchings_predictor(Patient & patient, std::string simulation_id = "original_data");
     Matchings_predictor(const Matchings_predictor & obj);
