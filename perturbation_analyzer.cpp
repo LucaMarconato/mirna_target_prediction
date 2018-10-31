@@ -275,7 +275,6 @@ void Perturbation_analyzer::perturb()
       You could be interested in leaving the lambda as the one it was before.
     */
     double lambda_adjustment_due_to_mirna_perturbation = total_reads / this->patient.tumor_mirnas.profile.begin()->second.get_grand_total();
-    this->matchings_predictor->lambda_adjustment_due_to_mirna_perturbation = lambda_adjustment_due_to_mirna_perturbation;
     std::cout << "lambda_adjustment_due_to_mirna_perturbation = " << lambda_adjustment_due_to_mirna_perturbation << "\n";
 
     // perturb genes
@@ -283,5 +282,6 @@ void Perturbation_analyzer::perturb()
 
     this->matchings_predictor = std::unique_ptr<Matchings_predictor>(new Matchings_predictor(this->perturbed_patient, simulation_id.str()));
     // it is very important to adjust the value of lambda stored inside the Matchings_predictor object
+    this->matchings_predictor->lambda_adjustment_due_to_mirna_perturbation = lambda_adjustment_due_to_mirna_perturbation;
     this->matchings_predictor->lambda *= this->matchings_predictor->lambda_adjustment_due_to_mirna_perturbation;
 }

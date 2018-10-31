@@ -327,7 +327,7 @@ void Matchings_predictor::compute() {
               for (auto &e : this->mirna_profile) {
                 double adjusted_value = e.second / cumulative_scaling;
                 adjusted_value =
-                    adjusted_value / this->lambda_adjustment_due_to_mirna_perturbation;
+                    adjusted_value * this->lambda_adjustment_due_to_mirna_perturbation;
                 ss1 << e.first << "\t" << adjusted_value << "\n";
               }
               std::stringstream mirna_log_filename;
