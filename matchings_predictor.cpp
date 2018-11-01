@@ -377,6 +377,7 @@ void Matchings_predictor::compute()
                             for (auto& e : this->cluster_profile)
                             {
                                 double adjusted_value = e.second / cumulative_scaling;
+                                // TODO: export reads along with relative quantities, so to make different datasets comparable
                                 ss2 << e.first << "\t" << adjusted_value << "\n";
                             }
                             std::stringstream cluster_log_filename;

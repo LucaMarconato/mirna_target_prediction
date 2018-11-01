@@ -19,7 +19,7 @@ int dna_rna_mismatch(char * dna, char * rna, int length, bool watson_crick)
     valid_length(dna, rna, length);
     for(int i = 0; i < length; i++) {
         if(!(
-             (dna[i] == 'A' && rna[i] == 'U') || 
+             (dna[i] == 'A' && rna[i] == 'U') ||
              (dna[i] == 'C' && rna[i] == 'G') ||
              (dna[i] == 'G' && rna[i] == 'C') ||
              (dna[i] == 'T' && rna[i] == 'A') ||
