@@ -56,9 +56,9 @@ analyze_mirna_expression_profiles <- function(simulation_output_path)
     original_log_difference <- NULL
     i <- 0
     for(file in files) {
-        t <- read.table(file, header = T, colClasses = c("numeric", "numeric"))
+        t <- read.table(file, header = T, colClasses = c("numeric", "numeric", "numeric"))
         if(is.null(mirna_ids_ordered)) {
-            my_order <- order(t$relative_expression)
+            my_order <- order(t$reads)
             mirna_ids_ordered <- t$mirna_id[my_order]
         }
         new_path <- tools::file_path_sans_ext(file)
@@ -69,23 +69,23 @@ analyze_mirna_expression_profiles <- function(simulation_output_path)
         timestep <- strsplit(file, "mirna_expression_profile_")[[1]][2]
         timestep <- strsplit(timestep, ".tsv")[[1]][1]
         my_order <- match(mirna_ids_ordered, t$mirna_id)
-        x_data <- 1:length(t$relative_expression)
-        y_data <- t$relative_expression[my_order]
+        x_data <- 1:length(t$reads)
+        y_data <- t$reads[my_order]
         mirna_dynamics[[length(mirna_dynamics) + 1]] <- y_data
         if(is.null(original_y_data)) {
             original_y_data <- y_data
         }
-        plot(x_data, y_data, main = paste(timestep, "miRNA expression"), ylim = c(0, max(original_y_data)))
+        plot(x_data, y_data, main = paste(timestep, "miRNA expression, reads"), ylim = c(0, max(original_y_data)))
         points(x_data, original_y_data, ylim = c(0, max(original_y_data)), col = "red", pch = "-")
-        
-        plot(x_data, log10(y_data), main = paste(timestep, "miRNA expression (log10)"), ylim = c(-20, 0))
+
+        plot(x_data, log10(y_data), main = paste(timestep, "miRNA expression, reads (log10)"), ylim = c(-20, 0))
         points(x_data, log10(original_y_data), ylim = c(-20, 0), col = "red", pch = "-")
 
         if(i > 0) {
             previous_file <- files[i]
             previous_t <- read.table(previous_file, header = T, colClasses = c("numeric", "numeric"))
             previous_my_order <- match(mirna_ids_ordered, previous_t$mirna_id)
-            previous_y_data <- previous_t$relative_expression[previous_my_order]
+            previous_y_data <- previous_t$reads[previous_my_order]
             difference <- previous_y_data - y_data
             log_difference <- log10(difference)
             ## log_difference[log_difference == -Inf] = 0
@@ -870,7 +870,7 @@ plot_rankings <- function(list_of_rankings)
             ## plot(s, xaxt = "n", main = "ordered scores", xlab = "miRNA perturbed", ylab = "score")
             ## lines(1:first_n_mirnas_to_consider, s)
             ## axis(1, at = 1:first_n_mirnas_to_consider, labels = paste(o))
-            ## par(mfrow = c(1,1))            
+            ## par(mfrow = c(1,1))
         }
     }
 }
@@ -887,85 +887,37 @@ analyze_mirna_expression_profiles_of_perturbed_data <- function(simulation_outpu
         files <- list.files(path = expression_profile_folder, pattern = "*.tsv", full.names = T, recursive = F)
 
         first_file <- files[[1]]
-        last_file <- files[[length(files)]]        
-        first_df <- read.table(first_file, header = T, colClasses = c("numeric", "numeric"))
-        last_df <- read.table(last_file, header = T, colClasses = c("numeric", "numeric"))
+        last_file <- files[[length(files)]]
+        first_df <- read.table(first_file, header = T, colClasses = c("numeric", "numeric", "numeric"))
+        last_df <- read.table(last_file, header = T, colClasses = c("numeric", "numeric", "numeric"))
         ## browser()
         if(is.null(first_reference_y_data)) {
-            my_order <- order(first_df$relative_expression)
+            my_order <- order(first_df$reads)
             assign("mirna_ids_ordered", value = first_df$mirna_id[my_order], envir = parent.frame())
-            assign("first_reference_y_data", value = first_df$relative_expression[my_order], envir = parent.frame())
-            
+            assign("first_reference_y_data", value = first_df$reads[my_order], envir = parent.frame())
+
             my_order <- match(mirna_ids_ordered, last_df$mirna_id)
-            assign("last_reference_y_data", value = last_df$relative_expression[my_order], envir = parent.frame())
+            assign("last_reference_y_data", value = last_df$reads[my_order], envir = parent.frame())
             ## browser()
             ## browser()
         } else {
             my_order <- match(mirna_ids_ordered, first_df$mirna_id)
-            first_y_data <- first_df$relative_expression[my_order]
+            first_y_data <- first_df$reads[my_order]
             my_order <- match(mirna_ids_ordered, last_df$mirna_id)
-            last_y_data <- last_df$relative_expression[my_order]
+            last_y_data <- last_df$reads[my_order]
 
             new_maximized_device()
             x_data <- 1:length(first_reference_y_data)
             y_lim <- c(0, max(first_reference_y_data))
             simulation_id <- basename(simulation_output_path)
 
-            plot(x_data, first_reference_y_data, main = paste(simulation_id, "miRNA expression"), ylim = y_lim, col = "black", pch = 20)
+            plot(x_data, first_reference_y_data, main = paste(simulation_id, "miRNA expression, reads"), ylim = y_lim, col = "black", pch = 20)
             points(x_data, last_reference_y_data, ylim = y_lim, col = "blue", pch = 20)
-            points(x_data, first_y_data, ylim = y_lim, col = "red", pch = ".")
+            points(x_data, first_y_data, ylim = y_lim, col = "red")
             points(x_data, last_y_data, ylim = y_lim, col = "green", pch = ".")
         }
-
-        ##     new_path <- tools::file_path_sans_ext(file)
-        ##     new_path <- paste(new_path, ".png", sep = "")
-        ##     png(filename = new_path, width = 1920, height = 1080)
-        ##     layout(matrix(1:3, 3, 1))
-        ##     ## print("TODO: check if the timestep has been split correctly")
-        ##     timestep <- strsplit(file, "mirna_expression_profile_")[[1]][2]
-        ##     timestep <- strsplit(timestep, ".tsv")[[1]][1]
-        ##     my_order <- match(mirna_ids_ordered, t$mirna_id)
-        ##     x_data <- 1:length(t$relative_expression)
-        ##     y_data <- t$relative_expression[my_order]
-        ##     mirna_dynamics[[length(mirna_dynamics) + 1]] <- y_data
-        ##     if(is.null(original_y_data)) {
-        ##         original_y_data <- y_data
-        ##     }
-        ##     plot(x_data, y_data, main = paste(timestep, "miRNA expression"), ylim = c(0, max(original_y_data)))
-        ##     points(x_data, original_y_data, ylim = c(0, max(original_y_data)), col = "red", pch = "-")
-            
-        ##     plot(x_data, log10(y_data), main = paste(timestep, "miRNA expression (log10)"), ylim = c(-20, 0))
-        ##     points(x_data, log10(original_y_data), ylim = c(-20, 0), col = "red", pch = "-")
-
-        ##     if(i > 0) {
-        ##         previous_file <- files[i]
-        ##         previous_t <- read.table(previous_file, header = T, colClasses = c("numeric", "numeric"))
-        ##         previous_my_order <- match(mirna_ids_ordered, previous_t$mirna_id)
-        ##         previous_y_data <- previous_t$relative_expression[previous_my_order]
-        ##         difference <- previous_y_data - y_data
-        ##         log_difference <- log10(difference)
-        ##         ## log_difference[log_difference == -Inf] = 0
-        ##         if(sum(is.nan(log_difference)) > 0) {
-        ##             print("warning: found a NaN, probably this is due by having reached the machine precision during the simulation")
-        ##             log_difference[is.nan(log_difference)] = 0
-        ##             ## browser()
-        ##         }
-        ##         if(is.null(original_log_difference)) {
-        ##             original_log_difference <- log_difference
-        ##         }
-        ##         plot(x_data, log_difference, main = paste(timestep, "exchanged"), ylim = c(-20, 0))
-        ##         points(x_data, original_log_difference, ylim = c(-20, 0), col = "red", pch = "-")
-        ##     }
-        ##     dev.off()
-        ##     i <- i + 1
-        ## }
-        ## filename <- paste(expression_profile_copy_folder, "/animation.gif", sep = "")
-        ## print(paste("generating", filename))
-        ## system(paste("convert -delay 10 -loop 0 ", expression_profile_copy_folder, "/*.png ", filename, sep = ""))
-        ## system(paste("open ", expression_profile_copy_folder, "/animation.gif", sep = ""))
-        ## return(mirna_dynamics)
     }
-    
+
     if(length(simulation_output_paths) < 2) {
         stop(paste("length(simulation_output_paths) =", length(simulation_output_paths)))
     }
@@ -1005,24 +957,25 @@ simulation_output_paths <- c(simulation_output_paths, simulation_output_path)
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r-1__", "/", sep = ""))
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r-0.9__", "/", sep = ""))
 
-perturbed_datasets_count <- 10
-replicates <- 3
-for(i in seq_len(perturbed_datasets_count)) {
-    for(j in seq_len(replicates)) {
-        simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/g__86__r", i, "__", j - 1, "/", sep = ""))
-    }
-}
+## perturbed_datasets_count <- 10
+## replicates <- 3
+## for(i in seq_len(perturbed_datasets_count)) {
+##     for(j in seq_len(replicates)) {
+##         simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/g__86__r", i, "__", j - 1, "/", sep = ""))
+##     }
+## }
 
 ## first_n_mirnas_to_perturb <- 87
 first_n_mirnas_to_perturb <- 3
 ## delta <- 22
 delta <- 0
 for(i in seq(0 + delta, first_n_mirnas_to_perturb - 1 + delta)) {
-    for(j in c(0, 1)) {
+    ## for(j in c(0, 1)) {
+    for(j in c(1)) {
         if(j == 0) {
-            simulation_id <- paste("p__", i, "__a500000__", sep = "")       
+            simulation_id <- paste("p__", i, "__a500000__", sep = "")
         } else {
-            simulation_id <- paste("p__", i, "__r-1__", sep = "")       
+            simulation_id <- paste("p__", i, "__r-1__", sep = "")
         }
     }
     simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", simulation_id, "/", sep = ""))
@@ -1036,10 +989,10 @@ mirna_expression_profile_filename <- paste(patient_folder, "tumor_mirna_expressi
 mirnas <- read.table(mirna_expression_profile_filename, header = T, colClasses = c("numeric", "numeric"))
 mirnas_considered <- mirnas[order(-mirnas$rpm),][1:first_n_mirnas_to_perturb, "mirna_id"]
 gene_ids <- list()
-for(i in seq_len(perturbed_datasets_count * replicates)) {
-    gene_ids[[i]] <- list()
-}
 gene_ids[[length(gene_ids) + 1]] <- list()
+## for(i in seq_len(perturbed_datasets_count * replicates)) {
+##     gene_ids[[length(gene_ids) + 1]] <- list()
+## }
 ## no mirna is perturbed for original data and gaussian data
 ## gene_ids[[1]] <- list()
 ## gene_ids[[2]] <- list()
