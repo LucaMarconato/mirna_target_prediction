@@ -66,7 +66,7 @@ plot_adjacency_matrix_insights <- function(patient_folder) {
     ##         ## hist(m[i,][m[i,] > 0], main = paste("histogram of", mirna_id))
     ##         barplot(table(m[i,][m[i,] > 0]), main = paste("miRNA", mirna_id))
     ##     }
-    ## }    
+    ## }
 }
 
 rpm_from_gdc_mirna_data <- function(filename_unfiltered_data, mirna_id_dictionary)
@@ -77,7 +77,7 @@ rpm_from_gdc_mirna_data <- function(filename_unfiltered_data, mirna_id_dictionar
     colnames(a)[[2]] <- "rpm"
     a <- cbind(a, mirna_id_dictionary[[a$mirna_id]])
     colnames(a)[[3]] <- "mirna_id_cpp"
-    a <- a[order(a$mirna_id_cpp),]    
+    a <- a[order(a$mirna_id_cpp),]
     selected_rows <- a[!is.na(a$mirna_id_cpp),]
     rpm <- selected_rows["rpm"][[1]]
     rpm <- rpm[rpm > 0]
@@ -121,20 +121,20 @@ plot_expression_profiles_insights <- function(patient_folder)
             plot.new()
         } else {
             ## plot(density(log10(expression_profile)), main = "")
-            
+
             hist(log10(expression_profile), main = "")
 
             ## plot(density(expression_profile), main = "")
-            
+
             ## plot(log10(expression_profile), main = "")
-            
+
             ## my_min <- -2
             ## my_max <- 2
             ## hist_data <- log10(expression_profile)
             ## hist_data <- hist_data[hist_data >= my_min & hist_data <= my_max]
             ## epsilon <- 0.001
             ## my_breaks <- seq(max(-2, min(hist_data)) - epsilon, min(2, max(hist_data)) + epsilon, length.out = 50)
-            ## hist(hist_data, main = "", breaks = my_breaks)      
+            ## hist(hist_data, main = "", breaks = my_breaks)
         }
         title(plot_titles_filtered[[i]])
     }
@@ -147,7 +147,7 @@ plot_expression_profiles_insights <- function(patient_folder)
     ## the graphs we are going to plot may be different from the one plotted just above for two reasons:
     ## first, before we plotted only mirnas and genes above the selected threshold
     ## second, before we plotted only mirnas and genes that were found in the interaction graph, here we plot the mirnas and the genes that belongs to the intersection between the GDC list and the TargetScan list of mirnas and gens, so we plot even mirnas and genes that are not found in the interaction graph
-    
+
     patient_info_file <- paste(patient_folder, "info.json", sep = "")
     info_json <- fromJSON(file = patient_info_file)
 
@@ -201,9 +201,9 @@ plot_expression_profiles_insights <- function(patient_folder)
             plot.new()
         } else {
             ## plot(density(log10(rpm)), main = "")
-            
+
             hist(log10(rpm), main = "")
-            
+
             ## my_min <- -2
             ## my_max <- 2
             ## hist_data <- log10(rpm)
@@ -211,13 +211,13 @@ plot_expression_profiles_insights <- function(patient_folder)
             ## epsilon <- 0.001
             ## my_breaks <- seq(max(-2, min(hist_data)) - epsilon, min(2, max(hist_data)) + epsilon, length.out = 50)
             ## hist(hist_data, main = "", breaks = my_breaks)
-            
+
             if(i %in% c(1,3)) {
                 abline(v = log10(mirna_threshold_rpm), col = "red")
             } else {
                 abline(v = log10(gene_threshold_rpm), col = "red")
             }
-            
+
             ## plot(density(rpm), main = "")
             ## abline(v = threeshold_rpm)
             ## plot(log10(rpm), main = "")
@@ -260,7 +260,7 @@ plot_overlapping_sites_insights <- function(patient_folder)
     a <- a[order(a[,5]),]
     ## browser()
     new_maximized_device()
-    
+
     rows <- 10
     first_rows_to_show <- 10
     last_rows_to_show <- 0
@@ -306,7 +306,7 @@ plot_overlapping_sites_insights <- function(patient_folder)
     to_plot <- a[[3]][a[[3]] > 1]
     if(length(to_plot) > 0) {
         barplot(table(a[[3]][a[[3]] > 1]))
-        grid()     
+        grid()
     } else {
         plot.new()
     }
@@ -331,7 +331,7 @@ study_overlaps_of_specific_gene <- function(patient_folder, gene_id = -1)
     ## TODO: check if the colors are correct or shifted by one0
     legend("top", legend_labels, col = my_palette[8:1], ncol = 8, pch = 15)
     mtext("position in the 3' UTR", side=3, at=par("usr")[1]+0.01*diff(par("usr")[1:2]), adj = 0, cex = 0.5)
-    
+
     rows <- a[a[[1]] == gene_id, ]
     max_site_position <- max(rows[[2]])
     intervals <- seq(0, max_site_position + 1, length.out = rows_first_plot + 1)
@@ -344,7 +344,7 @@ study_overlaps_of_specific_gene <- function(patient_folder, gene_id = -1)
     ## print(right_values)
     for(j in seq_along(left_values)) {
         left_value <- left_values[j]
-        right_value <- right_values[j]        
+        right_value <- right_values[j]
         if(j == 1) {
             par(mar = c(0,0,0,0))
         } else {
@@ -418,7 +418,7 @@ study_clusters <- function(patient_folder)
     to_plot <- table(a$cluster_size[a$cluster_size > 2])
     if(length(to_plot) > 0) {
         barplot(to_plot)
-        grid()        
+        grid()
     } else {
         plot.new()
     }
@@ -426,7 +426,7 @@ study_clusters <- function(patient_folder)
     to_plot <- table(a$cluster_size[a$cluster_size > 7])
     if(length(to_plot) > 0) {
         barplot(to_plot)
-        grid()        
+        grid()
     } else {
         plot.new()
     }

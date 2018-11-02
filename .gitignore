@@ -1,8 +1,6 @@
 *.bin
-data/raw
-data/processed
-data/interactions.RData
 CMakeFiles
 .DS_Store
 Makefile
 .Rhistory
+test_temporary_data
