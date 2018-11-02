@@ -154,7 +154,7 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
             if(processed.find(site) == processed.end()) {
                 Cluster * c = new Cluster();
                 std::queue<Site *> to_explore;
-                to_explore.push(site);                
+                to_explore.push(site);
                 while(to_explore.size() > 0) {
                     // std::cout << "processed.size() = " << processed.size() << ", c.sites.size() = " << c.sites.size() << ", to_explore.size() = " << to_explore.size() << "\n";
                     auto & e = to_explore.front();
@@ -167,18 +167,18 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
                     if(this->site_to_overlapping_sites.find(e) != this->site_to_overlapping_sites.end()) {
                         for(auto & overlapping : this->site_to_overlapping_sites.at(e)) {
                             if(processed.find(overlapping) == processed.end()) {
-                                to_explore.push(overlapping);            
+                                to_explore.push(overlapping);
                             }
-                        }   
+                        }
                     }
                 }
                 this->gene_to_clusters_arcs[gene_id].push_back(c);
             }
         }
     }
-    
+
     /*
-      WARNING: the model has a limitation (which can be addressed if needed): it underestimate the effect of a miRNA in the case in which it has more than one site available withing the same cluster. This scenario happens in approximately 0.5% of the cases, has it can be deduced running the following command 
+      WARNING: the model has a limitation (which can be addressed if needed): it underestimate the effect of a miRNA in the case in which it has more than one site available withing the same cluster. This scenario happens in approximately 0.5% of the cases, has it can be deduced running the following command
       cut -f 6 -d " " | uniq | sort | uniq | wc
       to the output of the code commented below
       // for(auto & e : this->gene_to_clusters_arcs) {

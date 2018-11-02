@@ -8,11 +8,11 @@ library(lattice)
 library(latticeExtra)
 
 analyze_convergence <- function(simulation_output_path)
-{    
+{
     filename <- paste(simulation_output_path, "matchings_prediction.tsv", sep = "")
     a <<- read.table(filename, header = T, colClasses = c("numeric", "numeric", "numeric", "numeric", "numeric"))
     x_values <- seq(1, length(a[[1]]))
-    
+
     new_maximized_device()
     layout(matrix(c(1,2,4,1,3,5,6,8,10,7,9,11), 4, 3, byrow = T))
     plot(x_values, a$cumulative_scaling, main = "cumulative scaling", pch = 20)
@@ -378,11 +378,11 @@ analyze_probabilities <- function(patient_folder, simulation_output_path)
         x_data <- 1:length(t$final_rpm)
         y_data <- t$final_rpm[my_order]
         original_y_data <- t$rpm[my_order]
-        
+
         new_path <- tools::file_path_sans_ext(file)
         new_path <- paste(new_path, ".png", sep = "")
         rows <- 10
-        
+
         png(filename = new_path, width = 1920, height = 1080)
         old_par <- par(mar = c(0,4,2,0))
 
@@ -560,10 +560,10 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
     if(is.null(choice)) {
         scores <- list()
         ## compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, "ratio")
-        ## scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "spearman")
-        ## scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "average")
+        scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "spearman")
+        scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "average")
         ## scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "euclidean")
-        scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "norm1")
+        ## scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "norm1")
         return(scores)
     }
     dataframes <- lapply(simulation_output_paths,
@@ -810,6 +810,7 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
         }
     }
     m <- m[, n:1]
+    print(m)
 
     lattice.options(axis.padding=list(factor=0.5))
     my_levelplot <- function(my_positions) {
@@ -966,12 +967,12 @@ simulation_output_paths <- c(simulation_output_paths, simulation_output_path)
 ## }
 
 ## first_n_mirnas_to_perturb <- 87
-first_n_mirnas_to_perturb <- 3
+first_n_mirnas_to_perturb <- 7
 ## delta <- 22
 delta <- 0
 for(i in seq(0 + delta, first_n_mirnas_to_perturb - 1 + delta)) {
     ## for(j in c(0, 1)) {
-    for(j in c(1)) {
+    for(j in c(0)) {
         if(j == 0) {
             simulation_id <- paste("p__", i, "__a500000__", sep = "")
         } else {
@@ -1024,7 +1025,8 @@ for(mirna_id in mirnas_considered) {
 
 rankings <- list()
 ## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = T)
-## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = T, allow_linear_correction = F)
+rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = T, allow_linear_correction = T)
+rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = T, allow_linear_correction = F)
 
 analyze_mirna_expression_profiles_of_perturbed_data(simulation_output_paths)
 ## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = F)

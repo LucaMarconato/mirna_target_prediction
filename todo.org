@@ -22,7 +22,11 @@
 * TODO adjust the amplication factor with the log
 * TODO investigate the ceRNA hypothesis by perturbing few mRNAs
 * TODO use TargetScan data for comparing the prediction with miRanda
-INTERESTING BUT NOT NOW
+* TODO include the version id in gene comparison
+* REAL DATA VALIDATION
+** TODO include the usage of version numbers
+** TODO verify that the conversion between ensembl ids and miRbase ids is correct. For instance look at ENSG00000210151
+ INTERESTING BUT NOT NOW
 * TODO interesting: find the correlation between the density of the entries of the interaction matrix and the quantity of exchanged mirnas and clusters
 * TODO compute the weighted context score and compare it the one computed trivially
 * TODO check different RPM and choose the right treshold based on different samples and of the variance

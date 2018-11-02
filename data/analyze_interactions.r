@@ -20,14 +20,14 @@ plot_adjacency_matrix_insights <- function(patient_folder) {
     ## the table bins start from 0, so we need > and not >=
     if(length(table(m)) > 5) {
         barplot(table(m[m >= 5]), main = title)
-        grid()   
+        grid()
     } else {
         plot.new()
     }
 
     if(length(table(m)) > 10) {
         barplot(table(m[m >= 10]), main = title)
-        grid()        
+        grid()
     } else {
         plot.new()
     }
@@ -86,7 +86,7 @@ rpm_from_gdc_mirna_data <- function(filename_unfiltered_data, mirna_id_dictionar
 
 rpm_from_gdc_gene_data <- function(filename_unfiltered_data, gene_id_dictionary)
 {
-    a <- read.table(filename_unfiltered_data, colClasses = c("character", "numeric"))    
+    a <- read.table(filename_unfiltered_data, colClasses = c("character", "numeric"))
     a <- a[!(a[[1]] %in% c("__no_feature", "__ambiguous", "__too_low_aQual", "__not_aligned", "__alignment_not_unique")),]
     colnames(a)[[2]] <- "reads"
     total_reads <- sum(a$reads)

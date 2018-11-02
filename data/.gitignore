@@ -5,3 +5,6 @@ interactions
 *.tsv
 *.json
 *.rds
+raw/
+processed/
+interactions.RData

@@ -49,8 +49,8 @@ int main(int argc, char* argv[])
     //                           "distance");
 
     int mirnas_count = patient.tumor_mirnas.profile.size();
-    // int first_n_mirnas_to_perturb = mirnas_count;
-    int first_n_mirnas_to_perturb = 3;
+    int first_n_mirnas_to_perturb = mirnas_count;
+    // int first_n_mirnas_to_perturb = 3;
     for (int i = 0; i < first_n_mirnas_to_perturb; i++)
     {
         perturbation_analyzer.run(Perturbation_type::Point_perturbation, Perturbation_type::No_perturbation, Perturbation_target(Perturbation_target::Nth_largest_element(i)), Perturbation_target(Perturbation_target::Empty_target()),
