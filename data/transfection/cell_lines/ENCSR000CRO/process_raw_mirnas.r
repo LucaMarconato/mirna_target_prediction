@@ -1,5 +1,8 @@
 library(data.table)
+library(base)
 library(rjson)
+## library(hashmap)
+source("../../../my_device.r")
 
 process_file <- function(file, mirna_threshold_rpm)
 {
@@ -21,28 +24,85 @@ process_file <- function(file, mirna_threshold_rpm)
     indexes_of_recognized <- match(ensembl_ids_recognized, a$gene_id)
 
     recognized_first_strand <- a[indexes_of_recognized, c("gene_id", "first_strand_count")]
-    recognized_second_strand <- a[indexes_of_recognized, c("gene_id", "first_strand_count")]
+    recognized_second_strand <- a[indexes_of_recognized, c("gene_id", "second_strand_count")]
 
-    recognized_first_strand$gene_id <- paste(ensembl_ids_mirbase_ids_dictionary$mirbase_id[match(recognized_first_strand$gene_id, ensembl_ids_mirbase_ids_dictionary$ensembl_id)], "-3p", sep = "")
-    recognized_second_strand$gene_id <- paste(ensembl_ids_mirbase_ids_dictionary$mirbase_id[match(recognized_second_strand$gene_id, ensembl_ids_mirbase_ids_dictionary$ensembl_id)], "-5p", sep = "")
+    distinguish_isoforms <- function(mirnas, suffix)
+    {
+        to_return <- mirnas
+        ## TODO: of course this does not work, fix the scope
+        if(!exists("mirna_isoforms_dictionary")) {
+            print("loading data")
+            mirna_isoforms_dictionary <- read.table("../../../processed/mirna_isoforms_dictionary.tsv", header = T, colClasses = c("character", "character", "character"))
+            mirna_isoforms_table <- table(mirna_isoforms_dictionary$ambiguous_mirna_id)
+            ## mirna_isoforms_map <- hashmap(mirna_isoforms_dictionary$ambiguous_mirna_id, mirna_isoforms_dictionary$disambiguated_mirna_id)
+        }
+        for(i in seq_along(mirnas$mirna_id)) {
+            ambiguous_mirna_id <- mirnas$mirna_id[i]
+            if(mirna_isoforms_table[ambiguous_mirna_id] == 1) {
+                disambiguated_mirna_id <- mirna_isoforms_dictionary[mirna_isoforms_dictionary$ambiguous_mirna_id == ambiguous_mirna_id,
+                                                                    "disambiguated_mirna_id"]
+                to_return[i, "mirna_id"] <- disambiguated_mirna_id
+            } else if(mirna_isoforms_table[ambiguous_mirna_id] == 2) {
+                rows <- mirna_isoforms_dictionary[mirna_isoforms_dictionary$ambiguous_mirna_id == ambiguous_mirna_id, ]
+                valid_disambiguations_found <- 0
+                for(row_index in c(1, 2)) {
+                    disambiguated_mirna_id <- rows$disambiguated_mirna_id[row_index]
+                    if(base::endsWith(disambiguated_mirna_id, suffix)) {
+                        to_return[i, "mirna_id"] <- disambiguated_mirna_id
+                        valid_disambiguations_found = valid_disambiguations_found + 1
+                    }
+                }
+                if(valid_disambiguations_found != 1) {
+                    stop(paste("error: valid_disambiguations_found = ", valid_disambiguations_found, sep = ""))
+                }
+            } else {
+                stop(paste("error: mirna_isoforms_table[", ambiguous_mirna_id, "] = ", mirna_isoforms_table[ambiguous_mirna_id], sep = ""))
+            }
+        }
+        return(to_return)
+    }
+
+    recognized_first_strand$gene_id <- paste(ensembl_ids_mirbase_ids_dictionary$mirbase_id[match(recognized_first_strand$gene_id, ensembl_ids_mirbase_ids_dictionary$ensembl_id)], sep = "")
+    recognized_second_strand$gene_id <- paste(ensembl_ids_mirbase_ids_dictionary$mirbase_id[match(recognized_second_strand$gene_id, ensembl_ids_mirbase_ids_dictionary$ensembl_id)], sep = "")
+    colnames(recognized_first_strand)[[1]] <- "mirna_id"
+    colnames(recognized_second_strand)[[1]] <- "mirna_id"
+    recognized_first_strand <- distinguish_isoforms(recognized_first_strand, "3p")
+    recognized_second_strand <- distinguish_isoforms(recognized_second_strand, "5p")
 
     mirna_expression_profile <- data.table(mirbase_id = c(
-                                               recognized_first_strand$gene_id,
-                                               recognized_second_strand$gene_id
+                                               recognized_first_strand$mirna_id,
+                                               recognized_second_strand$mirna_id
                                            ), reads = c(
                                                   recognized_first_strand$first_strand_count,
                                                   recognized_second_strand$second_strand_count
                                               ), stringsAsFactors = F)
 
+    aggregate(reads ~ mirbase_id, data = mirna_expression_profile, FUN = sum)
     mirna_expression_profile$rpm <- mirna_expression_profile$reads/sum(mirna_expression_profile$reads)*1000000
+    write.table(mirna_expression_profile, file = paste("processed/", file, sep = ""), sep = "\t", row.names = F, quote = F)
+
     to_filter <- mirna_expression_profile$rpm < mirna_threshold_rpm
-    print(paste("filtering ", sum(to_filter), "/", nrow(mirna_expression_profile), " mirnas, having an rpm value of less than ", mirna_threshold_rpm, sep = ""))
+    print(paste("filtering ", sum(to_filter), "/", nrow(mirna_expression_profile),
+                " mirnas, having an rpm value of less than ", mirna_threshold_rpm,
+                " (", nrow(mirna_expression_profile) - sum(to_filter), " remaining)",
+                sep = ""))
     rpm_filtered <- sum(mirna_expression_profile[to_filter, "rpm"])
     print(paste("total rpms filtered: ", round(rpm_filtered, 2),
-                " (=", round(rpm_filtered/1000000, 2), "%)",
+                " (=", round(rpm_filtered/1000000, 4), "%)",
                 sep = ""))
     mirna_expression_profile <- mirna_expression_profile[!to_filter, ]
-    plot(sort(mirna_expression_profile$reads))
+    ## plot(sort(mirna_expression_profile$reads))
+}
+
+analyze_correlation <- function(files, mirna_threshold_rpm)
+{
+    dataframes <- lapply(files, function(file) read.table(paste("processed/", file, sep = ""), header = T, colClasses = c("character", "numeric", "numeric")))
+
+    mirnas_involved <- unique(unlist(lapply(dataframes, function(x) x$mirbase_id)))
+
+    for(df in dataframes) {
+
+    }
     browser()
     browser()
 }
@@ -57,3 +117,5 @@ files <- c("ENCFF495ZXC.tsv", "ENCFF902KUU.tsv")
 for(file in files) {
     process_file(file, mirna_threshold_rpm)
 }
+
+analyze_correlation(files, mirna_threshold_rpm)
