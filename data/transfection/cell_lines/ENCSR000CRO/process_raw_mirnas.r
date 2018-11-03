@@ -1,7 +1,6 @@
 library(data.table)
 library(base)
 library(rjson)
-## library(hashmap)
 source("../../../my_device.r")
 
 process_file <- function(file, mirna_threshold_rpm)
@@ -23,24 +22,31 @@ process_file <- function(file, mirna_threshold_rpm)
     print(paste(length(ensembl_ids_not_recognized), "ensembl ids not recognized as mirnas"))
     indexes_of_recognized <- match(ensembl_ids_recognized, a$gene_id)
 
-    recognized_first_strand <- a[indexes_of_recognized, c("gene_id", "first_strand_count")]
-    recognized_second_strand <- a[indexes_of_recognized, c("gene_id", "second_strand_count")]
+    recognized_first_strand <- a[indexes_of_recognized, c("gene_id", "first_strand_count", "second_strand_count")]
+    recognized_second_strand <- a[indexes_of_recognized, c("gene_id", "first_strand_count", "second_strand_count")]
 
     distinguish_isoforms <- function(mirnas, suffix)
     {
         to_return <- mirnas
-        ## TODO: of course this does not work, fix the scope
+        ## one could load these data only once, but the code is fast anyway
         if(!exists("mirna_isoforms_dictionary")) {
             print("loading data")
-            mirna_isoforms_dictionary <- read.table("../../../processed/mirna_isoforms_dictionary.tsv", header = T, colClasses = c("character", "character", "character"))
-            mirna_isoforms_table <- table(mirna_isoforms_dictionary$ambiguous_mirna_id)
-            ## mirna_isoforms_map <- hashmap(mirna_isoforms_dictionary$ambiguous_mirna_id, mirna_isoforms_dictionary$disambiguated_mirna_id)
+            mirna_isoforms_dictionary <<- read.table("../../../processed/mirna_isoforms_dictionary.tsv", header = T, colClasses = c("character", "character", "character"))
+            mirna_isoforms_table <<- table(mirna_isoforms_dictionary$ambiguous_mirna_id)
         }
+
         for(i in seq_along(mirnas$mirna_id)) {
             ambiguous_mirna_id <- mirnas$mirna_id[i]
             if(mirna_isoforms_table[ambiguous_mirna_id] == 1) {
-                disambiguated_mirna_id <- mirna_isoforms_dictionary[mirna_isoforms_dictionary$ambiguous_mirna_id == ambiguous_mirna_id,
-                                                                    "disambiguated_mirna_id"]
+                disambiguated_mirna_id <- mirna_isoforms_dictionary[mirna_isoforms_dictionary$ambiguous_mirna_id == ambiguous_mirna_id, "disambiguated_mirna_id"]
+                if(mirnas[i, "first_strand_count"] > 0 && mirnas[i, "second_strand_count"] > 0) {
+                    print(paste("error: mirnas[", i, ", \"first_strand_count\"] = ",
+                               mirnas[i, "first_strand_count"], ", ",
+                               "mirnas[", i, ", \"second_strand_count\"] = ",
+                               mirnas[i, "second_strand_count"],
+                               ", do not ignore this error",
+                               sep = ""))
+                }
                 to_return[i, "mirna_id"] <- disambiguated_mirna_id
             } else if(mirna_isoforms_table[ambiguous_mirna_id] == 2) {
                 rows <- mirna_isoforms_dictionary[mirna_isoforms_dictionary$ambiguous_mirna_id == ambiguous_mirna_id, ]
@@ -62,12 +68,17 @@ process_file <- function(file, mirna_threshold_rpm)
         return(to_return)
     }
 
-    recognized_first_strand$gene_id <- paste(ensembl_ids_mirbase_ids_dictionary$mirbase_id[match(recognized_first_strand$gene_id, ensembl_ids_mirbase_ids_dictionary$ensembl_id)], sep = "")
-    recognized_second_strand$gene_id <- paste(ensembl_ids_mirbase_ids_dictionary$mirbase_id[match(recognized_second_strand$gene_id, ensembl_ids_mirbase_ids_dictionary$ensembl_id)], sep = "")
+    recognized_first_strand$gene_id <- ensembl_ids_mirbase_ids_dictionary$mirbase_id[match(recognized_first_strand$gene_id, ensembl_ids_mirbase_ids_dictionary$ensembl_id)]
+    recognized_second_strand$gene_id <- ensembl_ids_mirbase_ids_dictionary$mirbase_id[match(recognized_second_strand$gene_id, ensembl_ids_mirbase_ids_dictionary$ensembl_id)]
+
     colnames(recognized_first_strand)[[1]] <- "mirna_id"
     colnames(recognized_second_strand)[[1]] <- "mirna_id"
+
     recognized_first_strand <- distinguish_isoforms(recognized_first_strand, "3p")
     recognized_second_strand <- distinguish_isoforms(recognized_second_strand, "5p")
+
+    recognized_first_strand <- recognized_first_strand[recognized_first_strand$mirna_id != "", ]
+    recognized_second_strand <- recognized_second_strand[!is.null(recognized_second_strand$mirna_id)]
 
     mirna_expression_profile <- data.table(mirbase_id = c(
                                                recognized_first_strand$mirna_id,
@@ -99,9 +110,11 @@ analyze_correlation <- function(files, mirna_threshold_rpm)
     dataframes <- lapply(files, function(file) read.table(paste("processed/", file, sep = ""), header = T, colClasses = c("character", "numeric", "numeric")))
 
     mirnas_involved <- unique(unlist(lapply(dataframes, function(x) x$mirbase_id)))
+    ## TODO: find the mirnas missing for each dataset
 
+    ## TODO: plot the correlation matrix
     for(df in dataframes) {
-
+        
     }
     browser()
     browser()
