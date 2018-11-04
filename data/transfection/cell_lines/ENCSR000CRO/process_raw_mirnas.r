@@ -110,14 +110,44 @@ analyze_correlation <- function(files, mirna_threshold_rpm)
     dataframes <- lapply(files, function(file) read.table(paste("processed/", file, sep = ""), header = T, colClasses = c("character", "numeric", "numeric")))
 
     mirnas_involved <- unique(unlist(lapply(dataframes, function(x) x$mirbase_id)))
-    ## TODO: find the mirnas missing for each dataset
+    all_expression_profiles <- data.frame(mirbase_id = mirnas_involved);
 
-    ## TODO: plot the correlation matrix
-    for(df in dataframes) {
-        
+    ## find the mirnas missing for each dataset
+    i <- 1
+    for(file in files) {
+        df <- dataframes[[i]]
+        mirnas_missing <- setdiff(mirnas_involved, df$mirbase_id)
+        print(paste(length(mirnas_missing), " mirnas missing in ", file))
+        my_order <- match(df$mirbase_id, mirnas_involved)
+        reads <- rep(0, length(mirnas_involved))
+        reads[my_order] <- df$reads
+        all_expression_profiles <- cbind(all_expression_profiles, reads)
+        colnames(all_expression_profiles)[[length(all_expression_profiles)]] <- file
+        i <- i + 1
     }
-    browser()
-    browser()
+    log_reads <- subset(all_expression_profiles, select = seq(2, length(all_expression_profiles)))
+    ## the correlation will not change since we are using Spearman and the following is a monotonic function
+    log_reads <- sapply(log_reads, function(x) ifelse(x > 0, log(x), -1))
+
+    panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor)
+    {
+        usr <- par("usr"); on.exit(par(usr))
+        par(usr = c(0, 1, 0, 1))
+        r <- abs(cor(x, y, method = "spearman"))
+        txt <- format(c(r, 0.123456789), digits = digits)[1]
+        txt <- paste(prefix, txt, sep = "")
+        if(missing(cex.cor)) cex <- 0.8 / strwidth(txt)
+
+        test <- cor.test(x, y, method = "spearman")
+                                        # borrowed from printCoefmat
+        Signif <- symnum(test$p.value, corr = FALSE, na = FALSE,
+                         cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1),
+                         symbols = c("***", "**", "*", ".", " "))
+
+        text(0.5, 0.5, txt, cex = cex * r)
+        text(.8, .8, Signif, cex = cex, col = 2)
+    }
+    pairs(log_reads, lower.panel = panel.smooth, upper.panel = panel.cor)
 }
 
 info_json <- fromJSON(file = "../../../../global_parameters.json")
