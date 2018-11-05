@@ -5,6 +5,11 @@ source("../../../my_device.r")
 
 process_file <- function(file, mirna_threshold_rpm)
 {
+    encode_dataset <- strsplit(file, "/")[[1]][1]
+    output_dir <- paste("processed/", encode_dataset, "sep" = "")
+    if(!dir.exists(output_dir)) {
+        dir.create(output_dir)
+    }
     a <- read.table(paste("raw/", file, sep = ""), colClasses = c("character", "numeric", "numeric", "numeric"))
     colnames(a) <- c("gene_id", "unstranded_count", "first_strand_count", "second_strand_count")
 
@@ -125,29 +130,37 @@ analyze_correlation <- function(files, mirna_threshold_rpm)
         colnames(all_expression_profiles)[[length(all_expression_profiles)]] <- file
         i <- i + 1
     }
-    log_reads <- subset(all_expression_profiles, select = seq(2, length(all_expression_profiles)))
-    ## the correlation will not change since we are using Spearman and the following is a monotonic function
-    log_reads <- sapply(log_reads, function(x) ifelse(x > 0, log(x), -1))
+    ## in the case of the Pearson correlation we do not transform the data
+## in the case of the spearman correlation, we take the logatithm, shifting 0 to -1 to have finite values while preserving monotonicity
+    transformed_reads <- subset(all_expression_profiles, select = seq(2, length(all_expression_profiles)))
+    ## correlation_method <- "spearman"
+    TODO: check the hypothesis which justify the Pearson correlation
+    correlation_method <- "pearson"
+    if(correlation_method == "spearman") {
+        ## the correlation will not change since we are using Spearman and the following is a monotonic function
+        transformed_reads <- sapply(transformed_reads, function(x) ifelse(x > 0, log10(x), -1))
+    }
 
+    ## borrowed from https://www.r-bloggers.com/
     panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor)
     {
         usr <- par("usr"); on.exit(par(usr))
         par(usr = c(0, 1, 0, 1))
-        r <- abs(cor(x, y, method = "spearman"))
-        txt <- format(c(r, 0.123456789), digits = digits)[1]
+        r <- abs(cor(x, y, method = correlation_method))
+        txt <- format(r, digits = digits)
         txt <- paste(prefix, txt, sep = "")
         if(missing(cex.cor)) cex <- 0.8 / strwidth(txt)
 
-        test <- cor.test(x, y, method = "spearman")
-                                        # borrowed from printCoefmat
-        Signif <- symnum(test$p.value, corr = FALSE, na = FALSE,
+        test <- cor.test(x, y, method = correlation_method)
+        ## borrowed from printCoefmat
+        significance <- symnum(test$p.value, corr = FALSE, na = FALSE,
                          cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1),
                          symbols = c("***", "**", "*", ".", " "))
 
         text(0.5, 0.5, txt, cex = cex * r)
-        text(.8, .8, Signif, cex = cex, col = 2)
+        text(0.5, 0.8, significance, cex = cex, col = 2)
     }
-    pairs(log_reads, lower.panel = panel.smooth, upper.panel = panel.cor)
+    pairs(transformed_reads, lower.panel = panel.smooth, upper.panel = panel.cor)
 }
 
 info_json <- fromJSON(file = "../../../../global_parameters.json")
@@ -156,7 +169,9 @@ mirna_threshold_rpm <- info_json["mirna_threshold_rpm"]
 mirna_cpp_id_dictionary <- read.table("../../../processed/mirna_id_dictionary.tsv", header = T, colClasses = c("character", "numeric"))
 targetscan_mirnas <- mirna_cpp_id_dictionary[[1]]
 
-files <- c("ENCFF495ZXC.tsv", "ENCFF902KUU.tsv")
+files <- c("ENCSR000CRO/ENCFF495ZXC.tsv", "ENCSR000CRO/ENCFF902KUU.tsv",
+           "ENCSR000CRP/ENCFF806EYY.tsv", "ENCSR000CRP/ENCFF729EQX.tsv",
+           "ENCSR000CRQ/ENCFF360IHM.tsv", "ENCSR000CRQ/ENCFF612ZIR.tsv")
 for(file in files) {
     process_file(file, mirna_threshold_rpm)
 }

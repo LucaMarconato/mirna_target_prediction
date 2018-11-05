@@ -24,8 +24,13 @@
 * TODO use TargetScan data for comparing the prediction with miRanda
 * TODO include the version id in gene comparison
 * REAL DATA VALIDATION
+** TODO look at the mirna expression profiles for other HeLa cells
+** TODO look at the gene expression profiles
+** TODO predict the gene down-regulation for the real data and compare the predictions with pairwise targetscan scores
+** TODO in the case of gene expression profiles the spearman correlation is more appropriate since what matters is the log-fold change and not the absolute quantity. Anyway in this case the fact that the variance increases maybe should be taken into account
 ** TODO include the usage of version numbers
 ** TODO verify that the conversion between ensembl ids and miRbase ids is correct. For instance look at ENSG00000210151
+** TODO maybe I should use the Pearson correlation on the non transformed data, to reflect the fact that the most expressed mirnas are the most influential
  INTERESTING BUT NOT NOW
 * TODO interesting: find the correlation between the density of the entries of the interaction matrix and the quantity of exchanged mirnas and clusters
 * TODO compute the weighted context score and compare it the one computed trivially
