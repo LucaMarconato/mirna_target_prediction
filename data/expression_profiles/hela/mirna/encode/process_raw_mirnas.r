@@ -1,7 +1,7 @@
 library(data.table)
 library(base)
 library(rjson)
-source("../../../my_device.r")
+source("../../../../my_device.r")
 
 process_file <- function(file, mirna_threshold_rpm)
 {
@@ -16,7 +16,7 @@ process_file <- function(file, mirna_threshold_rpm)
     a <- subset(a, grepl("ENSG", gene_id))
     ## TODO: consider the version
     a$gene_id <- unlist(lapply(a$gene_id, function(x) strsplit(x, "\\.")[[1]][1]))
-    ensembl_ids_mirbase_ids_dictionary <- read.table("../../../processed/ensembl_id_to_mirbase_id.tsv", header = T, colClasses = c("character", "character"))
+    ensembl_ids_mirbase_ids_dictionary <- read.table("../../../../processed/ensembl_id_to_mirbase_id.tsv", header = T, colClasses = c("character", "character"))
 
     x <- a$gene_id
     y <- ensembl_ids_mirbase_ids_dictionary$ensembl_id
@@ -36,7 +36,7 @@ process_file <- function(file, mirna_threshold_rpm)
         ## one could load these data only once, but the code is fast anyway
         if(!exists("mirna_isoforms_dictionary")) {
             print("loading data")
-            mirna_isoforms_dictionary <<- read.table("../../../processed/mirna_isoforms_dictionary.tsv", header = T, colClasses = c("character", "character", "character"))
+            mirna_isoforms_dictionary <<- read.table("../../../../processed/mirna_isoforms_dictionary.tsv", header = T, colClasses = c("character", "character", "character"))
             mirna_isoforms_table <<- table(mirna_isoforms_dictionary$ambiguous_mirna_id)
         }
 
@@ -133,9 +133,9 @@ analyze_correlation <- function(files, mirna_threshold_rpm)
     ## in the case of the Pearson correlation we do not transform the data
 ## in the case of the spearman correlation, we take the logatithm, shifting 0 to -1 to have finite values while preserving monotonicity
     transformed_reads <- subset(all_expression_profiles, select = seq(2, length(all_expression_profiles)))
-    ## correlation_method <- "spearman"
-    TODO: check the hypothesis which justify the Pearson correlation
-    correlation_method <- "pearson"
+    correlation_method <- "spearman"
+    ## TODO: check the hypothesis which justify the Pearson correlation
+    ## correlation_method <- "pearson"
     if(correlation_method == "spearman") {
         ## the correlation will not change since we are using Spearman and the following is a monotonic function
         transformed_reads <- sapply(transformed_reads, function(x) ifelse(x > 0, log10(x), -1))
@@ -163,10 +163,10 @@ analyze_correlation <- function(files, mirna_threshold_rpm)
     pairs(transformed_reads, lower.panel = panel.smooth, upper.panel = panel.cor)
 }
 
-info_json <- fromJSON(file = "../../../../global_parameters.json")
+info_json <- fromJSON(file = "../../../../../global_parameters.json")
 mirna_threshold_rpm <- info_json["mirna_threshold_rpm"]
 
-mirna_cpp_id_dictionary <- read.table("../../../processed/mirna_id_dictionary.tsv", header = T, colClasses = c("character", "numeric"))
+mirna_cpp_id_dictionary <- read.table("../../../../processed/mirna_id_dictionary.tsv", header = T, colClasses = c("character", "numeric"))
 targetscan_mirnas <- mirna_cpp_id_dictionary[[1]]
 
 files <- c("ENCSR000CRO/ENCFF495ZXC.tsv", "ENCSR000CRO/ENCFF902KUU.tsv",
