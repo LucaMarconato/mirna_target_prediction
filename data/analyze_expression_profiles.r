@@ -9,7 +9,7 @@ gene_map <- hashmap(keys = gene_id_dictionary$gene_id_cpp, values = gene_id_dict
 
 ## load only if necessary since the process is slow
 if(!exists("interactions")) {
-    interactions <- read.table("processed/scored_interactions_processed.tsv", colClasses = c("numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric"), header = T)   
+    interactions <- read.table("processed/scored_interactions_processed.tsv", colClasses = c("numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric", "numeric"), header = T)
 }
 
 gene_expression_profile <- read.table("patients/TCGA-CJ-4642/481383ce-b91b-4051-be71-0742f26cb178/d9c7a1f7-f303-4617-b46c-2003e871095b.htseq.counts", colClasses = c("character", "numeric"))
