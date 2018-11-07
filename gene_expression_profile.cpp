@@ -54,7 +54,7 @@ void Gep::load_from_gdc_file(std::string filename, std::string patient_folder)
     } else {
         std::cout << "parsing \"" << patient_folder + filename << "\"\n";
         io::CSVReader<2, io::trim_chars<' '>, io::no_quote_escape<'\t'>> in(patient_folder + filename);
-        
+
         Output_buffer ob(patient_folder + "gene_not_recognized.tsv", 10000, 1000);
         std::string s = "gene_id\tgene_id_version\treads\n";
 
@@ -136,7 +136,7 @@ void Gep::filter(double threshold_rpm)
     // if we are performing the filtering process only once then the following lines print redundant information
     // std::cout << "newly_filtered_out_distinct_genes/recognized_distinct_genes: " << newly_filtered_out_distinct_genes << "/" << recognized_distinct_genes << " = " << ((double)newly_filtered_out_distinct_genes)/recognized_distinct_genes << "\n";
     // std::cout << "newly_filtered_out_reads/recognized_reads: " << newly_filtered_out_reads << "/" << recognized_reads << " = " << ((double)newly_filtered_out_reads)/recognized_reads << "\n";
-    
+
     this->filtered_out_distinct_genes += newly_filtered_out_distinct_genes;
     this->filtered_out_reads += newly_filtered_out_reads;
     std::cout << "remaining = recognized - filtered_out\n";

@@ -64,7 +64,7 @@ Patient::Patient(std::string case_id, bool export_data) : case_id(case_id)
             // std::cout << "buffer.str() = " << buffer.str() << "\n";
             auto j = json::parse(buffer.str());
             in.close();
-            
+
             std::string file_prefix = patient_folder;
             // std::string normal_mirnas_file = j["normal_mirnas"]["uuid"].get<std::string>() + "/" + j["normal_mirnas"]["file"].get<std::string>();
             std::string normal_genes_file = j["normal_genes"]["uuid"].get<std::string>() + "/" + j["normal_genes"]["file"].get<std::string>();
@@ -98,7 +98,7 @@ Patient::Patient(std::string case_id, bool export_data) : case_id(case_id)
             for(auto & e : this->tumor_genes.profile) {
                 genes.insert(e.first);
             }
-            
+
             if(genes.find(19322) != genes.end()) {
                 std::cout << "all right\n";
             }
@@ -140,7 +140,7 @@ Patient::Patient(std::string case_id, bool export_data) : case_id(case_id)
         std::cout << "\n";
         this->interaction_graph.print_statistics();
         std::cout << "\n";
-        if(export_data) {           
+        if(export_data) {
             this->interaction_graph.export_interactions_data(patient_folder);
             std::cout << "exporting expression profiles\n";
             this->export_expression_profiles(patient_folder);
