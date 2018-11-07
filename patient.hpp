@@ -12,12 +12,12 @@ class Matchings_predictor;
 
 class Patient {
     Patient();
-    
+
 public:
     std::string case_id;
-    Mirna_expression_profile normal_mirnas, tumor_mirnas;
-    Gene_expression_profile normal_genes, tumor_genes;
-    Cluster_expression_profile normal_clusters, tumor_clusters;
+    Mirna_expression_profile mirna_expression_profile;
+    Gene_expression_profile gene_expression_profile;
+    Cluster_expression_profile cluster_expression_profile;
     Interaction_graph interaction_graph;
 
     Patient(std::string case_id, bool export_data);
