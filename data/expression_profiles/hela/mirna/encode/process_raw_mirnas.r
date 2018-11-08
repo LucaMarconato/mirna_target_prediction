@@ -51,6 +51,7 @@ process_file <- function(file, mirna_threshold_rpm)
                                mirnas[i, "second_strand_count"],
                                ", do not ignore this error",
                                sep = ""))
+                    print(mirnas[[1]][i])
                 }
                 to_return[i, "mirna_id"] <- disambiguated_mirna_id
             } else if(mirna_isoforms_table[ambiguous_mirna_id] == 2) {

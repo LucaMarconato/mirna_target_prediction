@@ -4,12 +4,12 @@ library(base)
 mirna_id_dictionary <- read.table("../processed/mirna_id_dictionary.tsv", header = T, colClasses = c("character", "numeric"))
 gene_id_dictionary <- read.table("../processed/gene_id_dictionary.tsv", header = T, colClasses = c("character", "numeric"))
 
-expression_profiles <- read.table("expression_profiles.tsv", header = T, colClasses = c("character", "character"))
+expression_profiles <- read.table("expression_profiles.tsv", header = T, colClasses = c("character", "character", "character"))
 for(i in 1:nrow(expression_profiles)) {
     mirna_dataset <- expression_profiles$mirna_dataset[i]
     gene_dataset <- expression_profiles$gene_dataset[i]
 
-    patient_folder <- paste("../patients/artificial_", basename(strsplit(mirna_dataset, ".tsv")[[1]][1]), sep = "")
+    patient_folder <- paste("../patients/artificial_", expression_profiles$artificial_patient_id[i], sep = "")
     if(dir.exists(patient_folder)) {
         print(paste(patient_folder, "already exists, skipping it"))
     } else {
@@ -24,6 +24,9 @@ for(i in 1:nrow(expression_profiles)) {
         mirna_not_recognized_count <- sum(is.na(mirna_expression_profile$mirna_id_cpp))
         gene_expression_profile$gene_id_cpp <- gene_id_dictionary$gene_id_cpp[gene_indices]
         gene_not_recognized_count <- sum(is.na(gene_expression_profile$gene_id_cpp))
+
+        mirna_expression_profile_path <- paste(patient_folder, "/mirna_expression_profile.tsv", sep = "")
+        gene_expression_profile_path <- paste(patient_folder, "/gene_expression_profile.tsv", sep = "")
 
         lost_mirna_reads <- sum(mirna_expression_profile$reads[is.na(mirna_expression_profile$mirna_id_cpp)])
         total_mirna_reads <- sum(mirna_expression_profile$reads)
@@ -43,17 +46,15 @@ for(i in 1:nrow(expression_profiles)) {
                     " (=", round(lost_gene_ratio, 2), ") reads",
                     sep = ""))
 
-        mirna_not_recognized_path <- paste(patient_folder, "/", "mirna_not_recognized.tsv", sep = "")
-        mirna_recognized_path <- paste(patient_folder, "/", "mirna_recognized.tsv", sep = "")
-        gene_not_recognized_path <- paste(patient_folder, "/", "gene_not_recognized.tsv", sep = "")
-        gene_recognized_path <- paste(patient_folder, "/", "gene_recognized.tsv", sep = "")
+        mirna_not_recognized_path <- paste(patient_folder, "/mirna_not_recognized.tsv", sep = "")
+        mirna_recognized_path <- paste(patient_folder, "/mirna_expression_profile.tsv", sep = "")
+        gene_not_recognized_path <- paste(patient_folder, "/gene_not_recognized.tsv", sep = "")
+        gene_recognized_path <- paste(patient_folder, "/gene_expression_profile.tsv", sep = "")
 
         mirna_not_recognized <- mirna_expression_profile[is.na(mirna_expression_profile$mirna_id_cpp), ]
         mirna_not_recognized <- base::subset(mirna_not_recognized, select = c("mirbase_id", "reads"))
-        colnames(mirna_not_recognized)[1] <- "mirna_family"
         mirna_recognized <- mirna_expression_profile[!is.na(mirna_expression_profile$mirna_id_cpp), ]
-        mirna_recognized <- base::subset(mirna_recognized, select = c("mirbase_id", "reads"))
-        colnames(mirna_recognized)[1] <- "mirna_family"
+        mirna_recognized <- base::subset(mirna_recognized, select = c("mirbase_id", "reads", "rpm"))
         gene_not_recognized <- gene_expression_profile[is.na(gene_expression_profile$gene_id_cpp), ]
         gene_not_recognized <- base::subset(gene_not_recognized, select = c("gene_id", "reads"))
         colnames(gene_not_recognized)[1] <- "gene_id"
@@ -62,6 +63,7 @@ for(i in 1:nrow(expression_profiles)) {
         colnames(gene_recognized)[1] <- "gene_id"
 
         dir.create(patient_folder)
+
         write.table(mirna_not_recognized, mirna_not_recognized_path, row.names = F, quote = F, sep = "\t")
         write.table(mirna_recognized, mirna_recognized_path, row.names = F, quote = F, sep = "\t")
         write.table(gene_not_recognized, gene_not_recognized_path, row.names = F, quote = F, sep = "\t")
