@@ -1,4 +1,3 @@
-source("my_device.r")
 library(purrr)
 library(raster)
 library(RColorBrewer)
@@ -6,6 +5,8 @@ library(plotrix)
 library(gridExtra)
 library(lattice)
 library(latticeExtra)
+rm(list = ls())
+source("my_device.r")
 
 analyze_convergence <- function(simulation_output_path)
 {
@@ -337,7 +338,7 @@ analyze_probabilities <- function(patient_folder, simulation_output_path)
     a <- read.table(filename, header = T, colClasses = c("numeric", "numeric"))
     hist(a$p_j_downregulated_values)
 
-    filename <- paste(patient_folder, "tumor_gene_expression_profile.tsv", sep = "")
+    filename <- paste(patient_folder, "gene_expression_profile_exported.tsv", sep = "")
     b <- read.table(filename, header = T, colClasses = c("numeric", "numeric"))
 
     d <- merge(a, b)
@@ -445,9 +446,21 @@ analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_out
             stop("abort")
         }
     }
-    filename <- paste(patient_folder, "tumor_gene_expression_profile.tsv", sep = "")
+    filename <- paste(patient_folder, "gene_expression_profile_exported.tsv", sep = "")
     b <- read.table(filename, header = T, colClasses = c("numeric", "numeric"))
-    genes_ordered <- NULL
+    gene_id_dictionary <- read.table("processed/gene_id_dictionary.tsv", header = T, colClasses = c("character", "numeric"))
+    ## browser()
+    all_gene_ids_cpp <- gene_id_dictionary$gene_id_cpp
+    expressed_gene_ids_cpp <- b$gene_id
+    not_expressed_gene_ids_cpp <- setdiff(all_gene_ids_cpp, expressed_gene_ids_cpp)
+    b <- rbind(b, data.frame(gene_id = not_expressed_gene_ids_cpp, rpm = rep(0, length(not_expressed_gene_ids_cpp))))
+    b <- b[order(b$gene_id), ]
+
+    ## here I should use the equivalent of a static variable in C, but I do not know how to do it in R so I am using this temporary workaround
+    if(!exists("genes_ordered_static_variable")) {
+        genes_ordered_static_variable <<- NULL
+    }
+    ## number_of_genes_per_row <<- NULL
 
     message_about_gene_ids_already_printed <<- F
 
@@ -455,14 +468,19 @@ analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_out
         predicted_downregulation_folder <- paste(simulation_output_paths[[dataset_index]], "predicted_downregulation", sep = "")
         file <- paste(predicted_downregulation_folder, "/p_j_downregulated_values_999999.tsv", sep = "")
         t <- read.table(file, header = T, colClasses = c("numeric", "numeric"))
-        t <- merge(t, b)
+        t <- merge(t, b, all.y = T)
+        na_count <- sum(is.na(t$p_j_downregulated_values))
+        t$p_j_downregulated_values[is.na(t$p_j_downregulated_values)] <- rep(0, na_count)
+        ## browser()
         t$rpm_downregulated <- t$rpm * t$p_j_downregulated_values
         t$final_rpm <- t$rpm - t$rpm_downregulated
-        if(is.null(genes_ordered)) {
+        if(is.null(genes_ordered_static_variable)) {
             my_order <- order(t$rpm)
-            genes_ordered <- t$gene_id[my_order]
+            ## browser()
+            genes_ordered_static_variable <<- t$gene_id[my_order]
+            print("RECOMPUTING THE ORDER")
         }
-        my_order <- match(genes_ordered, t$gene_id)
+        my_order <- match(genes_ordered_static_variable, t$gene_id)
         x_data <- 1:length(t$final_rpm)
         y_data <- t$final_rpm[my_order]
         is_the_id_in_gene_ids <- (t$gene_id[my_order] %in% gene_ids[[dataset_index]])
@@ -479,8 +497,8 @@ analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_out
             skipped <- read.table(genes_skipped_in_distance_based_prediction_filename, header = T, colClasses = c("numeric"))[[1]]
             ## print(paste("genes skipped in distance based prediction:", paste(skipped, collapse = ", ")))
             genes_skipped_in_distance_based_prediction <- rep(F, length(x_data))
-            genes_skipped_in_distance_based_prediction[match(skipped, genes_ordered)] <- T
-            ## print(match(skipped, genes_ordered))
+            genes_skipped_in_distance_based_prediction[match(skipped, genes_ordered_static_variable)] <- T
+            ## print(match(skipped, genes_ordered_static_variable))
         } else {
             genes_skipped_in_distance_based_prediction <- rep(F, length(x_data))
         }
@@ -493,7 +511,12 @@ analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_out
             rows <- 1
         }
         u <- seq_along(x_data)
-        u_split <- split(u, ceiling(seq_along(u)/(length(u)/rows)))
+        ## if(is.null(number_of_genes_per_row)) {
+        number_of_genes_per_row <- floor(length(u) / rows)
+            ## print("setting number_of_genes_per_row")
+        ## }
+        ## print(number_of_genes_per_row)
+        u_split <- split(u, ceiling(seq_along(u) / number_of_genes_per_row))
         rows <- min(length(u_split), rows)
 
         ## we add an extra row for the title
@@ -509,10 +532,11 @@ analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_out
         ## old_par <- par(mar = c(0,0,0,0))
         ## browser()
         plot.new()
-        title(main = paste("predicted gene expression after downregulation", basename(simulation_output_paths[[dataset_index]])))
+        title(main = paste("predicted gene expression after downregulation", simulation_output_paths[[dataset_index]]))
         par(mar = c(0,0,1.3,0), mgp = c(3, 0.3, 0))
 
         for(i in seq_len(rows)){
+            ## print(length(u_split[[i]]))
             x_data_split <- x_data[u_split[[i]]]
             y_data_split <- y_data[u_split[[i]]]
             is_the_id_in_gene_ids_split <- is_the_id_in_gene_ids[u_split[[i]]]
@@ -561,13 +585,22 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
         scores <- list()
         ## compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, "ratio")
         scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "spearman")
-        scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "average")
+        ## scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "average")
         ## scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "euclidean")
-        ## scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "norm1")
+        scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "norm1")
         return(scores)
     }
     dataframes <- lapply(simulation_output_paths,
                          function(x) read.table(paste(x, "predicted_downregulation/p_j_downregulated_values_999999.tsv", sep = ""), header = T, colClasses = c("numeric", "numeric")))
+
+    all_genes <- read.table("processed/gene_id_dictionary.tsv", header = T, colClasses = c("character", "numeric"))$gene_id_cpp
+    for(i in 1:length(dataframes)) {
+        expressed_genes <- dataframes[[i]]$gene_id
+        not_expressed_genes <- setdiff(all_genes, expressed_genes)
+        dataframes[[i]] <- rbind(dataframes[[i]], data.frame(gene_id = not_expressed_genes, p_j_downregulated_values = rep(0, length(not_expressed_genes))))
+        dataframes[[i]] <- dataframes[[i]][order(dataframes[[i]]$gene_id), ]
+    }
+
     ## if(!is.null(gene_ids)) {
     ##     dataframes <- lapply(dataframes, function(x) x[x$gene_id %in% gene_ids, ])
     ## }
@@ -719,7 +752,7 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
                 x_j <- df_j$p_j_downregulated_values
             } else {
                 if(!exists("initial_gene_expression_profile")) {
-                    filename <- paste(patient_folder, "tumor_gene_expression_profile.tsv", sep = "")
+                    filename <- paste(patient_folder, "gene_expression_profile_exported.tsv", sep = "")
                     initial_gene_expression_profile <<- read.table(filename, header = T, colClasses = c("numeric", "numeric"))
                 }
                 df_i <- merge(df_i, initial_gene_expression_profile)
@@ -755,6 +788,7 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
     }
     ## print(round(distance_matrix, 2))
     new_maximized_device()
+    print(simulation_output_paths)
     my_labels <- unlist(lapply(simulation_output_paths, function(x) basename(x)))
     rownames(distance_matrix) <- my_labels
     colnames(distance_matrix) <- my_labels
@@ -928,7 +962,7 @@ analyze_mirna_expression_profiles_of_perturbed_data <- function(simulation_outpu
     }
 }
 
-patient_id <- "TCGA-CJ-4642"
+patient_id <- "artificial_TCGA-CJ-4642"
 ## patient_id <- "artificial0"
 ## patient_id <- "artificial1"
 patient_folder <- paste("patients/", patient_id, "/", sep = "")
@@ -945,7 +979,35 @@ close_all_devices()
 ## analyze_probabilities(patient_folder, simulation_output_path)
 
 simulation_output_paths <- c()
-simulation_output_paths <- c(simulation_output_paths, simulation_output_path)
+
+## hela_patients <- c("artificial_TCGA-CJ-4642", "artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela", "artificial_ENCFF729EQX-hela", "artificial_ENCFF806EYY-hela", "artificial_ENCFF902KUU-hela")
+## hela_patients <- c("artificial_TCGA-CJ-4642", "artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela")
+
+## hela_patients <- c("artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela", "artificial_ENCFF729EQX-hela", "artificial_ENCFF806EYY-hela", "artificial_ENCFF902KUU-hela")
+hela_patients <- c("artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela")
+
+list_of_perturbed_data <- c("original_data", "p__0__a500000__", "p__1__a500000__", "p__2__a500000__")
+for(patient in hela_patients) {
+    simulation_output_paths_for_current_patient <- c()
+    patient_folder_for_current_patient <- paste("patients/", patient, "/", sep = "")
+    for(perturbed_data in list_of_perturbed_data) {
+        new_path <- paste(patient_folder_for_current_patient, "matchings_predictor_output/", perturbed_data, "/", sep = "")
+        simulation_output_paths <- c(simulation_output_paths, new_path)
+        simulation_output_paths_for_current_patient <- c(simulation_output_paths_for_current_patient, new_path)
+    }
+    ## browser()
+    analyze_predictions_of_perturbed_data(patient_folder_for_current_patient,
+                                          simulation_output_paths_for_current_patient,
+                                          gene_ids = sapply(1:length(simulation_output_paths_for_current_patient), function(x) list()),
+                                          consider_only_specified_gene_ids = F)
+}
+
+gene_ids <- list()
+for(i in seq_along(simulation_output_paths)) {
+    gene_ids[[i]] <- list()
+}
+
+## simulation_output_paths <- c(simulation_output_paths, simulation_output_path)
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "g__87__r3__", "/", sep = ""))
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r100__", "/", sep = ""))
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "p__0__r10__", "/", sep = ""))
@@ -966,71 +1028,73 @@ simulation_output_paths <- c(simulation_output_paths, simulation_output_path)
 ##     }
 ## }
 
-## first_n_mirnas_to_perturb <- 87
-first_n_mirnas_to_perturb <- 7
-## delta <- 22
-delta <- 0
-for(i in seq(0 + delta, first_n_mirnas_to_perturb - 1 + delta)) {
-    ## for(j in c(0, 1)) {
-    for(j in c(0)) {
-        if(j == 0) {
-            simulation_id <- paste("p__", i, "__a500000__", sep = "")
-        } else {
-            simulation_id <- paste("p__", i, "__r-1__", sep = "")
-        }
-    }
-    simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", simulation_id, "/", sep = ""))
-}
-
-## for(path in simulation_output_paths) {
-##     analyze_convergence(path)
+## ## first_n_mirnas_to_perturb <- 87
+## first_n_mirnas_to_perturb <- 7
+## ## delta <- 22
+## delta <- 0
+## for(i in seq(0 + delta, first_n_mirnas_to_perturb - 1 + delta)) {
+##     ## for(j in c(0, 1)) {
+##     for(j in c(0)) {
+##         if(j == 0) {
+##             simulation_id <- paste("p__", i, "__a500000__", sep = "")
+##         } else {
+##             simulation_id <- paste("p__", i, "__r-1__", sep = "")
+##         }
+##     }
+##     simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", simulation_id, "/", sep = ""))
 ## }
 
-mirna_expression_profile_filename <- paste(patient_folder, "tumor_mirna_expression_profile.tsv", sep = "")
-mirnas <- read.table(mirna_expression_profile_filename, header = T, colClasses = c("numeric", "numeric"))
-mirnas_considered <- mirnas[order(-mirnas$rpm),][1:first_n_mirnas_to_perturb, "mirna_id"]
-gene_ids <- list()
-gene_ids[[length(gene_ids) + 1]] <- list()
-## for(i in seq_len(perturbed_datasets_count * replicates)) {
-##     gene_ids[[length(gene_ids) + 1]] <- list()
-## }
-## no mirna is perturbed for original data and gaussian data
+## ## for(path in simulation_output_paths) {
+## ##     analyze_convergence(path)
+## ## }
+
+## mirna_expression_profile_filename <- paste(patient_folder, "mirna_expression_profile_exported.tsv", sep = "")
+## mirnas <- read.table(mirna_expression_profile_filename, header = T, colClasses = c("numeric", "numeric"))
+## mirnas_considered <- mirnas[order(-mirnas$rpm),][1:first_n_mirnas_to_perturb, "mirna_id"]
+## gene_ids <- list()
+## gene_ids[[length(gene_ids) + 1]] <- list()
+## ## for(i in seq_len(perturbed_datasets_count * replicates)) {
+## ##     gene_ids[[length(gene_ids) + 1]] <- list()
+## ## }
+## ## no mirna is perturbed for original data and gaussian data
 ## gene_ids[[1]] <- list()
 ## gene_ids[[2]] <- list()
 ## gene_ids[[3]] <- list()
 ## gene_ids[[4]] <- list()
-i <- length(gene_ids) + 1
-for(mirna_id in mirnas_considered) {
-    filename <- paste("interactions/mirna_id", mirna_id, "_interactions.rds", sep = "")
-    if(!file.exists(filename)) {
-        ## I should have used a SQL database here...
-        print(paste("generating target file for mirna_id =", mirna_id))
-        source("analyze_expression_profiles.r")
-        get_targets_for_mirna(mirna_id)
-        print("generated")
-    }
-    gene_ids_for_mirna <- readRDS(filename)
-    gene_ids[[i]] <- gene_ids_for_mirna
-    gene_ids[[i + 1]] <- gene_ids_for_mirna
-    ## gene_ids <- unique(c(gene_ids, gene_ids_for_mirna))
-    i <- i + 2
-}
+## gene_ids[[5]] <- list()
+## gene_ids[[6]] <- list()
+## i <- length(gene_ids) + 1
+## for(mirna_id in mirnas_considered) {
+##     filename <- paste("interactions/mirna_id", mirna_id, "_interactions.rds", sep = "")
+##     if(!file.exists(filename)) {
+##         ## I should have used a SQL database here...
+##         print(paste("generating target file for mirna_id =", mirna_id))
+##         source("analyze_expression_profiles.r")
+##         get_targets_for_mirna(mirna_id)
+##         print("generated")
+##     }
+##     gene_ids_for_mirna <- readRDS(filename)
+##     gene_ids[[i]] <- gene_ids_for_mirna
+##     gene_ids[[i + 1]] <- gene_ids_for_mirna
+##     ## gene_ids <- unique(c(gene_ids, gene_ids_for_mirna))
+##     i <- i + 2
+## }
 ## gene_ids[[2]] <- gene_ids[[5]]
 ## gene_ids[[3]] <- gene_ids[[5]]
 ## gene_ids[[4]] <- gene_ids[[5]]
 ## gene_ids[[4]] <- gene_ids[[6]]
 ## gene_ids[[5]] <- gene_ids[[6]]
 
-## analyze_predictions_of_perturbed_data(patient_folder, simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F)
+analyze_predictions_of_perturbed_data(patient_folder, simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F)
 
 rankings <- list()
 ## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = T)
-rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = T, allow_linear_correction = T)
-rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = T, allow_linear_correction = F)
+## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = T, allow_linear_correction = T)
+## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = T, allow_linear_correction = F)
 
-analyze_mirna_expression_profiles_of_perturbed_data(simulation_output_paths)
-## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = F)
-## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = F, allow_linear_correction = F)
+## analyze_mirna_expression_profiles_of_perturbed_data(simulation_output_paths)
+## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = F, allow_linear_correction = F)
+rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = F, allow_linear_correction = F)
 
 ## plot_rankings(rankings)
 

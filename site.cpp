@@ -16,12 +16,12 @@
 Site::Site() {}
 
 Site::Site(Mirna_id mirna_id, Gene_id gene_id, unsigned int utr_start, unsigned int utr_end) :
-    mirna_id(mirna_id), 
-    gene_id(gene_id), 
-    utr_start(utr_start), 
+    mirna_id(mirna_id),
+    gene_id(gene_id),
+    utr_start(utr_start),
     utr_end(utr_end)
 {
-    
+
 }
 
 void Site::reduce_size_of_scored_interactions_file()
@@ -33,7 +33,7 @@ void Site::reduce_size_of_scored_interactions_file()
     ob.verbose = true;
     std::string header = "mirna_id\tgene_id\tutr_start\tutr_end\tseed_match_type\tcontext_score\tweighted_context_score\tconserved\n";
     ob.add_chunk(header);
-    
+
     io::CSVReader<10, io::trim_chars<' '>, io::no_quote_escape<'\t'>> in("./data/processed/scored_interactions.tsv");
     in.read_header(io::ignore_extra_column, "mirna_family", "gene_id", "gene_symbol", "transcript_id", "utr_start", "utr_end", "seed_match_type", "context_score", "weighted_context_score", "conserved");
     std::string columns[10];
@@ -64,7 +64,7 @@ void Site::reduce_size_of_scored_interactions_file()
             std::cerr << "error: columns[9] = " << columns[9] << "\n";
             exit(1);
         }
-        std::stringstream ss;        
+        std::stringstream ss;
         ss << mirna_id << "\t" << gene_id << "\t" << columns[4] << "\t" << columns[5] << "\t" << mirna_matching << "\t" << columns[7] << "\t" << columns[8] << "\t" << conserved << "\n";
         std::string s = ss.str();
         ob.add_chunk((void *)(s.c_str()),s.size());

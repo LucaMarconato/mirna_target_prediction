@@ -15,6 +15,7 @@ for(i in 1:nrow(expression_profiles)) {
     } else {
         mirna_expression_profile <- read.table(mirna_dataset, header = T, colClasses = c("character", "numeric", "numeric"))
         gene_expression_profile <- read.table(gene_dataset, header = T, colClasses = c("character", "numeric"))
+        gene_expression_profile$gene_id <- unlist(lapply(gene_expression_profile$gene_id, function(x) strsplit(x, "\\.")[[1]][1]))
 
         mirna_expression_profile$mirbase_id <- tolower(mirna_expression_profile$mirbase_id)
         mirna_indices <- match(mirna_expression_profile$mirbase_id, mirna_id_dictionary$mirna_family)
@@ -68,5 +69,7 @@ for(i in 1:nrow(expression_profiles)) {
         write.table(mirna_recognized, mirna_recognized_path, row.names = F, quote = F, sep = "\t")
         write.table(gene_not_recognized, gene_not_recognized_path, row.names = F, quote = F, sep = "\t")
         write.table(gene_recognized, gene_recognized_path, row.names = F, quote = F, sep = "\t")
+        ## browser()
+        ## browser()
     }
 }

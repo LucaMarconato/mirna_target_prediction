@@ -10,19 +10,19 @@
 
 typedef unsigned int Mirna_id;
 
-class Mirna {    
+class Mirna {
 private:
     Mirna();
 public:
     static boost::bimap<Mirna, Mirna_id> mirna_id_dictionary;
-    std::string mirna_family;
+    std::string mirbase_id;
 
-    Mirna(std::string mirna_family);
+    Mirna(std::string mirbase_id);
     template<class Archive>
     void serialize(Archive & ar, const unsigned int);
     static void initialize_mirna_dictionary();
     static void print_mirna_dictionary(unsigned int max_rows = -1);
-    
+
     friend bool operator<(Mirna const & lhs, Mirna const & rhs);
     friend std::ostream & operator<<(std::ostream & stream, const Mirna & o);
     /* // for accessing the private default constructor */
@@ -36,7 +36,7 @@ namespace std {
     {
         size_t operator()(const Mirna & e) const noexcept
         {
-            return boost::hash<std::string>()(e.mirna_family);
+            return boost::hash<std::string>()(e.mirbase_id);
         }
     };
 }

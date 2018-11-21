@@ -50,15 +50,15 @@ void Mep::load_from_file(std::string patient_folder)
     } else {
         std::cout << "parsing \"" << filename << "\"\n";
         io::CSVReader<2, io::trim_chars<' '>, io::no_quote_escape<'\t'>> in(filename);
-        in.read_header(io::ignore_extra_column, "mirna_family", "reads");
+        in.read_header(io::ignore_extra_column, "mirbase_id", "reads");
 
-        std::string mirna_family, reads;
-        while (in.read_row(mirna_family, reads)) {
-            Mirna mirna(mirna_family);
+        std::string mirbase_id, reads;
+        while (in.read_row(mirbase_id, reads)) {
+            Mirna mirna(mirbase_id);
             double reads_ull = std::strtod(reads.c_str(), nullptr);
             auto e = Mirna::mirna_id_dictionary.left.find(mirna);
             if (e == Mirna::mirna_id_dictionary.left.end()) {
-                std::cerr << "error: mirna not recognized, mirna_family = " << mirna_family << "\n";
+                std::cerr << "error: mirna not recognized, mirbase_id = " << mirbase_id << "\n";
                 exit(1);
             } else {
                 this->distinct_mirnas++;
@@ -67,7 +67,7 @@ void Mep::load_from_file(std::string patient_folder)
                 Reads reads(reads_ull);
                 Expression expression(reads);
                 if (this->profile.find(mirna_id) != this->profile.end()) {
-                    std::cerr << "error: mirna_id " << mirna_id << ", mirna_family = " << mirna_family << " already present in this->profile\n";
+                    std::cerr << "error: mirna_id " << mirna_id << ", mirbase_id = " << mirbase_id << " already present in this->profile\n";
                     exit(1);
                 }
                 this->profile[mirna_id] = expression;

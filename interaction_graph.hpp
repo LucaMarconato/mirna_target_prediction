@@ -19,7 +19,7 @@
 
 class Interaction_graph;
 
-class Mirna_site_arc {    
+class Mirna_site_arc {
 public:
     // this is required by std::unordered_map, I should find a way to keep this private
     Mirna_site_arc() {};
@@ -37,7 +37,7 @@ public:
 };
 
 class Interaction_graph {
-public:    
+public:
     std::unordered_map<boost::tuple<Mirna_id, Gene_id, unsigned int, unsigned int>, Site *> sites_by_location;
     // gene-site arcs
     std::unordered_map<Gene_id, std::list<Site *>> gene_to_sites_arcs;

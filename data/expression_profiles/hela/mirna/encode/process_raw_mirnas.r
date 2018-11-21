@@ -6,7 +6,7 @@ source("../../../../my_device.r")
 process_file <- function(file, mirna_threshold_rpm)
 {
     encode_dataset <- strsplit(file, "/")[[1]][1]
-    output_dir <- paste("processed/", encode_dataset, "sep" = "")
+    output_dir <- paste("processed/", encode_dataset, sep = "")
     if(!dir.exists(output_dir)) {
         dir.create(output_dir)
     }
@@ -94,7 +94,7 @@ process_file <- function(file, mirna_threshold_rpm)
                                                   recognized_second_strand$second_strand_count
                                               ), stringsAsFactors = F)
 
-    aggregate(reads ~ mirbase_id, data = mirna_expression_profile, FUN = sum)
+    mirna_expression_profile <- aggregate(reads ~ mirbase_id, data = mirna_expression_profile, FUN = sum)
     mirna_expression_profile$rpm <- mirna_expression_profile$reads/sum(mirna_expression_profile$reads)*1000000
     write.table(mirna_expression_profile, file = paste("processed/", file, sep = ""), sep = "\t", row.names = F, quote = F)
 

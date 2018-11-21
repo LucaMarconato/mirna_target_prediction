@@ -36,7 +36,7 @@ void swap(Mirna_site_arc & obj1, Mirna_site_arc & obj2)
     std::swap(obj1.seed_match_type,obj2.seed_match_type);
     std::swap(obj1.context_score,obj2.context_score);
     std::swap(obj1.weighted_context_score,obj2.weighted_context_score);
-    std::swap(obj1.conserved,obj2.conserved);    
+    std::swap(obj1.conserved,obj2.conserved);
 }
 
 Mirna_site_arc & Mirna_site_arc::operator=(Mirna_site_arc obj)
@@ -90,7 +90,7 @@ Ig & Ig::operator=(Ig obj)
 void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> & genes)
 {
     std::cout << "building the interaction graph\n";
-    Timer::start();    
+    Timer::start();
     io::CSVReader<8, io::trim_chars<' '>, io::no_quote_escape<'\t'>> in("./data/processed/scored_interactions_processed.tsv");
     in.read_header(io::ignore_extra_column, "mirna_id",  "gene_id",  "utr_start",  "utr_end",  "seed_match_type",  "context_score",  "weighted_context_score", "conserved");
     std::string columns[8];
@@ -101,7 +101,7 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
             this->rows_skipped++;
             continue;
         }
-        this->rows_processed++;            
+        this->rows_processed++;
         unsigned int utr_start = std::strtoul(columns[2].c_str(), nullptr, 10);
         unsigned int utr_end = std::strtoul(columns[3].c_str(), nullptr, 10);
         Seed_match_type::Mirna_site_matching mirna_site_matching = static_cast<Seed_match_type::Mirna_site_matching>(atoi(columns[4].c_str()));
@@ -112,7 +112,7 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
         Site * site = this->get_site(mirna_id, gene_id, utr_start, utr_end);
 
         // create gene-site arcs
-        this->gene_to_sites_arcs[gene_id].push_back(site);        
+        this->gene_to_sites_arcs[gene_id].push_back(site);
 
         // create mirna-site arcs
         Mirna_site_arc mirna_site_arc(seed_match_type, context_score, weighted_context_score, conserved);
@@ -120,14 +120,14 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
         if(this->mirna_site_arcs.find(p0) != this->mirna_site_arcs.end()) {
             std::cout << "warning: considering only one binding between a mirna and one sites\n";
         }
-        this->mirna_site_arcs[p0] = mirna_site_arc;        
-        this->mirna_to_sites_arcs[mirna_id].push_back(site);        
+        this->mirna_site_arcs[p0] = mirna_site_arc;
+        this->mirna_to_sites_arcs[mirna_id].push_back(site);
         this->site_to_mirnas_arcs[site].push_back(mirna_id);
-        
+
         // create mirna-gene arcs
         auto p1 = std::make_pair(mirna_id, gene_id);
-        this->mirna_gene_arcs[p1].push_back(site);        
-        this->mirna_to_genes_arcs[mirna_id].push_back(gene_id);        
+        this->mirna_gene_arcs[p1].push_back(site);
+        this->mirna_to_genes_arcs[mirna_id].push_back(gene_id);
         this->gene_to_mirnas_arcs[gene_id].push_back(mirna_id);
     }
     // create site-site arcs
@@ -140,7 +140,7 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
                     // WARNING: you may be interested in using utr_start and utr_end instead of the following condition
                     if(std::abs((((long long)site0->utr_start) - ((long long)site1->utr_start))) <= Global_parameters::threshold_for_overlapping_sites) {
                         this->site_to_overlapping_sites[site0].push_back(site1);
-                    }                    
+                    }
                 }
             }
         }
@@ -200,7 +200,7 @@ void Ig::build_interaction_graph(std::set<Mirna_id> & mirnas, std::set<Gene_id> 
       //     }
       // }
      */
-    
+
     std::cout << "built, ";
     Timer::stop();
 }
@@ -214,7 +214,7 @@ Site * Ig::get_site(Mirna_id mirna_id, Gene_id gene_id, unsigned int utr_start, 
     } else {
         Site * site = new Site(mirna_id, gene_id, utr_start, utr_end);
         this->sites_by_location[boost::make_tuple(mirna_id, gene_id, utr_start, utr_end)] = site;
-        return site;   
+        return site;
     }
 }
 
@@ -245,14 +245,14 @@ void Ig::print_statistics()
     // note that if the condition is false (so that the equality holds), we are not considering sites in which the same mirna can bind in different ways
     if(this->sites_by_location.size() != this->mirna_site_arcs.size()) {
         std::cerr << "error: sites_by_location.size() = " << sites_by_location.size() << ", mirna_site_arcs.size() = " << mirna_site_arcs.size() << "\n";
-        exit(1);        
-    }    
+        exit(1);
+    }
     unsigned long long total_clusters = 0;
     for(auto & e : this->gene_to_clusters_arcs) {
         total_clusters += e.second.size();
     }
     std::cout << "total_clusters/total_sites: " << total_clusters << "/" << mirna_site_arcs.size() << " = " << ((double)total_clusters)/mirna_site_arcs.size() << "\n";
-    
+
 }
 
 void Ig::export_interactions_data(std::string patient_folder)
@@ -294,7 +294,7 @@ void Ig::export_interactions_data(std::string patient_folder)
         std::cerr << "error: j_to_gene_id.size() = " << j_to_gene_id.size() << ", gene_count = " << gene_count << "\n";
         exit(1);
     }
-    
+
     for(auto & e : this->mirna_to_genes_arcs) {
         Mirna_id mirna_id = e.first;
         unsigned long long i = i_to_mirna_id.right.at(mirna_id);
@@ -325,7 +325,7 @@ void Ig::export_interactions_data(std::string patient_folder)
     delete [] m;
     // std::cout << "written, ";
     // Timer::stop();
-    
+
     // information about overlapping sites
     // Timer::start();
     std::cout << "writing information about overlapping sites\n";
@@ -382,7 +382,7 @@ void Interaction_graph::free_pointers()
         }
     }
     // std::cout << "deleted, ";
-    // Timer::stop();    
+    // Timer::stop();
 }
 
 Interaction_graph::~Interaction_graph()

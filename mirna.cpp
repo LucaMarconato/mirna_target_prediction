@@ -15,7 +15,7 @@ boost::bimap<Mirna, Mirna_id> Mirna::mirna_id_dictionary;
 
 Mirna::Mirna() {}
 
-Mirna::Mirna(std::string mirna_family) : mirna_family(mirna_family) {}
+Mirna::Mirna(std::string mirbase_id) : mirbase_id(mirbase_id) {}
 
 void Mirna::initialize_mirna_dictionary()
 {
@@ -29,7 +29,7 @@ void Mirna::initialize_mirna_dictionary()
         Mirna_id i = 0;
         // get the header
         getline(in, line);
-        if(line != "mirna_family") {
+        if(line != "mirbase_id") {
             std::cerr << "error: line = " << line << "\n";
             exit(1);
         }
@@ -45,7 +45,7 @@ void Mirna::initialize_mirna_dictionary()
                 }
             }
         }
-        in.close();        
+        in.close();
         std::cout << "writing mirna_id_dictionary.bin\n";
         Timer::start();
         std::ofstream out("mirna_id_dictionary.bin", std::ios::binary);
@@ -54,11 +54,11 @@ void Mirna::initialize_mirna_dictionary()
         out.close();
         std::cout << "written, ";
         Timer::stop();
-        
+
         std::stringstream ss;
-        ss << "mirna_family\tmirna_id_cpp\n";
+        ss << "mirbase_id\tmirna_id_cpp\n";
         for(auto & e : Mirna::mirna_id_dictionary.left) {
-            ss << e.first.mirna_family << "\t" << e.second << "\n";
+            ss << e.first.mirbase_id << "\t" << e.second << "\n";
         }
         out.open("data/processed/mirna_id_dictionary.tsv");
         out << ss.str();
@@ -67,7 +67,7 @@ void Mirna::initialize_mirna_dictionary()
         std::cout << "loading mirna_id_dictionary.bin\n";
         Timer::start();
         std::ifstream in("mirna_id_dictionary.bin", std::ios::binary);
-        boost::archive::binary_iarchive ia(in);        
+        boost::archive::binary_iarchive ia(in);
         ia >> Mirna::mirna_id_dictionary;
         in.close();
         std::cout << "loaded, ";
@@ -85,19 +85,19 @@ void Mirna::print_mirna_dictionary(unsigned int max_rows)
         if(j++ < max_rows) {
             Mirna & mirna = const_cast<Mirna &>(e.first);
             Mirna_id & i = const_cast<Mirna_id &>(e.second);
-            std::cout << "mirna.mirna_family = " << mirna.mirna_family << ", i = " << i << "\n";            
+            std::cout << "mirna.mirbase_id = " << mirna.mirbase_id << ", i = " << i << "\n";
         }
     }
 }
 
 bool operator<(Mirna const & lhs, Mirna const & rhs)
 {
-    return lhs.mirna_family < rhs.mirna_family;
+    return lhs.mirbase_id < rhs.mirbase_id;
 }
 
 std::ostream & operator<<(std::ostream & stream, const Mirna & o)
 {
-    return stream << "mirna_family = " << o.mirna_family << "\n";
+    return stream << "mirbase_id = " << o.mirbase_id << "\n";
 }
 
 // Mirna::Mirna_matching Mirna::matches_with_string(char * site)
@@ -105,7 +105,7 @@ std::ostream & operator<<(std::ostream & stream, const Mirna & o)
 //     int len = strlen(site);
 //     if(len < 8) {
 //         std::cerr << "error: len = " << len << "\n";
-//         exit(1);        
+//         exit(1);
 //     }
 //     char * mirna = const_cast<char *>(this->sequence.c_str());
 //     bool A_at_pos_1 = site[0] == 'A';
@@ -124,6 +124,6 @@ std::ostream & operator<<(std::ostream & stream, const Mirna & o)
 //     }
 //     if(rna_rna_mismatch(mirna+2, site+2, 6, true) == -1) {
 //         return canonical_offset_6mer;
-//     }       
+//     }
 //     return no_matching;
 // }

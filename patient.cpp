@@ -145,6 +145,6 @@ void Patient::export_expression_profiles(std::string patient_folder)
         out.close();
 	};
 
-    export_mirna_expression_profile(this, patient_folder + "mirna_expression_profile.tsv", this->mirna_expression_profile);
-    export_gene_expression_profile(this, patient_folder + "gene_expression_profile.tsv", this->gene_expression_profile);
+    export_mirna_expression_profile(this, patient_folder + "mirna_expression_profile_exported.tsv", this->mirna_expression_profile);
+    export_gene_expression_profile(this, patient_folder + "gene_expression_profile_exported.tsv", this->gene_expression_profile);
 }

@@ -24,13 +24,24 @@
 * TODO use TargetScan data for comparing the prediction with miRanda
 * TODO include the version id in gene comparison
 * REAL DATA VALIDATION
-** TODO look at the mirna expression profiles for other HeLa cells
-** TODO look at the gene expression profiles
-** TODO predict the gene down-regulation for the real data and compare the predictions with pairwise targetscan scores
-** TODO in the case of gene expression profiles the spearman correlation is more appropriate since what matters is the log-fold change and not the absolute quantity. Anyway in this case the fact that the variance increases maybe should be taken into account
-** TODO include the usage of version numbers
-** TODO verify that the conversion between ensembl ids and miRbase ids is correct. For instance look at ENSG00000210151
-** TODO maybe I should use the Pearson correlation on the non transformed data, to reflect the fact that the most expressed mirnas are the most influential
+** STABILITY ANALYSIS
+*** DONE make the program work with the new data format
+    CLOSED: [2018-11-21 Wed 12:11]
+*** DONE fix analyze_matchings_predictions.r to conform the new data format
+    CLOSED: [2018-11-21 Wed 12:11]
+*** DONE modify the matrix plot to support plots taken among different experiments
+    CLOSED: [2018-11-21 Wed 15:28]
+*** TODO make the predictions perturbing all the mirnas, to see if the ranking between different replicates coincide
+*** TODO use featureCounts for finding the expression profiles of isoforms from hela data
+*** TODO check the predictions when using replicates for mRNA
+*** TODO look at the gene expression profiles from St. Olav server
+** TRANSFECTION
+*** TODO predict the gene down-regulation for the real data and compare the predictions with pairwise targetscan scores
+** VALIDATION WITH GDC LIKE IN THE ARTICLE
+*** TODO look at the mirna expression profiles for HeLa cells
+** FUTURE
+*** TODO include the usage of version numbers
+*** TODO verify that the conversion between ensembl ids and miRbase ids is correct. For instance look at ENSG00000210151
  INTERESTING BUT NOT NOW
 * TODO interesting: find the correlation between the density of the entries of the interaction matrix and the quantity of exchanged mirnas and clusters
 * TODO compute the weighted context score and compare it the one computed trivially
