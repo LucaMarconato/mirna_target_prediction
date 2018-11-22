@@ -25,9 +25,9 @@ int main(int argc, char* argv[])
 
     std::vector<Patient> patients;
     // patients.emplace_back(Patient("artificial_TCGA-CJ-4642", true));
-    patients.emplace_back(Patient("artificial_ENCFF360IHM-hela", true));
-    patients.emplace_back(Patient("artificial_ENCFF495ZXC-hela", true));
-    patients.emplace_back(Patient("artificial_ENCFF612ZIR-hela", true));
+    // patients.emplace_back(Patient("artificial_ENCFF360IHM-hela", true));
+    // patients.emplace_back(Patient("artificial_ENCFF495ZXC-hela", true));
+    // patients.emplace_back(Patient("artificial_ENCFF612ZIR-hela", true));
     patients.emplace_back(Patient("artificial_ENCFF729EQX-hela", true));
     patients.emplace_back(Patient("artificial_ENCFF806EYY-hela", true));
     patients.emplace_back(Patient("artificial_ENCFF902KUU-hela", true));

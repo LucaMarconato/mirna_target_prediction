@@ -35,6 +35,7 @@
 *** TODO use featureCounts for finding the expression profiles of isoforms from hela data
 *** TODO check the predictions when using replicates for mRNA
 *** TODO look at the gene expression profiles from St. Olav server
+*** TODO fix order of pertrbations in matrix plot
 ** TRANSFECTION
 *** TODO predict the gene down-regulation for the real data and compare the predictions with pairwise targetscan scores
 ** VALIDATION WITH GDC LIKE IN THE ARTICLE

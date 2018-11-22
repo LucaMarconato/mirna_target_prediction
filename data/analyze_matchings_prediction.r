@@ -91,7 +91,7 @@ analyze_mirna_expression_profiles <- function(simulation_output_path)
             log_difference <- log10(difference)
             ## log_difference[log_difference == -Inf] = 0
             if(sum(is.nan(log_difference)) > 0) {
-                print("warning: found a NaN, probably this is due by having reached the machine precision during the simulation")
+                print("warning: found a nan, probably this is due by having reached the machine precision during the simulation")
                 log_difference[is.nan(log_difference)] = 0
                 ## browser()
             }
@@ -478,7 +478,6 @@ analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_out
             my_order <- order(t$rpm)
             ## browser()
             genes_ordered_static_variable <<- t$gene_id[my_order]
-            print("RECOMPUTING THE ORDER")
         }
         my_order <- match(genes_ordered_static_variable, t$gene_id)
         x_data <- 1:length(t$final_rpm)
@@ -579,12 +578,12 @@ analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_out
     }
 }
 
-compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL, consider_only_specified_gene_ids = F, consider_relative_changes, allow_linear_correction = F, choice = NULL)
+compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL, consider_only_specified_gene_ids = F, consider_relative_changes, allow_linear_correction = F, choice = NULL, plot_the_matrix = F)
 {
     if(is.null(choice)) {
         scores <- list()
         ## compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, "ratio")
-        scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "spearman")
+        ## scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "spearman")
         ## scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "average")
         ## scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "euclidean")
         scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "norm1")
@@ -787,19 +786,37 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
         }
     }
     ## print(round(distance_matrix, 2))
-    new_maximized_device()
-    print(simulation_output_paths)
+    if(plot_the_matrix) {
+        new_maximized_device()
+    }
+    ## print(simulation_output_paths)
     my_labels <- unlist(lapply(simulation_output_paths, function(x) basename(x)))
     rownames(distance_matrix) <- my_labels
     colnames(distance_matrix) <- my_labels
     m <- distance_matrix
-    diag(m) <- rep(1, dim(m)[[1]])
+    ## browser()
+    if(plot_only_essentials) {
+        min_assigned_value <- min(m[2:(dim(m)[[1]]), 1])
+        max_assigned_value <- max(m[2:(dim(m)[[1]]), 1])
+    } else {
+        m_without_diag <- m
+        diag(m_without_diag) <- NA
+        min_assigned_value <- min(m_without_diag, na.rm = T)
+        max_assigned_value <- max(m_without_diag, na.rm = T)
+    }
+    diag(m) <- 1
     if(choice == "ratio") {
         color_order <- c("black", "white")
-        diag(m) <- rep(1, dim(m)[[1]])
+        if(plot_only_essentials) {
+            m[, 2:(dim(m)[[2]])]  <- max_assigned_value
+        }
+        diag(m) <- max_assigned_value
     } else if(choice == "spearman") {
         color_order <- c("white", "black", "white")
-        diag(m) <- rep(1, dim(m)[[1]])
+        if(plot_only_essentials) {
+            m[, 2:(dim(m)[[2]])]  <- max_assigned_value
+        }
+        diag(m) <- max_assigned_value
     } else if(choice == "average") {
         color_order <- c("blue", "white", "red")
     } else if(choice == "euclidean") {
@@ -831,7 +848,7 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
         ## my_positions2 <- my_positions1
         my_positions2 <- seq(min(m, -max(m)), max(m, -min(m)), length.out = 100)
     } else {
-        m_without_diag <- m
+        m_without_diag <- m ## unused
         diag(m) <- NA
         my_positions2 <- seq(min(m, na.rm = T), max(m, na.rm = T), length.out = 100)
         if(length(unique(my_positions2)) == 1) {
@@ -844,7 +861,7 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
         }
     }
     m <- m[, n:1]
-    print(m)
+    ## print(m)
 
     lattice.options(axis.padding=list(factor=0.5))
     my_levelplot <- function(my_positions) {
@@ -862,9 +879,11 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
                          )
         return(obj)
     }
-    plot1 <- my_levelplot(my_positions1)
-    plot2 <- my_levelplot(my_positions2)
-    grid.arrange(plot1, plot2, ncol = 2)
+    if(plot_the_matrix) {
+        plot1 <- my_levelplot(my_positions1)
+        plot2 <- my_levelplot(my_positions2)
+        grid.arrange(plot1, plot2, ncol = 2)
+    }
 
     ## we adjust the scores so that sorting them ascendignly we get the mirnas contributing the most
     unadjusted_scores <- m[2:n,n]
@@ -882,8 +901,12 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
     return(adjusted_scores)
 }
 
-plot_rankings <- function(list_of_rankings)
+plot_rankings <- function(list_of_patients, list_of_rankings)
 {
+    if(length(list_of_patients) != length(list_of_rankings)) {
+        print(paste("error: length(list_of_patients = ", length(list_of_patients, ", length(list_of_rankings) = ", length(list_of_rankings), sep = "")))
+        stop("abort")
+    }
     first_n_mirnas_to_consider <- 10
     rankings_count <- length(list_of_rankings)
     rankings_size <- length(list_of_rankings[[1]])
@@ -892,22 +915,42 @@ plot_rankings <- function(list_of_rankings)
     for(i in 1:rankings_count) {
         rankings <- list_of_rankings[[i]]
         for(j in 1:rankings_size) {
+            ## new code
             scores <- rankings[[j]]
-            ## note the "- 1", in C++ these values are 0-based
-            o <- order(scores)[1:first_n_mirnas_to_consider] - 1
-            s <- sort(scores)[1:first_n_mirnas_to_consider]
-            ## par(mfrow = c(2,1))
-            ranking_string <- paste(o, collapse = ", ")
-            plot(o, s, xaxt = "n", xlab = "n-th strongest miRNA perturbed", ylab = "score", main = ranking_string)
-            lines(o, s)
-            abline(v = o, col = "gray", lty = "dashed")
-            axis(1, at = o, labels = str(o))
-            ## plot(s, xaxt = "n", main = "ordered scores", xlab = "miRNA perturbed", ylab = "score")
-            ## lines(1:first_n_mirnas_to_consider, s)
-            ## axis(1, at = 1:first_n_mirnas_to_consider, labels = paste(o))
-            ## par(mfrow = c(1,1))
+            substituted <- sub("p__", "", names(scores), perl = T)
+            substituted <- sub("__[ar][0-9]+__", "", substituted, perl = T)
+            substituted <- as.numeric(substituted) + 1
+            mirna_expression_profile_path <- paste("patients/", list_of_patients[[i]], "/mirna_expression_profile.tsv", sep = "")
+            mirna_expression_profile <- read.table(mirna_expression_profile_path, header = T, colClasses = c("character", "numeric", "numeric"))
+            mirna_expression_profile <- mirna_expression_profile[order(-mirna_expression_profile$reads), ]
+            o <- order(scores)[1:first_n_mirnas_to_consider]
+            ## browser()
+            ranking_of_perturbed_indexes <- substituted[o]
+            best_mirnas <- mirna_expression_profile$mirbase_id[ranking_of_perturbed_indexes]
+            best_scores <- scores[o]
+            print(best_mirnas)
+            par(mar = c(0, 4, 1, 2), las = 1)
+            plot(1:length(best_scores), best_scores, ylab = "")
+            ## browser()
+
+            ## old code
+            ## scores <- rankings[[j]]
+            ## ## note the "- 1", in C++ these values are 0-based
+            ## o <- order(scores)[1:first_n_mirnas_to_consider] - 1
+            ## s <- sort(scores)[1:first_n_mirnas_to_consider]
+            ## ## par(mfrow = c(2,1))
+            ## ranking_string <- paste(o, collapse = ", ")
+            ## plot(o, s, xaxt = "n", xlab = "n-th strongest miRNA perturbed", ylab = "score", main = ranking_string)
+            ## lines(o, s)
+            ## abline(v = o, col = "gray", lty = "dashed")
+            ## axis(1, at = o, labels = str(o))
+            ## ## plot(s, xaxt = "n", main = "ordered scores", xlab = "miRNA perturbed", ylab = "score")
+            ## ## lines(1:first_n_mirnas_to_consider, s)
+            ## ## axis(1, at = 1:first_n_mirnas_to_consider, labels = paste(o))
+            ## ## par(mfrow = c(1,1))
         }
     }
+    end_browser_plot()
 }
 
 analyze_mirna_expression_profiles_of_perturbed_data <- function(simulation_output_paths)
@@ -983,15 +1026,24 @@ simulation_output_paths <- c()
 ## hela_patients <- c("artificial_TCGA-CJ-4642", "artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela", "artificial_ENCFF729EQX-hela", "artificial_ENCFF806EYY-hela", "artificial_ENCFF902KUU-hela")
 ## hela_patients <- c("artificial_TCGA-CJ-4642", "artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela")
 
-## hela_patients <- c("artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela", "artificial_ENCFF729EQX-hela", "artificial_ENCFF806EYY-hela", "artificial_ENCFF902KUU-hela")
-hela_patients <- c("artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela")
+hela_patients <- c("artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela", "artificial_ENCFF729EQX-hela", "artificial_ENCFF806EYY-hela", "artificial_ENCFF902KUU-hela")
+## hela_patients <- c("artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela")
+## hela_patients <- c("artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela")
+## hela_patients <- c("artificial_ENCFF360IHM-hela")
 
-list_of_perturbed_data <- c("original_data", "p__0__a500000__", "p__1__a500000__", "p__2__a500000__")
+rankings <- list()
+
 for(patient in hela_patients) {
     simulation_output_paths_for_current_patient <- c()
     patient_folder_for_current_patient <- paste("patients/", patient, "/", sep = "")
+    ## list_of_perturbed_data <- c("original_data", "p__0__a500000__", "p__1__a500000__", "p__2__a500000__")
+    list0 <- list.files(path = paste(patient_folder_for_current_patient, "matchings_predictor_output/", sep = ""), pattern = "original_data$", full.names = T, recursive = F)
+    list1 <- list.files(path = paste(patient_folder_for_current_patient, "matchings_predictor_output/", sep = ""), pattern = "__a500000__$", full.names = T, recursive = F)
+    list_of_perturbed_data <- c(list0, list1)
+    ## browser()
     for(perturbed_data in list_of_perturbed_data) {
-        new_path <- paste(patient_folder_for_current_patient, "matchings_predictor_output/", perturbed_data, "/", sep = "")
+        ## new_path <- paste(patient_folder_for_current_patient, "matchings_predictor_output/", perturbed_data, "/", sep = "")
+        new_path <- paste(perturbed_data, "/", sep = "")
         simulation_output_paths <- c(simulation_output_paths, new_path)
         simulation_output_paths_for_current_patient <- c(simulation_output_paths_for_current_patient, new_path)
     }
@@ -1000,12 +1052,17 @@ for(patient in hela_patients) {
                                           simulation_output_paths_for_current_patient,
                                           gene_ids = sapply(1:length(simulation_output_paths_for_current_patient), function(x) list()),
                                           consider_only_specified_gene_ids = F)
+
+    rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths_for_current_patient,
+                                                                   gene_ids = sapply(1:length(simulation_output_paths_for_current_patient), function(x) list()),
+                                                                   consider_only_specified_gene_ids = T,
+                                                                   consider_relative_changes = F,
+                                                                   allow_linear_correction = F,
+                                                                   plot_the_matrix = F)
+    ## plot_rankings(hela_patients[[1]], rankings)
 }
 
-gene_ids <- list()
-for(i in seq_along(simulation_output_paths)) {
-    gene_ids[[i]] <- list()
-}
+plot_rankings(hela_patients, rankings)
 
 ## simulation_output_paths <- c(simulation_output_paths, simulation_output_path)
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "g__87__r3__", "/", sep = ""))
@@ -1085,18 +1142,15 @@ for(i in seq_along(simulation_output_paths)) {
 ## gene_ids[[4]] <- gene_ids[[6]]
 ## gene_ids[[5]] <- gene_ids[[6]]
 
-analyze_predictions_of_perturbed_data(patient_folder, simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F)
+## analyze_predictions_of_perturbed_data(patient_folder, simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F)
 
-rankings <- list()
 ## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = T)
 ## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = T, allow_linear_correction = T)
 ## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = T, allow_linear_correction = F)
 
 ## analyze_mirna_expression_profiles_of_perturbed_data(simulation_output_paths)
 ## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = F, consider_relative_changes = F, allow_linear_correction = F)
-rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = F, allow_linear_correction = F)
-
-## plot_rankings(rankings)
+## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids = gene_ids, consider_only_specified_gene_ids = T, consider_relative_changes = F, allow_linear_correction = F)
 
 ## compute_pairwise_distances(simulation_output_paths)
 end_browser_plot()
