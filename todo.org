@@ -10,6 +10,7 @@
 * DONE complete the code for the gaussian perturbation
 * DONE find the mRNAs which are most influenced, both perturbing the base level and adding some copies to the knocked-down dataset; look both at log-ratio and at Spearman's correlation coefficient
 * DONE systhematic perturbation by a fixed amount
+* TODO use snakemake
 * TODO more plots on gaussian perturbation
 ** TODO for the already generated data try plotting the mirna expression
 ** TODO try absolute perturbations

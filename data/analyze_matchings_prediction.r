@@ -437,7 +437,14 @@ analyze_probabilities <- function(patient_folder, simulation_output_path)
     abline(v = which.min(abs(cd - tail(cd, n = 1)*3/4)))
 }
 
-analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_output_paths, gene_ids = NULL, consider_only_specified_gene_ids = F, consider_only_gene_ids_of_current_experiment = F)
+## export_predictions_using_ensembl_ids <- function(predicted_downregulation_folder, time_index, initial_rpm, final_rpm)
+## {
+##     path <- paste(predicted_downregulation_folder, "/predicted_downregulation_", index, ".tsv", sep = "")
+##     predicted_downregulation <- data.frame()
+##     stop("stop here!")
+## }
+
+analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_output_paths, gene_ids = NULL, consider_only_specified_gene_ids = F, consider_only_gene_ids_of_current_experiment = F) ## , generate_images = T
 {
     print("analyzing predictions of perturbed data")
     if(consider_only_specified_gene_ids) {
@@ -473,7 +480,13 @@ analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_out
         t$p_j_downregulated_values[is.na(t$p_j_downregulated_values)] <- rep(0, na_count)
         ## browser()
         t$rpm_downregulated <- t$rpm * t$p_j_downregulated_values
+        ## browser()
+        ## note that this RPMs do not sum to 1000000 because I want the to be directly comparable with the RPM values used for making the predictions
         t$final_rpm <- t$rpm - t$rpm_downregulated
+        ## export_predictions_using_ensembl_ids(predicted_downregulation_folder = predicted_downregulation_folder, time_index = "999999", initial_rpm = t$rpm, final_rpm = t$final_rpm)
+        ## if(!generate_images) {
+        ##     return()
+        ## }
         if(is.null(genes_ordered_static_variable)) {
             my_order <- order(t$rpm)
             ## browser()
@@ -1053,13 +1066,12 @@ for(patient in hela_patients) {
                                           gene_ids = sapply(1:length(simulation_output_paths_for_current_patient), function(x) list()),
                                           consider_only_specified_gene_ids = F)
 
-    rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths_for_current_patient,
-                                                                   gene_ids = sapply(1:length(simulation_output_paths_for_current_patient), function(x) list()),
-                                                                   consider_only_specified_gene_ids = T,
-                                                                   consider_relative_changes = F,
-                                                                   allow_linear_correction = F,
-                                                                   plot_the_matrix = F)
-    ## plot_rankings(hela_patients[[1]], rankings)
+    ## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths_for_current_patient,
+    ##                                                                gene_ids = sapply(1:length(simulation_output_paths_for_current_patient), function(x) list()),
+    ##                                                                consider_only_specified_gene_ids = T,
+    ##                                                                consider_relative_changes = F,
+    ##                                                                allow_linear_correction = F,
+    ##                                                                plot_the_matrix = F)
 }
 
 plot_rankings(hela_patients, rankings)

@@ -16,7 +16,7 @@ colnames(a)[[1]] <- "refseq_id"
 colnames(a)[[2]] <- "used_in_training"
 colnames(a)[[3]] <- "gene_symbol"
 a$gene_symbol <- toupper(a$gene_symbol)
-a$used_in_training <- as.factor(a$used_in_training)
+a$used_in_training <- as.logical(a$used_in_training == "yes")
 
 as.num = function(x, na.strings = "NA") {
     stopifnot(is.character(x))
@@ -43,8 +43,8 @@ describe_a <- function()
     print("the value of a generic cell belonging to the last 74 columns is the log-fold change (log2) of the transcript expression after the transfection of the miRNA (sometimes a siRNA) specified in the column name")
     print("such a value is NA if the expression values of the transcript before and after the transfection were too low to accurately quantify the log-fold change (these expression values are not shown)")
 
-    used_in_training_count <- sum(a$used_in_training == "yes")
-    not_used_in_training_count <- sum(a$used_in_training == "no")
+    used_in_training_count <- sum(a$used_in_training == T)
+    not_used_in_training_count <- sum(a$used_in_training == F)
     print(paste(used_in_training_count, "rows have been used in training"))
     print(paste(not_used_in_training_count, "rows have not been used in training"))
 
@@ -105,8 +105,8 @@ if(print_the_differing_rows) {
                            predicted_gene_symbols = predicted_gene_symbols[rows_na_or_differing_by_gene_symbol])
     print(to_print)
 }
-print("the reason behind so many transcript annotated to different genes is probably that I am using a wrong conversion table version, I will fix this. For the moment I will continue working with a subset of the data")
-## for fixing the versions I will have to look at the output of these commands and at the url shown below
+print("the reason behind so many transcript annotated to different genes is probably that I am using a wrong conversion table version, I will fix this. For the moment I will continue working with a subset of the data. Note that some genes are the same but with the name written differently, as 01-DEC and DEC1. There are also gene synonyms to take into account!")
+## TODO: for fixing the versions I will have to look at the output of these commands and at the url shown below
 ## listDatasets(useMart("ensembl"))
 ## listFilters(ensembl)
 ## listAttributes(ensembl)
@@ -114,8 +114,23 @@ print("the reason behind so many transcript annotated to different genes is prob
 
 ## the matrix with the valid data is called b, I will only consider genes having only one transcript
 b <- a
-b$ensembl_gene_id <- predicted_gene_symbols
-STOPPPED WORKING HEREEEEEEEEEEEE... I NEED TO SELECT THE ROWS WITH UNIQUE GENE SYMBOL
-b$transcripts_with_the_same_gene <- 
-b <- b[!is.na(b$ensembl_gene_id), ]
-print(dim(b))
+b$predicted_gene_symbol <- predicted_gene_symbols
+b$ensembl_gene_id <- refseq_embl_conversion_table$ensembl_gene_id[match(b$refseq_id, refseq_embl_conversion_table$refseq_mrna)]
+gene_count <- data.frame(ensembl_gene_id = b$ensembl_gene_id, count = 1)
+gene_count <- aggregate(count ~ ensembl_gene_id, data = gene_count, FUN = sum)
+
+print("selecting only the rows for which the ensembl_gene_id is unique among all the rows")
+b$gene_count <- gene_count$count[match(b$ensembl_gene_id, gene_count$ensembl_gene_id)]
+
+number_of_duplicate_genes <- sum(!is.na(b$gene_count) & b$gene_count > 1,c(1,2,3,78,79))
+## it is interesing to print this because it shows an example of discrpancies in gene names that needs to be addressed, this is not a problem for the moment since it happens on a small number of genes that do not affect the analysis that I am currently doing, but it needs to be fixed in the future (TODO)
+print_the_differing_rows <- T
+if(print_the_differing_rows) {
+    differing <- b[!is.na(b$gene_count) & b$gene_count > 1,c(1,2,3,78,79)]
+    ## ordering for making reading easier
+    print(differing[order(differing$ensembl_gene_id),])
+}
+b <- b[!is.na(b$gene_count), ]
+b <- b[b$gene_count == 1, ]
+b <- b[, !(names(b) %in% c("gene_count"))]
+write.table(b, "targetscan_data/transfection_data.tsv", quote = F, sep = "\t", row.names = F)
