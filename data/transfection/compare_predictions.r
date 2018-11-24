@@ -1,8 +1,4 @@
-transfection_data <- read.table("targetscan_data/transfection_data.tsv", stringsAsFactors = F, header = T, fill = T)
-
-patients <- c("artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela", "artificial_ENCFF729EQX-hela", "artificial_ENCFF806EYY-hela", "artificial_ENCFF902KUU-hela", "artificial_TCGA-CJ-4642")
-
-gene_id_dictionary <- read.table("../processed/gene_id_dictionary.tsv", header = T, colClasses = c("character", "numeric"))
+gene_id_dictionacolry <- read.table("../processed/gene_id_dictionary.tsv", header = T, colClasses = c("character", "numeric"))
 
 for(patient in patients) {
     print(paste("patient = ", patient, sep = ""))

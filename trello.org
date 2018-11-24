@@ -1,0 +1,121 @@
+:PROPERTIES:
+#+PROPERTY: board-name mirna_target_prediction
+#+PROPERTY: board-id 5bf96aeaabcfee2911d58b3d
+#+PROPERTY: Done 5bf96aeaabcfee2911d58b40
+#+PROPERTY: Doing 5bf96aeaabcfee2911d58b3f
+#+PROPERTY: Comparison-with-TargetScan 5bf98ab983469553268fb0f3
+#+PROPERTY: Code-quality 5bf98446cb0509550aa8ca57
+#+PROPERTY: Robustness 5bf9883efb70af47ac11a3fa
+#+PROPERTY: Correct-data-handling 5bf987d70f5d67227446d7e5
+#+PROPERTY: To-do 5bf96aeaabcfee2911d58b3e
+#+TODO: To-do Correct-data-handling Robustness Code-quality Comparison-with-TargetScan Doing Test | Done
+#+PROPERTY: orgtrello_user_lucamarconato3 55f31e63be8600ca188f244d
+#+PROPERTY: :blue
+#+PROPERTY: :red
+#+PROPERTY: :green
+#+PROPERTY: :yellow
+#+PROPERTY: :orange
+#+PROPERTY: :purple real data validation
+#+PROPERTY: orgtrello_user_me lucamarconato3
+:END:
+* To-do Looking only at the conserved data, would the differential equations still be coupled? How the two approaches influence the predictions?
+  :PROPERTIES:
+  :orgtrello_id: 5bf989339fa605657bb8e905
+  :orgtrello_local_checksum: 9809f27f8eb7cd2e1b2c30f46e30ee087c19189f1957808d8448cfa23eafaaeb
+  :END:
+
+* To-do Investigate ceRNA hypothesis by building a pipeline for perturbing selected transcripts/genes
+  :PROPERTIES:
+  :orgtrello_id: 5bf989b20db50d45f0146108
+  :orgtrello_local_checksum: cc3e2c9b56c8541ebfde183d5caecc6d269a36ff3412be788a3220d4ba264165
+  :END:
+
+* Correct-data-handling Check old miRNA ids, for instance hsa-mir-122 was previously called hsa-mir-122a. hsa-mir-122b is also a valid mirna name in use.
+  :PROPERTIES:
+  :orgtrello_id: 5bf988420ad3bf293aabae40
+  :orgtrello_local_checksum: 6404f1424fb2bfcb8ab4d59c5c0638c8077b68f627c7f475d4d1e320999b16c6
+  :END:
+
+* Correct-data-handling Consider isoforms
+  :PROPERTIES:
+  :orgtrello_id: 5bf988b65f46d3622b0408fe
+  :orgtrello_local_checksum: f695487f24c8f7377a78946cd9577a34139d81c606fd5a65a59cd120b2704af4
+  :END:
+
+* Correct-data-handling Include conservation
+  :PROPERTIES:
+  :orgtrello_id: 5bf988e026ecc25f94e41ec2
+  :orgtrello_local_checksum: 510d7eb8e9b8d3fbe866cdfc04e6f9bdafa082e41b0f6f6ac2f0dfe3c0084d91
+  :END:
+
+* Correct-data-handling Include version iD
+  :PROPERTIES:
+  :orgtrello_id: 5bf98ae370ea77653fd3b8b8
+  :orgtrello_local_checksum: d71cc896f8bbc7745ca466d1722ef852ee9ea6889cebe89faa9d4e5b6b4d7b72
+  :END:
+
+* Correct-data-handling Uniform usage of column names
+  :PROPERTIES:
+  :orgtrello_local_checksum: 4da1c7815ef453cd306b9801e226b7a2e76d33c1a9e0963e420c0ed36b06165a
+  :orgtrello_id: 5bf995ff64596b3aff13deeb
+  :END:
+
+  - [-] Checklist :PROPERTIES: {"orgtrello_id":"5bf996040a099c0ed4115bc8","orgtrello_local_checksum":"ac61466f7eb48a8c637afdeefdc5dca2a6fe3b31ed17ac2b9575e79d09f01f04"}
+    - [ ] mirbase_id instead of mirna_id and mirna_family :PROPERTIES: {"orgtrello_id":"5bf996194e00ed629754e603","orgtrello_local_checksum":"8127d93ef9545a1408feeac64734661876c176d8e737de07dcbdd2d6afdbd62f"}
+    - [ ] mirna_id_cpp instead of mirna_id :PROPERTIES: {"orgtrello_id":"5bf996224183127ee8d9bd98","orgtrello_local_checksum":"0fd0be460f1fb30229fd01b4c025a76e6fb6d9f2b5250773959a33dbba7e61f2"}
+    - [ ] ensembl_id instead of gene_id :PROPERTIES: {"orgtrello_id":"5bf9962940675f025ed5218e","orgtrello_local_checksum":"88c73cff69c3b87bbea628ed96576f07e4d1a7b851f2eec78c89e9a967ca6910"}
+    - [ ] gene_id_cpp instead of gene_id :PROPERTIES: {"orgtrello_id":"5bf9962f82ac336fb0e44fdf","orgtrello_local_checksum":"5c06680bc2a69197b7233b6cf083bd6c1bd24e2b1335646415259e64d9e1f142"}
+* Correct-data-handling Remove rpm from the mirna_expression_profile.tsv files and use reads instead
+  :PROPERTIES:
+  :orgtrello_id: 5bf99674de18656cfacf9436
+  :orgtrello_local_checksum: 5a255479efe7623904678df1a5a4107c2dec63549bc81ebdcd0657d5493ca9d7
+  :END:
+  RPM can induce confusion since it does not make sense to renormalize them after filtering depending on the threshold
+* Robustness Are the real replicate data similar to Gaussian perturbations?
+  :PROPERTIES:
+  :orgtrello_local_checksum: d10af27168bd901b266440dc54a1b32033495e4734f33d6980172d5e57947bf6
+  :orgtrello_id: 5bf988842389dd46a37943ae
+  :END:
+
+  - [-] Checklist :PROPERTIES: {"orgtrello_id":"5bf9888b39ada654bab594a0","orgtrello_local_checksum":"d41383755dc5c80806387057d6bf03376ce8c1f32eb5603fb004d95d7a32086a"}
+    - [ ] Try absolute Gaussian perturbation :PROPERTIES: {"orgtrello_id":"5bf988976c68b92e56ccff90","orgtrello_local_checksum":"00f51cb0ceab9dd6188bafc2850a9e96f20fe95fc9faaaf6db3d007d9c07da41"}
+    - [ ] Is there difference between miRNAs and transcript/genes? :PROPERTIES: {"orgtrello_id":"5bf988a51719374461348fde","orgtrello_local_checksum":"578da76075ea0a935c69c5581089579cd9518be7345d5296fa5418e5a57bdb73"}
+* Robustness Influence of parameters
+  :PROPERTIES:
+  :orgtrello_local_checksum: 30a263ee837e8d2017ef8b55b5d889a1575a5b43ab0fa598da5a09798216aee0
+  :orgtrello_id: 5bf9893d4f6a36490bcffa6e
+  :END:
+
+  - [-] Checklist :PROPERTIES: {"orgtrello_id":"5bf989413dcc366505942015","orgtrello_local_checksum":"f8b0fef1652ef8432f932e5ab9f0d97851dbe3d45908568667d27165d1b9b51c"}
+    - [ ] Influence of h in the Euler method :PROPERTIES: {"orgtrello_id":"5bf989482ab4812a799ad3d0","orgtrello_local_checksum":"726ca09745f910907a0398bd1afdd5168b8bafebefad0aafc3a0dfcb1aa39969"}
+    - [ ] Influence of max_steps :PROPERTIES: {"orgtrello_id":"5bf989628e1bd135cfd08aa3","orgtrello_local_checksum":"6a41caf39da876da093fa1a4c62ff83f950ee87c670604dfec5b5655733e197e"}
+* Robustness Consider transcript/gene perturbations
+  :PROPERTIES:
+  :orgtrello_id: 5bf9897a6ea6b8331fd6cbfe
+  :orgtrello_local_checksum: c4434e54d7e9ae8aa23819a548712b830588ec69fc48f7b0cc326cc9b6258667
+  :END:
+
+* Code-quality Use Snakemake
+  :PROPERTIES:
+  :orgtrello_id: 5bf9845602837f6df6655d30
+  :orgtrello_local_checksum: f49c9ee3f85f5a33813db744ee724400ef55e4af5f0c045ee4b71e6b1debfd32
+  :END:
+
+* Comparison-with-TargetScan Use featureCounts for determining the correct isoforms from BAM files :purple:
+  :PROPERTIES:
+  :orgtrello_id: 5bf98bf0f8f2853c40822514
+  :orgtrello_local_checksum: 63fd3a9f22698a34c8cf55e54015fd623ce21c4ec22f7d27547d32c5c82af3f7
+  :END:
+
+* Comparison-with-TargetScan Consider replicates for the transcripts/genes :purple:
+  :PROPERTIES:
+  :orgtrello_id: 5bf98c52a017fc10c6c572c3
+  :orgtrello_local_checksum: 52ee7ad994647bfdb496ab5a18ef4edfb1a4a7f2fc38dd021fa1d0872698a2e7
+  :END:
+
+* Comparison-with-TargetScan Look at HeLa data collected at St. Olav    :purple:
+  :PROPERTIES:
+  :orgtrello_id: 5bf98c7901e9fa8ca35dc3b1
+  :orgtrello_local_checksum: 06374fda1a8d809b7deb98cdf10cab0e344c857496bd0a8be0fd26e4fedb38b8
+  :END:
+

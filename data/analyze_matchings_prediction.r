@@ -1039,11 +1039,16 @@ simulation_output_paths <- c()
 ## hela_patients <- c("artificial_TCGA-CJ-4642", "artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela", "artificial_ENCFF729EQX-hela", "artificial_ENCFF806EYY-hela", "artificial_ENCFF902KUU-hela")
 ## hela_patients <- c("artificial_TCGA-CJ-4642", "artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela")
 
-hela_patients <- c("artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela", "artificial_ENCFF729EQX-hela", "artificial_ENCFF806EYY-hela", "artificial_ENCFF902KUU-hela")
+## hela_patients <- c("artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela", "artificial_ENCFF729EQX-hela", "artificial_ENCFF806EYY-hela", "artificial_ENCFF902KUU-hela")
 ## hela_patients <- c("artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela")
 ## hela_patients <- c("artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela")
-## hela_patients <- c("artificial_ENCFF360IHM-hela")
+hela_patients <- c("artificial_ENCFF360IHM-hela")
 
+transfected_mirnas <- c("hsa-mir-122-5p", "hsa-mir-128-3p", "hsa-mir-132-3p", "hsa-mir-142-5p")
+## probably it is not the best way to do a Cartesian product of two sequences of strings, but here is what came into my mind, I will look for a more succinct way
+hela_patients <- as.character(apply(expand.grid(unlist(lapply(hela_patients, function(x) paste(x, "_", sep = ""))),
+                                                unlist(lapply(transfected_mirnas, function(x) paste(x, "_transfected", sep = "")))),
+                                    1, function(x) paste(x, collapse = "")))
 rankings <- list()
 
 for(patient in hela_patients) {
@@ -1051,8 +1056,9 @@ for(patient in hela_patients) {
     patient_folder_for_current_patient <- paste("patients/", patient, "/", sep = "")
     ## list_of_perturbed_data <- c("original_data", "p__0__a500000__", "p__1__a500000__", "p__2__a500000__")
     list0 <- list.files(path = paste(patient_folder_for_current_patient, "matchings_predictor_output/", sep = ""), pattern = "original_data$", full.names = T, recursive = F)
-    list1 <- list.files(path = paste(patient_folder_for_current_patient, "matchings_predictor_output/", sep = ""), pattern = "__a500000__$", full.names = T, recursive = F)
-    list_of_perturbed_data <- c(list0, list1)
+    ## list1 <- list.files(path = paste(patient_folder_for_current_patient, "matchings_predictor_output/", sep = ""), pattern = "__a500000__$", full.names = T, recursive = F)
+    ## list_of_perturbed_data <- c(list0, list1)
+    list_of_perturbed_data <- list0
     ## browser()
     for(perturbed_data in list_of_perturbed_data) {
         ## new_path <- paste(patient_folder_for_current_patient, "matchings_predictor_output/", perturbed_data, "/", sep = "")
@@ -1066,12 +1072,12 @@ for(patient in hela_patients) {
                                           gene_ids = sapply(1:length(simulation_output_paths_for_current_patient), function(x) list()),
                                           consider_only_specified_gene_ids = F)
 
-    ## rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths_for_current_patient,
-    ##                                                                gene_ids = sapply(1:length(simulation_output_paths_for_current_patient), function(x) list()),
-    ##                                                                consider_only_specified_gene_ids = T,
-    ##                                                                consider_relative_changes = F,
-    ##                                                                allow_linear_correction = F,
-    ##                                                                plot_the_matrix = F)
+    rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths_for_current_patient,
+                                                                   gene_ids = sapply(1:length(simulation_output_paths_for_current_patient), function(x) list()),
+                                                                   consider_only_specified_gene_ids = T,
+                                                                   consider_relative_changes = F,
+                                                                   allow_linear_correction = F,
+                                                                   plot_the_matrix = F)
 }
 
 plot_rankings(hela_patients, rankings)

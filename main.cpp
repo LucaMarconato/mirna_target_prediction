@@ -23,34 +23,41 @@ int main(int argc, char* argv[])
     // Gene::print_gene_dictionary(10);
     // Site::reduce_size_of_scored_interactions_file();
 
-    std::vector<Patient> patients;
-    // patients.emplace_back(Patient("artificial_TCGA-CJ-4642", true));
-    // patients.emplace_back(Patient("artificial_ENCFF360IHM-hela", true));
-    // patients.emplace_back(Patient("artificial_ENCFF495ZXC-hela", true));
-    // patients.emplace_back(Patient("artificial_ENCFF612ZIR-hela", true));
-    patients.emplace_back(Patient("artificial_ENCFF729EQX-hela", true));
-    patients.emplace_back(Patient("artificial_ENCFF806EYY-hela", true));
-    patients.emplace_back(Patient("artificial_ENCFF902KUU-hela", true));
+    std::vector<std::string> patient_ids = {"artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela", "artificial_ENCFF729EQX-hela", "artificial_ENCFF806EYY-hela", "artificial_ENCFF902KUU-hela"};
+    std::vector<std::string> transfected_mirbase_ids = {"hsa-mir-122-5p", "hsa-mir-128-3p", "hsa-mir-132-3p", "hsa-mir-142-5p"};
 
-    // Patient patient("artificial0", true);
-    // Patient patient("artificial1", true);
+    std::vector<Patient> patients;
+
+    // patients.emplace_back(Patient("artificial_TCGA-CJ-4642", true));
+
+    for (auto& patient_id : patient_ids) {
+        for (auto& transfected_mirbase_id : transfected_mirbase_ids) {
+            std::string transfected_patient_id = patient_id + "_" + transfected_mirbase_id + "_transfected";
+            patients.emplace_back(Patient(transfected_patient_id, true));
+            patients.emplace_back(Patient(patient_id, true));
+        }
+    }
+
+    // for (auto& patient_id : patient_ids) {
+    //     patients.emplace_back(Patient(patient_id, true));
+    // }
 
     for (auto& patient : patients) {
         Matchings_predictor matching_predictor(patient);
         matching_predictor.compute();
 
-        Perturbation_analyzer perturbation_analyzer(patient);
-        int mirnas_count = patient.mirna_expression_profile.profile.size();
-        int first_n_mirnas_to_perturb = mirnas_count;
-        // int first_n_mirnas_to_perturb = 3;
-        for (int i = 0; i < first_n_mirnas_to_perturb; i++) {
-            perturbation_analyzer.run(Perturbation_type::Point_perturbation,
-                                      Perturbation_type::No_perturbation,
-                                      Perturbation_target(Perturbation_target::Nth_largest_element(i)),
-                                      Perturbation_target(Perturbation_target::Empty_target()),
-                                      Perturbation_extent(Perturbation_extent::Absolute_perturbation(500000)),
-                                      Perturbation_extent(Perturbation_extent::No_perturbation()));
-        }
+        // Perturbation_analyzer perturbation_analyzer(patient);
+        // int mirnas_count = patient.mirna_expression_profile.profile.size();
+        // int first_n_mirnas_to_perturb = mirnas_count;
+        // // int first_n_mirnas_to_perturb = 3;
+        // for (int i = 0; i < first_n_mirnas_to_perturb; i++) {
+        //     perturbation_analyzer.run(Perturbation_type::Point_perturbation,
+        //                               Perturbation_type::No_perturbation,
+        //                               Perturbation_target(Perturbation_target::Nth_largest_element(i)),
+        //                               Perturbation_target(Perturbation_target::Empty_target()),
+        //                               Perturbation_extent(Perturbation_extent::Absolute_perturbation(500000)),
+        //                               Perturbation_extent(Perturbation_extent::No_perturbation()));
+        // }
         patient.interaction_graph.free_pointers();
     }
 

@@ -1,5 +1,4 @@
 * DONE find the distribution of the length of the clusters and prepare the clustering procedure
-* DONE fix omp
 * DONE small cases
 * DONE introduce the various lambdas for taking into account of the effect of clusterization in the ratio between mirna and target absolute quantities (this is not needed!) and introduce a second lambda acting as a tuning parameter for modeling the ratio between the mirna absolute quantity and the gene absolute quantity
 * DONE validate the animation with the real data
@@ -9,21 +8,8 @@
 * DONE check the gene with id 118 (the gene indexing was wrong)
 * DONE complete the code for the gaussian perturbation
 * DONE find the mRNAs which are most influenced, both perturbing the base level and adding some copies to the knocked-down dataset; look both at log-ratio and at Spearman's correlation coefficient
-* DONE systhematic perturbation by a fixed amount
-* TODO use snakemake
-* TODO more plots on gaussian perturbation
-** TODO for the already generated data try plotting the mirna expression
-** TODO try absolute perturbations
-* TODO consider isoforms
-* TODO stability of the method, for the expression levels, the exchange and the context (do it in the log-scale to have comparable constant variance)
-* TODO find the elements which cause most of the variability in the method
-* TODO check the simulation with conserved only
-* TODO in cons and non-cons check if the simpler methods would work, if not how many rows do not make it possible
-* TODO perturb the mRNA
-* TODO adjust the amplication factor with the log
-* TODO investigate the ceRNA hypothesis by perturbing few mRNAs
-* TODO use TargetScan data for comparing the prediction with miRanda
-* TODO include the version id in gene comparison
+* DONE find the elements which cause most of the variability in the method
+  CLOSED: [2018-11-24 Sat 18:22]
 * REAL DATA VALIDATION
 ** STABILITY ANALYSIS
 *** DONE make the program work with the new data format
@@ -32,11 +18,8 @@
     CLOSED: [2018-11-21 Wed 12:11]
 *** DONE modify the matrix plot to support plots taken among different experiments
     CLOSED: [2018-11-21 Wed 15:28]
-*** TODO make the predictions perturbing all the mirnas, to see if the ranking between different replicates coincide
-*** TODO use featureCounts for finding the expression profiles of isoforms from hela data
-*** TODO check the predictions when using replicates for mRNA
-*** TODO look at the gene expression profiles from St. Olav server
-*** TODO fix order of pertrbations in matrix plot
+*** DONE make the predictions perturbing all the mirnas, to see if the ranking between different replicates coincide
+    CLOSED: [2018-11-24 Sat 18:32]
 ** TRANSFECTION
 *** TODO predict the gene down-regulation for the real data and compare the predictions with pairwise targetscan scores
 ** VALIDATION WITH GDC LIKE IN THE ARTICLE
