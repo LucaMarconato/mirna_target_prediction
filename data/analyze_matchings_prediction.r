@@ -591,15 +591,15 @@ analyze_predictions_of_perturbed_data <- function(patient_folder, simulation_out
     }
 }
 
-compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL, consider_only_specified_gene_ids = F, consider_relative_changes, allow_linear_correction = F, choice = NULL, plot_the_matrix = F)
+compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL, consider_only_specified_gene_ids = F, consider_relative_changes, allow_linear_correction = F, choice = NULL, plot_the_matrix = T)
 {
     if(is.null(choice)) {
         scores <- list()
-        ## compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, "ratio")
-        ## scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "spearman")
-        ## scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "average")
-        ## scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "euclidean")
-        scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "norm1")
+        ## compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, "ratio", plot_the_matrix = plot_the_matrix)
+        scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "spearman", plot_the_matrix = plot_the_matrix)
+        ## scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "average", plot_the_matrix = plot_the_matrix)
+        ## scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "euclidean", plot_the_matrix = plot_the_matrix)
+        scores[[length(scores) + 1]] <- compute_pairwise_distances(simulation_output_paths, gene_ids, consider_only_specified_gene_ids, consider_relative_changes, allow_linear_correction, "norm1", plot_the_matrix = plot_the_matrix)
         return(scores)
     }
     dataframes <- lapply(simulation_output_paths,
@@ -1039,48 +1039,123 @@ simulation_output_paths <- c()
 ## hela_patients <- c("artificial_TCGA-CJ-4642", "artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela", "artificial_ENCFF729EQX-hela", "artificial_ENCFF806EYY-hela", "artificial_ENCFF902KUU-hela")
 ## hela_patients <- c("artificial_TCGA-CJ-4642", "artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela")
 
-## hela_patients <- c("artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela", "artificial_ENCFF729EQX-hela", "artificial_ENCFF806EYY-hela", "artificial_ENCFF902KUU-hela")
+hela_patients <- c("artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela", "artificial_ENCFF729EQX-hela", "artificial_ENCFF806EYY-hela", "artificial_ENCFF902KUU-hela")
 ## hela_patients <- c("artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela")
 ## hela_patients <- c("artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela")
-hela_patients <- c("artificial_ENCFF360IHM-hela")
+## hela_patients <- c("artificial_ENCFF360IHM-hela")
 
 transfected_mirnas <- c("hsa-mir-122-5p", "hsa-mir-128-3p", "hsa-mir-132-3p", "hsa-mir-142-5p")
-## probably it is not the best way to do a Cartesian product of two sequences of strings, but here is what came into my mind, I will look for a more succinct way
-hela_patients <- as.character(apply(expand.grid(unlist(lapply(hela_patients, function(x) paste(x, "_", sep = ""))),
-                                                unlist(lapply(transfected_mirnas, function(x) paste(x, "_transfected", sep = "")))),
-                                    1, function(x) paste(x, collapse = "")))
-rankings <- list()
+## I will make this more readable
+## hela_patients <- as.character(apply(expand.grid(unlist(lapply(hela_patients, function(x) paste(x, "_", sep = ""))),
+##                                                 unlist(lapply(transfected_mirnas, function(x) paste(x, "_transfected", sep = "")))),
+##                                     1, function(x) paste(x, collapse = "")))
 
-for(patient in hela_patients) {
-    simulation_output_paths_for_current_patient <- c()
-    patient_folder_for_current_patient <- paste("patients/", patient, "/", sep = "")
-    ## list_of_perturbed_data <- c("original_data", "p__0__a500000__", "p__1__a500000__", "p__2__a500000__")
-    list0 <- list.files(path = paste(patient_folder_for_current_patient, "matchings_predictor_output/", sep = ""), pattern = "original_data$", full.names = T, recursive = F)
-    ## list1 <- list.files(path = paste(patient_folder_for_current_patient, "matchings_predictor_output/", sep = ""), pattern = "__a500000__$", full.names = T, recursive = F)
-    ## list_of_perturbed_data <- c(list0, list1)
-    list_of_perturbed_data <- list0
+mirna_id_dictionary <- read.table("processed/mirna_id_dictionary.tsv", header = T, colClasses = c("character", "numeric"))
+
+for(hela_patient in hela_patients) {
+    rankings <- list()
+    gene_ids <- list()
+    simulation_output_paths <- list()
+    patient_folders <- list()
+    patient_folder <- paste("patients/", hela_patient, "/", sep = "")
+    patient_folders[[1]] <- patient_folder
+
+    simulation_output_path <- paste(patient_folder, "matchings_predictor_output/original_data/", sep = "")
+    simulation_output_paths[[1]] <- simulation_output_path
+
+    gene_ids_for_mirna <- list()
+    gene_ids[[1]] <- gene_ids_for_mirna
+
     ## browser()
-    for(perturbed_data in list_of_perturbed_data) {
-        ## new_path <- paste(patient_folder_for_current_patient, "matchings_predictor_output/", perturbed_data, "/", sep = "")
-        new_path <- paste(perturbed_data, "/", sep = "")
-        simulation_output_paths <- c(simulation_output_paths, new_path)
-        simulation_output_paths_for_current_patient <- c(simulation_output_paths_for_current_patient, new_path)
-    }
-    ## browser()
-    analyze_predictions_of_perturbed_data(patient_folder_for_current_patient,
-                                          simulation_output_paths_for_current_patient,
-                                          gene_ids = sapply(1:length(simulation_output_paths_for_current_patient), function(x) list()),
+    analyze_predictions_of_perturbed_data(patient_folder,
+                                          c(simulation_output_path),
+                                          gene_ids = list(gene_ids_for_mirna),
                                           consider_only_specified_gene_ids = F)
 
-    rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths_for_current_patient,
-                                                                   gene_ids = sapply(1:length(simulation_output_paths_for_current_patient), function(x) list()),
-                                                                   consider_only_specified_gene_ids = T,
-                                                                   consider_relative_changes = F,
-                                                                   allow_linear_correction = F,
-                                                                   plot_the_matrix = F)
+    i <- 2
+    for(transfected_mirna in transfected_mirnas) {
+        patient_folder <- paste("patients/", hela_patient, "_", transfected_mirna, "_transfected/", sep = "")
+        patient_folders[[i]] <- patient_folder
+
+        simulation_output_path <- paste(patient_folder, "matchings_predictor_output/original_data/", sep = "")
+        simulation_output_paths[[i]] <- simulation_output_path
+
+        mirna_id_cpp <- mirna_id_dictionary$mirna_id_cpp[match(transfected_mirna, mirna_id_dictionary$mirna_family)]
+        filename <- paste("interactions/mirna_id", mirna_id_cpp, "_interactions.rds", sep = "")
+        if(!file.exists(filename)) {
+            ## I should have used a sql database here...
+            print(paste("generating target file for mirna_id_cpp =", mirna_id_cpp))
+            source("analyze_expression_profiles.r")
+            get_targets_for_mirna(mirna_id_cpp)
+            print("generated")
+        }
+        gene_ids_for_mirna <- readRDS(filename)
+        gene_ids[[i]] <- gene_ids_for_mirna
+
+        analyze_predictions_of_perturbed_data(patient_folder,
+                                              c(simulation_output_path),
+                                              gene_ids = list(gene_ids_for_mirna),
+                                              consider_only_specified_gene_ids = F)
+
+        i <- i + 1
+    }
+    unused <- compute_pairwise_distances(simulation_output_paths,
+                                         gene_ids = gene_ids,
+                                         consider_only_specified_gene_ids = T,
+                                         consider_relative_changes = F,
+                                         allow_linear_correction = F,
+                                         plot_the_matrix = T)
 }
 
-plot_rankings(hela_patients, rankings)
+## for(patient in hela_patients) {
+##     simulation_output_paths_for_current_patient <- c()
+##     patient_folder_for_current_patient <- paste("patients/", patient, "/", sep = "")
+##     ## list_of_perturbed_data <- c("original_data", "p__0__a500000__", "p__1__a500000__", "p__2__a500000__")
+##     list0 <- list.files(path = paste(patient_folder_for_current_patient, "matchings_predictor_output/", sep = ""), pattern = "original_data$", full.names = T, recursive = F)
+##     ## list1 <- list.files(path = paste(patient_folder_for_current_patient, "matchings_predictor_output/", sep = ""), pattern = "__a500000__$", full.names = T, recursive = F)
+##     ## list_of_perturbed_data <- c(list0, list1)
+##     list_of_perturbed_data <- list0
+##     ## browser()
+##     for(perturbed_data in list_of_perturbed_data) {
+##         ## new_path <- paste(patient_folder_for_current_patient, "matchings_predictor_output/", perturbed_data, "/", sep = "")
+##         new_path <- paste(perturbed_data, "/", sep = "")
+##         simulation_output_paths <- c(simulation_output_paths, new_path)
+##         simulation_output_paths_for_current_patient <- c(simulation_output_paths_for_current_patient, new_path)
+##     }
+##     ## browser()
+##     mirnas_considered <- mirna_id_dictionary$mirna_id_cpp[match(transfected_mirnas), mirna_id_dictionary$mirna_family]
+##     for(mirna_id in mirnas_considered) {
+##         filename <- paste("interactions/mirna_id", mirna_id, "_interactions.rds", sep = "")
+##         if(!file.exists(filename)) {
+##             ## I should have used a sql database here...
+##             print(paste("generating target file for mirna_id =", mirna_id))
+##             source("analyze_expression_profiles.r")
+##             get_targets_for_mirna(mirna_id)
+##             print("generated")
+##         }
+##         gene_ids_for_mirna <- readRDS(filename)
+##         for(patient in hela_patients) {
+##             gene_ids[[i]] <- gene_ids_for_mirna
+##             i <- i + 1
+##         }
+##     }
+##     simulation_output_paths_grouped <- c(simulation_output_paths_grouped, simulation_output_paths_for_current_patient)
+##     gene_ids_grouped <- c(gene_ids_grouped, gene_ids_for_current_patient)
+## }
+
+## rankings <- list()
+## analyze_predictions_of_perturbed_data(patient_folder_for_current_patient,
+##                                           simulation_output_paths_for_current_patient,
+##                                           gene_ids = sapply(1:length(simulation_output_paths_for_current_patient), function(x) list()),
+##                                           consider_only_specified_gene_ids = F)
+
+##     rankings[[length(rankings) + 1]] <- compute_pairwise_distances(simulation_output_paths_for_current_patient,
+##                                                                    gene_ids = sapply(1:length(simulation_output_paths_for_current_patient), function(x) list()),
+##                                                                    consider_only_specified_gene_ids = T,
+##                                                                    consider_relative_changes = F,
+##                                                                    allow_linear_correction = F,
+##                                                                    plot_the_matrix = F)
+## plot_rankings(hela_patients, rankings)
 
 ## simulation_output_paths <- c(simulation_output_paths, simulation_output_path)
 ## simulation_output_paths <- c(simulation_output_paths, paste(patient_folder, "matchings_predictor_output/", "g__87__r3__", "/", sep = ""))
@@ -1128,10 +1203,10 @@ plot_rankings(hela_patients, rankings)
 ## mirnas_considered <- mirnas[order(-mirnas$rpm),][1:first_n_mirnas_to_perturb, "mirna_id"]
 ## gene_ids <- list()
 ## gene_ids[[length(gene_ids) + 1]] <- list()
-## ## for(i in seq_len(perturbed_datasets_count * replicates)) {
-## ##     gene_ids[[length(gene_ids) + 1]] <- list()
-## ## }
-## ## no mirna is perturbed for original data and gaussian data
+## for(i in seq_len(perturbed_datasets_count * replicates)) {
+##     gene_ids[[length(gene_ids) + 1]] <- list()
+## }
+## no mirna is perturbed for original data and gaussian data
 ## gene_ids[[1]] <- list()
 ## gene_ids[[2]] <- list()
 ## gene_ids[[3]] <- list()
@@ -1139,20 +1214,24 @@ plot_rankings(hela_patients, rankings)
 ## gene_ids[[5]] <- list()
 ## gene_ids[[6]] <- list()
 ## i <- length(gene_ids) + 1
+## mirnas_considered <- mirna_id_dictionary$mirna_id_cpp[match(transfected_mirnas), mirna_id_dictionary$mirna_family]
 ## for(mirna_id in mirnas_considered) {
 ##     filename <- paste("interactions/mirna_id", mirna_id, "_interactions.rds", sep = "")
 ##     if(!file.exists(filename)) {
-##         ## I should have used a SQL database here...
+##         ## i should have used a sql database here...
 ##         print(paste("generating target file for mirna_id =", mirna_id))
 ##         source("analyze_expression_profiles.r")
 ##         get_targets_for_mirna(mirna_id)
 ##         print("generated")
 ##     }
-##     gene_ids_for_mirna <- readRDS(filename)
-##     gene_ids[[i]] <- gene_ids_for_mirna
-##     gene_ids[[i + 1]] <- gene_ids_for_mirna
-##     ## gene_ids <- unique(c(gene_ids, gene_ids_for_mirna))
-##     i <- i + 2
+##     gene_ids_for_mirna <- readrds(filename)
+##     for(patient in hela_patients) {
+##         gene_ids[[i]] <- gene_ids_for_mirna
+##         i <- i + 1
+##     }
+    ## gene_ids[[i + 1]] <- gene_ids_for_mirna
+    ## gene_ids <- unique(c(gene_ids, gene_ids_for_mirna))
+    ## i <- i + 2
 ## }
 ## gene_ids[[2]] <- gene_ids[[5]]
 ## gene_ids[[3]] <- gene_ids[[5]]

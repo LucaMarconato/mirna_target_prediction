@@ -23,7 +23,8 @@ int main(int argc, char* argv[])
     // Gene::print_gene_dictionary(10);
     // Site::reduce_size_of_scored_interactions_file();
 
-    std::vector<std::string> patient_ids = {"artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela", "artificial_ENCFF729EQX-hela", "artificial_ENCFF806EYY-hela", "artificial_ENCFF902KUU-hela"};
+    std::vector<std::string> patient_ids = {"artificial_ENCFF360IHM-hela"};
+    // std::vector<std::string> patient_ids = {"artificial_ENCFF360IHM-hela", "artificial_ENCFF495ZXC-hela", "artificial_ENCFF612ZIR-hela", "artificial_ENCFF729EQX-hela", "artificial_ENCFF806EYY-hela", "artificial_ENCFF902KUU-hela"};
     std::vector<std::string> transfected_mirbase_ids = {"hsa-mir-122-5p", "hsa-mir-128-3p", "hsa-mir-132-3p", "hsa-mir-142-5p"};
 
     std::vector<Patient> patients;

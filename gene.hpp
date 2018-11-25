@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <unordered_set>
 
 #include <boost/unordered_map.hpp>
 #include <boost/bimap.hpp>
@@ -15,6 +16,7 @@ private:
     Gene();
 public:
     static boost::bimap<Gene, Gene_id> gene_id_dictionary;
+    static std::unordered_set<std::string> ensembl_ids_used_in_targetscan;
 
     std::string gene_id;
     int gene_id_version;
