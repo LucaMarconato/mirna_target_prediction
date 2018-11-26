@@ -706,6 +706,8 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
             }
             return(mean(x_i_considered - x_j_considered))
         } else if(choice == "euclidean") {
+            x_i_considered <- x_i_considered/sqrt(sum(x_i_considered ** 2))
+            x_j_considered <- x_j_considered/sqrt(sum(x_j_considered ** 2))
             ## browser()
             if(!plot_only_essentials) {
                 par(mar = c(2, 2, 1, 0))
@@ -713,6 +715,8 @@ compute_pairwise_distances <- function(simulation_output_paths, gene_ids = NULL,
             }
             return(sqrt(sum((x_i_considered - x_j_considered)^2)))
         } else if(choice == "norm1") {
+            x_i_considered <- x_i_considered/sum(abs(x_i_considered))
+            x_j_considered <- x_j_considered/sum(abs(x_j_considered))
             if(!plot_only_essentials) {
                 par(mar = c(2, 2, 1, 0))
                 hist(abs(x_i_considered - x_j_considered), main = "")

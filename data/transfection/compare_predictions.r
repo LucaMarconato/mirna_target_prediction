@@ -141,6 +141,7 @@ for(hela_patient in hela_patients) {
         print(paste("--->Correlation expected to be low:", round(cor(la_v, ld_v, method = "spearman"), 2), "<---", sep = ""))
         print(paste("--->TargetScan predictions correlation:", round(cor(la_v, le_v, method = "spearman"), 2), "<---", sep = ""))
         print(paste("--->New method predictions correlation:", round(cor(la_v, ld_lb_v, method = "spearman"), 2), "<---", sep = ""))
+        pairs(all_the_predictions)
         ## browser()
         i <- i + 1
     }
